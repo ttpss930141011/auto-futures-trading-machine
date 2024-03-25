@@ -6,7 +6,8 @@ from typing import Dict
 class UserLoginView:
     """ Create profession view Class """
 
-    def show(self, data: Dict) -> None:
+    @staticmethod
+    def show(data: Dict) -> None:
         """ Show profession view
          :param data: data to show
         :return: None

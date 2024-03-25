@@ -22,8 +22,18 @@ class ItemNotCreatedException(Exception):
         self.item_type = item_type
 
     def __str__(self) -> str:
-        return f"{self.item_type.capitalize()} '{self.item_name}' was not \
-created correctly"
+        return f"{self.item_type.capitalize()} '{self.item_name}' was not created correctly"
+
+
+class ItemNotDeletedException(Exception):
+    """ Exception raised when an item is not deleted """
+
+    def __init__(self, item_name: str, item_type: str) -> None:
+        self.item_name = item_name
+        self.item_type = item_type
+
+    def __str__(self) -> str:
+        return f"{self.item_type.capitalize()} '{self.item_name}' was not deleted correctly"
 
 
 class UniqueViolationError(Exception):
@@ -38,3 +48,13 @@ class LoginFailedException(Exception):
 
     def __str__(self) -> str:
         return f"{'Login failed'}: {self.message.capitalize()}"
+
+
+class LogoutFailedException(Exception):
+    """ Exception raised when a logout fails """
+
+    def __init__(self, message: str) -> None:
+        self.message = message
+
+    def __str__(self) -> str:
+        return f"{'Logout failed'}: {self.message.capitalize()}"

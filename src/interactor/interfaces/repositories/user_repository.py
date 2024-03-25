@@ -29,3 +29,18 @@ class UserRepositoryInterface(ABC):
         :param client: Any
         :return: User
         """
+
+    @abstractmethod
+    def delete(self, account: str) -> bool:
+        """ Delete a User by account
+
+        :param account: account
+        :return: bool
+        """
+
+    @abstractmethod
+    def delete_all(self) -> bool:
+        """ Delete all users
+
+        :return: bool
+        """

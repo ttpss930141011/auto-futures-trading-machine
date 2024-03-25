@@ -15,6 +15,7 @@ class Config(object):
     DEALER_CLIENT = client
     DEALER_TEST_URL = os.getenv("DEALER_TEST_URL", "")
     DEALER_PROD_URL = os.getenv("DEALER_PROD_URL", "")
+    DEFAULT_SESSION_TIMEOUT = 43200
 
     def __init__(self):
         if self.DEALER_CLIENT is None:

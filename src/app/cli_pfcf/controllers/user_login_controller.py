@@ -1,6 +1,6 @@
 from typing import Type
 
-from config import Config
+from src.app.cli_pfcf.config import Config
 from src.app.cli_pfcf.interfaces.cli_memory_controller_interface import CliMemoryControllerInterface
 from src.app.cli_pfcf.presenters.user_login_presenter import UserLoginPresenter
 from src.app.cli_pfcf.views.user_login_view import UserLoginView

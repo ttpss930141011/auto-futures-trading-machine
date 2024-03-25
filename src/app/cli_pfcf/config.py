@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 from src.infrastructure.pfcf_client import client
 
-load_dotenv(encoding="utf8", dotenv_path=".env")
+load_dotenv(encoding="utf8", dotenv_path="../../../.env")
 
 
 class Config(object):

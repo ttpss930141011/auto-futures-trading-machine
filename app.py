@@ -1,5 +1,5 @@
-from config import Config
 from src.app.cli_pfcf.cli_pfcf_process_handler import CliMemoryProcessHandler
+from src.app.cli_pfcf.config import Config
 from src.app.cli_pfcf.controllers.exit_controller import ExitController
 from src.app.cli_pfcf.controllers.user_login_controller import UserLoginController
 from src.app.cli_pfcf.controllers.user_logout_controller import UserLogoutController

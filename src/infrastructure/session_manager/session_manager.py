@@ -14,12 +14,12 @@ class SessionManager(SessionManagerInterface):
     def __init__(self, session_timeout, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._session_data = {}
-        self._session_timeout = session_timeout  # session timeout in seconds
+        self.session_timeout = session_timeout  # session timeout in seconds
 
     def create_session(self, account: str):
         self._session_data['account'] = account
         self._session_data['logged_in'] = True
-        self._session_data['expiration_time'] = time.time() + self._session_timeout
+        self._session_data['expiration_time'] = time.time() + self.session_timeout
 
     def get_current_user(self):
         if self._session_expired():
@@ -41,4 +41,4 @@ class SessionManager(SessionManagerInterface):
 
     def renew_session(self):
         if self.is_user_logged_in():
-            self._session_data['expiration_time'] = time.time() + self._session_timeout
+            self._session_data['expiration_time'] = time.time() + self.session_timeout

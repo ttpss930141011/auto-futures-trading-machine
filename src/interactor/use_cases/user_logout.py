@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Dict, Type
 
-from config import Config
+from src.app.cli_pfcf.config import Config
 from src.interactor.dtos.user_logout_dtos import UserLogoutInputDto, UserLogoutOutputDto
 from src.interactor.errors.error_classes import LogoutFailedException
 from src.interactor.interfaces.logger.logger import LoggerInterface

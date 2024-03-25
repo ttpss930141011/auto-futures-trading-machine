@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Dict, Type
 
-from config import Config
+from src.app.cli_pfcf.config import Config
 from src.interactor.dtos.user_login_dtos import UserLoginInputDto, UserLoginOutputDto
 from src.interactor.errors.error_classes import LoginFailedException, ItemNotCreatedException
 from src.interactor.interfaces.logger.logger import LoggerInterface
@@ -63,7 +63,7 @@ class UserLoginUseCase:
             )
             if not user:
                 self.logger.log_error(f"User {input_dto.account} not created")
-                raise ItemNotCreatedException("User not created", "User")
+                raise ItemNotCreatedException(input_dto.account, "User")
 
         # Create a new session in the session manager
         self.session_manager.create_session(account=user.account)

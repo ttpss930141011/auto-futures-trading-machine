@@ -1,7 +1,7 @@
 """ This module is responsible for user logout.
 """
 from datetime import datetime
-from typing import Dict, Type
+from typing import Dict
 
 from src.app.cli_pfcf.config import Config
 from src.interactor.dtos.user_logout_dtos import UserLogoutInputDto, UserLogoutOutputDto
@@ -20,7 +20,7 @@ class UserLogoutUseCase:
             self,
             presenter: UserLogoutPresenterInterface,
             # repository: UserRepositoryInterface,
-            config: Type[Config],
+            config: Config,
             logger: LoggerInterface,
             session_manager: SessionManagerInterface
     ):

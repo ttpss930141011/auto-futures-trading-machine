@@ -1,7 +1,7 @@
 """ This module is responsible for creating a new profession.
 """
 from datetime import datetime
-from typing import Dict, Type
+from typing import Dict
 
 from src.app.cli_pfcf.config import Config
 from src.interactor.dtos.user_login_dtos import UserLoginInputDto, UserLoginOutputDto
@@ -21,7 +21,7 @@ class UserLoginUseCase:
             self,
             presenter: UserLoginPresenterInterface,
             repository: UserRepositoryInterface,
-            config: Type[Config],
+            config: Config,
             logger: LoggerInterface,
             session_manager: SessionManagerInterface
     ):

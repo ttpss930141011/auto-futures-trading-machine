@@ -1,5 +1,3 @@
-from typing import Type
-
 from src.app.cli_pfcf.config import Config
 from src.app.cli_pfcf.interfaces.cli_memory_controller_interface \
     import CliMemoryControllerInterface
@@ -15,7 +13,7 @@ class UserLogoutController(CliMemoryControllerInterface):
     """ User logout controller
     """
 
-    def __init__(self, logger: LoggerInterface, config: Type[Config], session_manager: SessionManagerInterface):
+    def __init__(self, logger: LoggerInterface, config: Config, session_manager: SessionManagerInterface):
         self.logger = logger
         self.config = config
         self.session_manager = session_manager

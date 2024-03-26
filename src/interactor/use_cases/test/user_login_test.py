@@ -6,14 +6,11 @@
 import pytest
 
 from src.domain.entities.user import User
-from src.interactor.dtos.user_login_dtos \
-    import UserLoginInputDto, UserLoginOutputDto
+from src.interactor.dtos.user_login_dtos import UserLoginInputDto, UserLoginOutputDto
 from src.interactor.errors.error_classes import ItemNotCreatedException
 from src.interactor.interfaces.logger.logger import LoggerInterface
-from src.interactor.interfaces.presenters.user_login_presenter \
-    import UserLoginPresenterInterface
-from src.interactor.interfaces.repositories.user_repository \
-    import UserRepositoryInterface
+from src.interactor.interfaces.presenters.user_login_presenter import UserLoginPresenterInterface
+from src.interactor.interfaces.repositories.user_repository import UserRepositoryInterface
 from src.interactor.interfaces.session_manager.session_manager import SessionManagerInterface
 from src.interactor.use_cases import user_login
 

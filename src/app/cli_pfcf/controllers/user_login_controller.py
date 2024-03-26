@@ -1,5 +1,3 @@
-from typing import Type
-
 from src.app.cli_pfcf.config import Config
 from src.app.cli_pfcf.interfaces.cli_memory_controller_interface import CliMemoryControllerInterface
 from src.app.cli_pfcf.presenters.user_login_presenter import UserLoginPresenter
@@ -15,7 +13,7 @@ class UserLoginController(CliMemoryControllerInterface):
     """ User login controller
     """
 
-    def __init__(self, logger: LoggerInterface, config: Type[Config], session_manager: SessionManagerInterface):
+    def __init__(self, logger: LoggerInterface, config: Config, session_manager: SessionManagerInterface):
         self.logger = logger
         self.config = config
         self.session_manager = session_manager
@@ -25,7 +23,6 @@ class UserLoginController(CliMemoryControllerInterface):
         password = input("Enter the password: ")
         is_production = input("Is this login for production?[y/n](blank for n): ")
         ip_address = self.config.DEALER_PROD_URL if is_production == "y" else self.config.DEALER_TEST_URL
-
         return UserLoginInputDto(account, password, ip_address)
 
     def execute(self):

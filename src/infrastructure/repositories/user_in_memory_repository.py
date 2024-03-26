@@ -31,3 +31,22 @@ class UserInMemoryRepository(UserRepositoryInterface):
         )
         self._data[account] = user
         return user
+
+    def delete(self, account: str) -> bool:
+        """ Delete User by account
+
+        :param account: str
+        :return: bool
+        """
+        if account in self._data:
+            del self._data[account]
+            return True
+        return False
+
+    def delete_all(self) -> bool:
+        """ Delete all users
+
+        :return: bool
+        """
+        self._data = {}
+        return True

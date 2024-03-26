@@ -19,5 +19,8 @@ class UserLoginPresenter(UserLoginPresenterInterface):
         :return: Dict
         """
         return {
+            "action": "user_login",
+            "message": "User logged in successfully",
             "account": output_dto.user.account,
+            "ip_address": output_dto.user.ip_address,
         }

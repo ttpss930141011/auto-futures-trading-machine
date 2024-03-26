@@ -6,17 +6,21 @@ import sys
 
 from dotenv import load_dotenv
 
-from src.infrastructure.pfcf_client import client
+from src.interactor.interfaces.dealer_client.dealer_client import PFCFClientInterface
 
 load_dotenv(encoding="utf8", dotenv_path=".env")
 
 
 class Config(object):
-    DEALER_CLIENT = client
+    DEALER_CLIENT = None
     DEALER_TEST_URL = os.getenv("DEALER_TEST_URL", "")
     DEALER_PROD_URL = os.getenv("DEALER_PROD_URL", "")
+    DEFAULT_SESSION_TIMEOUT = 43200
 
-    def __init__(self):
+    def __init__(self, dealer_client: PFCFClientInterface | None = None):
+
+        self.DEALER_CLIENT = dealer_client.get_client() if dealer_client is not None else None
+
         if self.DEALER_CLIENT is None:
             print("FAIL TO LOAD DEALER_CLIENT.")
             sys.exit(1)

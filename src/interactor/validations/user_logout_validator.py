@@ -1,10 +1,13 @@
+""" Defines the validator for the create profession input data.
+"""
+
 from typing import Dict
 
 from src.interactor.validations.base_input_validator import BaseInputValidator
 
 
-class UserLoginInputDtoValidator(BaseInputValidator):
-    """ Validates the input data for UserLoginUseCase.
+class UserLogoutInputDtoValidator(BaseInputValidator):
+    """ Validates the create profession input data.
     :param input_data: The input data to be validated.
     """
 
@@ -16,20 +19,6 @@ class UserLoginInputDtoValidator(BaseInputValidator):
                 "type": "string",
                 "minlength": 11,
                 "maxlength": 80,
-                "required": True,
-                "empty": False
-            },
-            "password": {
-                "type": "string",
-                "minlength": 5,
-                "maxlength": 200,
-                "required": True,
-                "empty": False
-            },
-            "ip_address": {
-                "type": "string",
-                "minlength": 5,
-                "maxlength": 200,
                 "required": True,
                 "empty": False
             }

@@ -3,7 +3,7 @@
 # pylint: disable=missing-function-docstring
 
 
-from .user_in_memory_repository import UserInMemoryRepository
+from src.infrastructure.repositories.user_in_memory_repository import UserInMemoryRepository
 
 
 def test_user_in_memory_repository(fixture_user):

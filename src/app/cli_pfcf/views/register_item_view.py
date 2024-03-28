@@ -1,9 +1,9 @@
-""" Create profession view Module """
+"""Module for RegisterItemView class."""
 
 from typing import Dict
 
 
-class UserLoginView:
+class RegisterItemView:
 
     @staticmethod
     def show(data: Dict) -> None:

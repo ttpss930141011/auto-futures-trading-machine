@@ -4,7 +4,6 @@
 from typing import Dict, Literal
 
 from src.app.cli_pfcf.interfaces.cli_memory_controller_interface import CliMemoryControllerInterface
-from src.interactor.errors.error_classes import FieldValueNotPermittedException
 from src.interactor.interfaces.logger.logger import LoggerInterface
 from src.interactor.interfaces.session_manager.session_manager import SessionManagerInterface
 
@@ -62,10 +61,7 @@ class CliMemoryProcessHandler:
             if option:
                 try:
                     option.execute()
-                except (
-                        ValueError,
-                        FieldValueNotPermittedException
-                ) as exception:
+                except Exception as exception:
                     print(f'\nERROR: {str(exception)}\n')
                     self.logger.log_exception(str(exception))
             else:

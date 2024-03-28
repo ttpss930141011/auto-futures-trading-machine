@@ -26,7 +26,7 @@ class UserLogoutController(CliMemoryControllerInterface):
         """ Execute the user logout controller
         """
         if not self.session_manager.is_user_logged_in():
-            print("User not logged in")
+            self.logger.log_info("User not login")
             return
         # repository = UserInMemoryRepository()
         presenter = UserLogoutPresenter()

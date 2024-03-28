@@ -47,7 +47,7 @@ class LoginFailedException(Exception):
         self.message = message
 
     def __str__(self) -> str:
-        return f"{'Login failed'}: {self.message.capitalize()}"
+        return f"Login failed: {self.message.capitalize()}"
 
 
 class LogoutFailedException(Exception):
@@ -57,4 +57,24 @@ class LogoutFailedException(Exception):
         self.message = message
 
     def __str__(self) -> str:
-        return f"{'Logout failed'}: {self.message.capitalize()}"
+        return f"Logout failed: {self.message.capitalize()}"
+
+
+class RegisterItemFailedException(Exception):
+    """ Exception raised when a register item fails """
+
+    def __init__(self, message: str) -> None:
+        self.message = message
+
+    def __str__(self) -> str:
+        return f"Register item failed: {self.message.capitalize()}"
+
+
+class NotFountItemException(Exception):
+    """ Exception raised when a item is not found """
+
+    def __init__(self, message: str) -> None:
+        self.message = message
+
+    def __str__(self) -> str:
+        return f"Item not found: {self.message.capitalize()}"

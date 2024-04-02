@@ -1,6 +1,6 @@
 import pytest
 
-from src.infrastructure.session_manager.session_manager import SessionManager
+from src.infrastructure.repositories.session_in_memory_repository import SessionInMemoryRepository
 
 
 @pytest.fixture
@@ -40,4 +40,4 @@ def fixture_tick_data_trade():
 @pytest.fixture
 def session_manager():
     session_timeout = 1  # 1 second
-    return SessionManager(session_timeout)
+    return SessionInMemoryRepository(session_timeout)

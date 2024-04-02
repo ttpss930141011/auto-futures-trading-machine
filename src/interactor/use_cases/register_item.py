@@ -1,13 +1,13 @@
 """ This module is responsible for creating a new profession.
 """
-from typing import Dict, Callable
+from typing import Dict
 
 from src.app.cli_pfcf.config import Config
 from src.interactor.dtos.register_item_dtos import RegisterItemInputDto, RegisterItemOutputDto
 from src.interactor.errors.error_classes import LoginFailedException, NotFountItemException
 from src.interactor.interfaces.logger.logger import LoggerInterface
 from src.interactor.interfaces.presenters.register_item_presenter import RegisterItemPresenterInterface
-from src.interactor.interfaces.session_manager.session_manager import SessionManagerInterface
+from src.interactor.interfaces.repositories.session_repository import SessionRepositoryInterface
 from src.interactor.validations.register_item_validator import RegisterItemInputDtoValidator
 
 
@@ -20,14 +20,12 @@ class RegisterItemUseCase:
             presenter: RegisterItemPresenterInterface,
             config: Config,
             logger: LoggerInterface,
-            session_manager: SessionManagerInterface,
-            event_handler: Callable
+            session_repository: SessionRepositoryInterface,
     ):
         self.presenter = presenter
         self.config = config
         self.logger = logger
-        self.session_manager = session_manager
-        self.event_handler = event_handler
+        self.session_repository = session_repository
 
     def execute(
             self,
@@ -42,7 +40,7 @@ class RegisterItemUseCase:
         validator = RegisterItemInputDtoValidator(input_dto.to_dict())
         validator.validate()
 
-        user = self.session_manager.get_current_user()
+        user = self.session_repository.get_current_user()
 
         if user is None:
             error = LoginFailedException(f"Account {input_dto.account} not login")
@@ -58,7 +56,6 @@ class RegisterItemUseCase:
             raise error
 
         self.config.DEALER_CLIENT.DQuoteLib.RegItem(input_dto.item_code)  # Register item
-        self.config.DEALER_CLIENT.DQuoteLib.OnTickDataTrade += self.event_handler  # Register event
 
         output_dto = RegisterItemOutputDto(account=input_dto.account, item_code=input_dto.item_code, is_registered=True)
         presenter_response = self.presenter.present(output_dto)

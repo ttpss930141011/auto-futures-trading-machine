@@ -4,7 +4,7 @@ from src.interactor.dtos.register_item_dtos import RegisterItemInputDto, Registe
 from src.interactor.errors.error_classes import LoginFailedException
 from src.interactor.interfaces.logger.logger import LoggerInterface
 from src.interactor.interfaces.presenters.register_item_presenter import RegisterItemPresenterInterface
-from src.interactor.interfaces.session_manager.session_manager import SessionManagerInterface
+from src.interactor.interfaces.repositories.session_repository import SessionRepositoryInterface
 from src.interactor.use_cases.register_item import RegisterItemUseCase
 
 
@@ -17,8 +17,7 @@ def test_register_item(mocker, fixture_register_item):
     presenter_mock = mocker.patch.object(RegisterItemPresenterInterface, "present")
     config_mock = mocker.patch("src.app.cli_pfcf.config.Config")
     logger_mock = mocker.patch.object(LoggerInterface, "log_info")
-    session_manager_mock = mocker.patch.object(SessionManagerInterface, "get_current_user")
-    event_handler_mock = mocker.MagicMock()
+    session_manager_mock = mocker.patch.object(SessionRepositoryInterface, "get_current_user")
 
     validator_mock = mocker.patch("src.interactor.use_cases.register_item.RegisterItemInputDtoValidator")
     validator_mock_instance = validator_mock.return_value
@@ -37,7 +36,6 @@ def test_register_item(mocker, fixture_register_item):
         config_mock,
         logger_mock,
         session_manager_mock,
-        event_handler_mock
     )
     input_dto = RegisterItemInputDto(
         account=fixture_register_item["account"],
@@ -69,9 +67,8 @@ def test_register_item_if_user_is_none(mocker, fixture_register_item):
     presenter_mock = mocker.patch.object(RegisterItemPresenterInterface, "present")
     config_mock = mocker.patch("src.app.cli_pfcf.config.Config")
     logger_mock = mocker.patch.object(LoggerInterface, "log_info")
-    session_manager_mock = mocker.patch.object(SessionManagerInterface, "get_current_user")
+    session_manager_mock = mocker.patch.object(SessionRepositoryInterface, "get_current_user")
     session_manager_mock.get_current_user.return_value = None
-    event_handler_mock = mocker.MagicMock()
 
     validator_mock = mocker.patch("src.interactor.use_cases.register_item.RegisterItemInputDtoValidator")
     validator_mock_instance = validator_mock.return_value
@@ -81,7 +78,6 @@ def test_register_item_if_user_is_none(mocker, fixture_register_item):
         config_mock,
         logger_mock,
         session_manager_mock,
-        event_handler_mock
     )
     input_dto = RegisterItemInputDto(
         account=fixture_register_item["account"],
@@ -104,9 +100,8 @@ def test_register_item_if_item_code_not_in_items_list(mocker, fixture_register_i
     presenter_mock = mocker.patch.object(RegisterItemPresenterInterface, "present")
     config_mock = mocker.patch("src.app.cli_pfcf.config.Config")
     logger_mock = mocker.patch.object(LoggerInterface, "log_info")
-    session_manager_mock = mocker.patch.object(SessionManagerInterface, "get_current_user")
+    session_manager_mock = mocker.patch.object(SessionRepositoryInterface, "get_current_user")
     session_manager_mock.get_current_user.return_value = "Test user"
-    event_handler_mock = mocker.MagicMock()
 
     validator_mock = mocker.patch("src.interactor.use_cases.register_item.RegisterItemInputDtoValidator")
     validator_mock_instance = validator_mock.return_value
@@ -124,7 +119,6 @@ def test_register_item_if_item_code_not_in_items_list(mocker, fixture_register_i
         config_mock,
         logger_mock,
         session_manager_mock,
-        event_handler_mock
     )
     input_dto = RegisterItemInputDto(
         account=fixture_register_item["account"],

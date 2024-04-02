@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 
-class SessionManagerInterface(ABC):
+class SessionRepositoryInterface(ABC):
     @abstractmethod
     def create_session(self, account: str) -> None:
         pass

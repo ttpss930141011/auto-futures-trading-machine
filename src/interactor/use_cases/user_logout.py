@@ -8,7 +8,7 @@ from src.interactor.dtos.user_logout_dtos import UserLogoutInputDto, UserLogoutO
 from src.interactor.errors.error_classes import LogoutFailedException
 from src.interactor.interfaces.logger.logger import LoggerInterface
 from src.interactor.interfaces.presenters.user_logout_presenter import UserLogoutPresenterInterface
-from src.interactor.interfaces.session_manager.session_manager import SessionManagerInterface
+from src.interactor.interfaces.repositories.session_repository import SessionRepositoryInterface
 from src.interactor.validations.user_logout_validator import UserLogoutInputDtoValidator
 
 
@@ -22,7 +22,7 @@ class UserLogoutUseCase:
             # repository: UserRepositoryInterface,
             config: Config,
             logger: LoggerInterface,
-            session_manager: SessionManagerInterface
+            session_manager: SessionRepositoryInterface
     ):
         self.presenter = presenter
         # self.repository = repository

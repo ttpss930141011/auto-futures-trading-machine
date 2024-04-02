@@ -1,22 +1,22 @@
-from src.app.cli_pfcf.config import Config
 from src.app.cli_pfcf.interfaces.cli_memory_controller_interface import CliMemoryControllerInterface
 from src.app.cli_pfcf.presenters.user_login_presenter import UserLoginPresenter
 from src.app.cli_pfcf.views.user_login_view import UserLoginView
 from src.infrastructure.repositories.user_in_memory_repository import UserInMemoryRepository
+from src.infrastructure.services.service_container import ServiceContainer
 from src.interactor.dtos.user_login_dtos import UserLoginInputDto
-from src.interactor.interfaces.logger.logger import LoggerInterface
-from src.interactor.interfaces.session_manager.session_manager import SessionManagerInterface
 from src.interactor.use_cases.user_login import UserLoginUseCase
 
+
+# from getpass import getpass
 
 class UserLoginController(CliMemoryControllerInterface):
     """ User login controller
     """
 
-    def __init__(self, logger: LoggerInterface, config: Config, session_manager: SessionManagerInterface):
-        self.logger = logger
-        self.config = config
-        self.session_manager = session_manager
+    def __init__(self, service_container: ServiceContainer):
+        self.logger = service_container.logger
+        self.config = service_container.config
+        self.session_repository = service_container.session_repository
 
     def _get_user_info(self) -> UserLoginInputDto:
         account = input("Enter the account: ")
@@ -28,14 +28,15 @@ class UserLoginController(CliMemoryControllerInterface):
     def execute(self):
         """ Execute the user login controller
         """
-        if self.session_manager.is_user_logged_in():
+        if self.session_repository.is_user_logged_in():
+            self.logger.log_info("User already logged in")
             print("User already logged in")
             return
         repository = UserInMemoryRepository()
         presenter = UserLoginPresenter()
         input_dto = self._get_user_info()
         use_case = UserLoginUseCase(
-            presenter, repository, self.config, self.logger, self.session_manager)
+            presenter, repository, self.config, self.logger, self.session_repository)
         result = use_case.execute(input_dto)
         view = UserLoginView()
         view.show(result)

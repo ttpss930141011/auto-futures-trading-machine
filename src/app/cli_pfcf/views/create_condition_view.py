@@ -3,7 +3,7 @@
 from typing import Dict
 
 
-class OnTickDataTradeView:
+class CreateConditionView:
 
     @staticmethod
     def show(data: Dict) -> None:

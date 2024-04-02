@@ -4,17 +4,16 @@
 from typing import Dict, Literal
 
 from src.app.cli_pfcf.interfaces.cli_memory_controller_interface import CliMemoryControllerInterface
-from src.interactor.interfaces.logger.logger import LoggerInterface
-from src.interactor.interfaces.session_manager.session_manager import SessionManagerInterface
+from src.infrastructure.services.service_container import ServiceContainer
 
 
 class CliMemoryProcessHandler:
     """ The ProcessHandler for Cli that uses Memory repository
     """
 
-    def __init__(self, logger: LoggerInterface, session_manager: SessionManagerInterface) -> None:
-        self.logger = logger
-        self.session_manager = session_manager
+    def __init__(self, service_container: ServiceContainer) -> None:
+        self.logger = service_container.logger
+        self.session_repository = service_container.session_repository
         self.options: Dict = {}
         self.public_options = []
         self.protected_options = []
@@ -46,7 +45,7 @@ class CliMemoryProcessHandler:
         for option, controller in self.options.items():
             if option in self.public_options:
                 print(f"{option}: {controller.__class__.__name__}")
-            if self.session_manager.is_user_logged_in() and option in self.protected_options:
+            if self.session_repository.is_user_logged_in() and option in self.protected_options:
                 print(f"{option}: {controller.__class__.__name__}")
 
     def execute(self) -> None:

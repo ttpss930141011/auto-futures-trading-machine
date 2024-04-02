@@ -8,8 +8,8 @@ from src.interactor.dtos.user_login_dtos import UserLoginInputDto, UserLoginOutp
 from src.interactor.errors.error_classes import LoginFailedException, ItemNotCreatedException
 from src.interactor.interfaces.logger.logger import LoggerInterface
 from src.interactor.interfaces.presenters.user_login_presenter import UserLoginPresenterInterface
+from src.interactor.interfaces.repositories.session_repository import SessionRepositoryInterface
 from src.interactor.interfaces.repositories.user_repository import UserRepositoryInterface
-from src.interactor.interfaces.session_manager.session_manager import SessionManagerInterface
 from src.interactor.validations.user_login_validator import UserLoginInputDtoValidator
 
 
@@ -23,7 +23,7 @@ class UserLoginUseCase:
             repository: UserRepositoryInterface,
             config: Config,
             logger: LoggerInterface,
-            session_manager: SessionManagerInterface
+            session_manager: SessionRepositoryInterface
     ):
         self.presenter = presenter
         self.repository = repository

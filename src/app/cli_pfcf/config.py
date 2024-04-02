@@ -16,6 +16,8 @@ class Config(object):
     DEALER_TEST_URL = os.getenv("DEALER_TEST_URL", "")
     DEALER_PROD_URL = os.getenv("DEALER_PROD_URL", "")
     DEFAULT_SESSION_TIMEOUT = 43200
+    DEFAULT_TAKE_PROFIT_POINT = 90
+    DEFAULT_STOP_LOSS_POINT = 30
 
     def __init__(self, dealer_client: PFCFClientInterface | None = None):
 

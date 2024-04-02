@@ -1,17 +1,17 @@
 import time
 
-from src.interactor.interfaces.session_manager.session_manager import SessionManagerInterface
+from src.interactor.interfaces.repositories.session_repository import SessionRepositoryInterface
 
 
-class SessionManager(SessionManagerInterface):
+class SessionInMemoryRepository(SessionRepositoryInterface):
     _instance = None
 
-    def __new__(cls, session_timeout, *args, **kwargs):
+    def __new__(cls, session_timeout=3, *args, **kwargs):
         if not cls._instance:
-            cls._instance = super(SessionManager, cls).__new__(cls, *args, **kwargs)
+            cls._instance = super(SessionInMemoryRepository, cls).__new__(cls, *args, **kwargs)
         return cls._instance
 
-    def __init__(self, session_timeout, *args, **kwargs):
+    def __init__(self, session_timeout=3, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._session_data = {}
         self.session_timeout = session_timeout  # session timeout in seconds

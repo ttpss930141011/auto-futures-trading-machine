@@ -1,7 +1,7 @@
 from src.interactor.dtos.user_logout_dtos import UserLogoutInputDto
 from src.interactor.interfaces.logger.logger import LoggerInterface
 from src.interactor.interfaces.presenters.user_logout_presenter import UserLogoutPresenterInterface
-from src.interactor.interfaces.session_manager.session_manager import SessionManagerInterface
+from src.interactor.interfaces.repositories.session_repository import SessionRepositoryInterface
 from src.interactor.use_cases.user_logout import UserLogoutUseCase
 
 
@@ -9,7 +9,7 @@ def test_user_logout(mocker):
     presenter_mock = mocker.patch.object(UserLogoutPresenterInterface, "present")
     config_mock = mocker.patch("src.app.cli_pfcf.config.Config")
     config_mock.DEALER_CLIENT.PFCLogout = mocker.MagicMock()
-    session_manager_mock = mocker.patch.object(SessionManagerInterface, "destroy_session")
+    session_manager_mock = mocker.patch.object(SessionRepositoryInterface, "destroy_session")
     logger_mock = mocker.patch.object(LoggerInterface, "log_info")
     validator_mock = mocker.patch("src.interactor.use_cases.user_logout.UserLogoutInputDtoValidator")
 

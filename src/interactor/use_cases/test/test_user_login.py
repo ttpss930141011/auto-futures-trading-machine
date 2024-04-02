@@ -10,8 +10,8 @@ from src.interactor.dtos.user_login_dtos import UserLoginInputDto, UserLoginOutp
 from src.interactor.errors.error_classes import ItemNotCreatedException
 from src.interactor.interfaces.logger.logger import LoggerInterface
 from src.interactor.interfaces.presenters.user_login_presenter import UserLoginPresenterInterface
+from src.interactor.interfaces.repositories.session_repository import SessionRepositoryInterface
 from src.interactor.interfaces.repositories.user_repository import UserRepositoryInterface
-from src.interactor.interfaces.session_manager.session_manager import SessionManagerInterface
 from src.interactor.use_cases import user_login
 
 
@@ -26,7 +26,7 @@ def test_user_login(mocker, fixture_user):
     repository_mock = mocker.patch.object(UserRepositoryInterface, "create")
     config_mock = mocker.patch("src.app.cli_pfcf.config.Config")
     config_mock.DEALER_CLIENT.PFCLogin = mocker.MagicMock()
-    session_manager_mock = mocker.patch.object(SessionManagerInterface, "create_session")
+    session_manager_mock = mocker.patch.object(SessionRepositoryInterface, "create_session")
 
     input_dto_validator_mock = mocker.patch("src.interactor.use_cases.user_login.UserLoginInputDtoValidator")
     logger_mock = mocker.patch.object(LoggerInterface, "log_info")
@@ -75,7 +75,7 @@ def test_user_login_empty_field(mocker, fixture_user):
     repository_mock = mocker.patch.object(UserRepositoryInterface, "create")
     config_mock = mocker.patch("src.app.cli_pfcf.config.Config")
     logger_mock = mocker.patch.object(LoggerInterface, "log_info")
-    session_manager_mock = mocker.patch.object(SessionManagerInterface, "create_session")
+    session_manager_mock = mocker.patch.object(SessionRepositoryInterface, "create_session")
 
     use_case = user_login.UserLoginUseCase(
         presenter_mock,

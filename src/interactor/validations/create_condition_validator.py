@@ -43,7 +43,11 @@ class CreateConditionInputDtoValidator(BaseInputValidator):
                 "required": True,
                 "empty": False
             },
-
+            "is_following": {
+                "type": "boolean",
+                "required": False,
+                "empty": False
+            }
         }
 
     def validate(self) -> None:

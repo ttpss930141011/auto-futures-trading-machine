@@ -1,11 +1,10 @@
 """ Module for ConditionInMemoryRepository
 """
-import copy
 import uuid
-from typing import Dict, Literal
+from typing import Dict
 
 from src.domain.entities.condition import Condition
-from src.domain.value_objects import ConditionId
+from src.domain.value_objects import ConditionId, OrderOperation
 from src.interactor.interfaces.repositories.condition_repository import ConditionRepositoryInterface
 
 
@@ -22,7 +21,7 @@ class ConditionInMemoryRepository(ConditionRepositoryInterface):
         :param condition_id: ConditionId
         :return: Condition
         """
-        return copy.deepcopy(self._data[condition_id])
+        return self._data.get(condition_id)
 
     def get_all(self) -> Dict[ConditionId, Condition]:
         """ Get all Conditions
@@ -42,7 +41,7 @@ class ConditionInMemoryRepository(ConditionRepositoryInterface):
         return {condition_id: condition for condition_id, condition in self._data.items() if
                 condition.trigger_price == trigger_price}
 
-    def create(self, action: Literal["buy", "sell"], trigger_price: int, turning_point: int,
+    def create(self, action: OrderOperation, trigger_price: int, turning_point: int,
                quantity: int, take_profit_point: int, stop_loss_point: int,
                is_following: bool) -> Condition:
         """ Create a new Condition"""
@@ -57,8 +56,8 @@ class ConditionInMemoryRepository(ConditionRepositoryInterface):
             stop_loss_point=stop_loss_point,
             is_following=is_following
         )
-        self._data[condition.condition_id] = copy.deepcopy(condition)
-        return copy.deepcopy(self._data[condition.condition_id])
+        self._data[condition.condition_id] = condition
+        return condition
 
     def delete(self, condition_id: ConditionId) -> bool:
         """

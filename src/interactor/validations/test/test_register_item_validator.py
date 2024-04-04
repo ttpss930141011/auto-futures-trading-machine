@@ -36,7 +36,7 @@ def test_register_item_validator_valid_data(
     validator.verify.assert_called_once_with(schema)  # pylint: disable=E1101
 
 
-def test_register_item_validator_empty_input(fixture_register_item):
+def test_register_item_validator_empty_input():
     # We are doing just a simple test as the complete test is done in
     # test_base_input_validator.py
     input_data = {

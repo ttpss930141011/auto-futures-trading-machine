@@ -78,3 +78,13 @@ class NotFountItemException(Exception):
 
     def __str__(self) -> str:
         return f"Item not found: {self.message.capitalize()}"
+
+
+class SendMarketOrderFailedException(Exception):
+    """ Exception raised when a send market order fails """
+
+    def __init__(self, message: str) -> None:
+        self.message = message
+
+    def __str__(self) -> str:
+        return f"Send market order failed: {self.message.capitalize()}"

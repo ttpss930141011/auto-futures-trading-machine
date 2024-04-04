@@ -42,7 +42,7 @@ class SelectOrderAccountUseCase:
 
         user = self.session_repository.get_current_user()
         if user is None:
-            raise LoginFailedException(f"User not logged in")
+            raise LoginFailedException("User not logged in")
 
         order_account_set = self.config.EXCHANGE_CLIENT.UserOrderSet
 

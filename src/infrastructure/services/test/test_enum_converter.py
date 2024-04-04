@@ -42,9 +42,9 @@ def test_enum_converter_to_pfcf_enum(mocker):
 def test_enum_converter_to_pfcf_decimal(mocker):
     mock_config = mocker.MagicMock()
     mock_config.EXCHANGE_DECIMAL.Parse = mocker.MagicMock()
-    mock_config.EXCHANGE_DECIMAL.Parse.return_value = 0.1
+    mock_config.EXCHANGE_DECIMAL.Parse.return_value = 100
 
     enum_converter = EnumConverter(mock_config)
 
-    assert enum_converter.to_pfcf_decimal(0.1) == 0.1
-    mock_config.EXCHANGE_DECIMAL.Parse.assert_called_once_with("0.1")
+    assert enum_converter.to_pfcf_decimal(100) == 100
+    mock_config.EXCHANGE_DECIMAL.Parse.assert_called_once_with("100")

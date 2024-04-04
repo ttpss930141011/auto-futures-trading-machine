@@ -48,7 +48,7 @@ def test_user_login_validator_valid_data(
 
 def test_user_login_validator_empty_input(fixture_user):
     # We are doing just a simple test as the complete test is done in
-    # base_input_validator_test.py
+    # test_base_input_validator.py
     input_data = {
         "account": fixture_user["account"],
         "password": "",

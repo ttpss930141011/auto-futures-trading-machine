@@ -23,13 +23,13 @@ class UserLoginUseCase:
             repository: UserRepositoryInterface,
             config: Config,
             logger: LoggerInterface,
-            session_manager: SessionRepositoryInterface
+            session_repository: SessionRepositoryInterface
     ):
         self.presenter = presenter
         self.repository = repository
         self.config = config
         self.logger = logger
-        self.session_manager = session_manager
+        self.session_repository = session_repository
 
     def execute(
             self,
@@ -46,8 +46,8 @@ class UserLoginUseCase:
 
         # Login to the dealer client
         try:
-            self.config.DEALER_CLIENT.PFCLogin(input_dto.account,
-                                               input_dto.password, input_dto.ip_address)
+            self.config.EXCHANGE_CLIENT.PFCLogin(input_dto.account,
+                                                 input_dto.password, input_dto.ip_address)
         except LoginFailedException as e:
             self.logger.log_exception(f"Account {input_dto.account} login exception raised at {datetime.now()}: {e}")
             raise LoginFailedException("Login failed")
@@ -59,14 +59,14 @@ class UserLoginUseCase:
                 account=input_dto.account,
                 password=input_dto.password,
                 ip_address=input_dto.ip_address,
-                client=self.config.DEALER_CLIENT
+                client=self.config.EXCHANGE_CLIENT
             )
             if not user:
                 self.logger.log_error(f"User {input_dto.account} not created")
                 raise ItemNotCreatedException(input_dto.account, "User")
 
         # Create a new session in the session manager
-        self.session_manager.create_session(account=user.account)
+        self.session_repository.create_session(account=user.account)
 
         output_dto = UserLoginOutputDto(user)
         presenter_response = self.presenter.present(output_dto)

@@ -27,7 +27,7 @@ def test_user_login(monkeypatch, mocker, fixture_user):
 
     logger_mock = service_container_mock.logger
     config_mock = service_container_mock.config
-    config_mock.DEALER_TEST_URL = fixture_user["ip_address"]
+    config_mock.EXCHANGE_TEST_URL = fixture_user["ip_address"]
     session_repository_mock = service_container_mock.session_repository
 
     # mock the module in use case

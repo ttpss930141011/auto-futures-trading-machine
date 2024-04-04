@@ -3,7 +3,7 @@ from typing import Dict
 from src.interactor.validations.base_input_validator import BaseInputValidator
 
 
-class CreateConditionInputDtoValidator(BaseInputValidator):
+class SendMarketOrderInputDtoValidator(BaseInputValidator):
     """ Validates the input data for RegisterItemUseCase.
     :param input_data: The input data to be validated.
     """
@@ -12,19 +12,30 @@ class CreateConditionInputDtoValidator(BaseInputValidator):
         super().__init__(input_data)
         self.input_data = input_data
         self.__schema = {
-            "action": {
+            "order_account": {
+                "type": "string",
+                "required": True,
+                "empty": False
+            },
+            "item_code": {
+                "type": "string",
+                "required": True,
+                "empty": False
+            },
+            "side": {
                 "type": "string",
                 "allowed": ["buy", "sell"],
                 "required": True,
                 "empty": False
             },
-            "trigger_price": {
-                "type": "integer",
+            "order_type": {
+                "type": "string",
+                "allowed": ["Limit", "Market", "MarketPrice"],
                 "required": True,
                 "empty": False
             },
-            "turning_point": {
-                "type": "integer",
+            "price": {
+                "type": "float",
                 "required": True,
                 "empty": False
             },
@@ -33,21 +44,32 @@ class CreateConditionInputDtoValidator(BaseInputValidator):
                 "required": True,
                 "empty": False
             },
-            "take_profit_point": {
-                "type": "integer",
+            "time_in_force": {
+                "type": "string",
+                "allowed": ["ROD", "IOC", "FOK"],
                 "required": True,
                 "empty": False
             },
-            "stop_loss_point": {
-                "type": "integer",
+            "open_close": {
+                "type": "string",
+                "allowed": ["Y", "N", "AUTO"],
                 "required": True,
                 "empty": False
             },
-            "is_following": {
-                "type": "boolean",
+            "day_trade": {
+                "type": "string",
+                "allowed": ["Y", "N"],
+                "required": True,
+                "empty": False
+            },
+            "note": {
+                "type": "string",
+                "minlength": 0,
+                "maxlength": 10,
                 "required": False,
-                "empty": False
+                "empty": True
             }
+
         }
 
     def validate(self) -> None:

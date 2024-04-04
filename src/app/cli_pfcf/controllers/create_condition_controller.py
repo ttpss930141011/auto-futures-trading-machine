@@ -1,8 +1,7 @@
-from typing import Literal
-
 from src.app.cli_pfcf.interfaces.cli_memory_controller_interface import CliMemoryControllerInterface
 from src.app.cli_pfcf.presenters.create_condition_presenter import CreateConditionPresenter
 from src.app.cli_pfcf.views.create_condition_view import CreateConditionView
+from src.domain.value_objects import OrderOperation
 from src.infrastructure.services.service_container import ServiceContainer
 from src.interactor.dtos.create_condition_dtos import CreateConditionInputDto
 from src.interactor.use_cases.create_condition import CreateConditionUseCase
@@ -25,14 +24,16 @@ class CreateConditionController(CliMemoryControllerInterface):
         quantity_input = input("Enter the quantity: ")
         take_profit_point_input = input("Enter the take profit point (blank for default): ")
         stop_loss_point_input = input("Enter the stop loss point (blank for default): ")
+        following_input = input("Enter if the condition is following (y/n): ")
 
-        action: Literal["buy", "sell"] = "buy" if action_input == "b" else "sell"
+        action = OrderOperation.BUY if action_input == "b" else OrderOperation.SELL
         target_price = int(target_price_input)
         turning_point = int(turning_point_input)
         quantity = int(quantity_input)
         take_profit_point = int(
             take_profit_point_input) if take_profit_point_input else self.config.DEFAULT_TAKE_PROFIT_POINT
         stop_loss_point = int(stop_loss_point_input) if stop_loss_point_input else self.config.DEFAULT_STOP_LOSS_POINT
+        is_following = True if following_input == "y" else False
 
         input_dto = CreateConditionInputDto(
             action=action,
@@ -40,7 +41,8 @@ class CreateConditionController(CliMemoryControllerInterface):
             turning_point=turning_point,
             quantity=quantity,
             take_profit_point=take_profit_point,
-            stop_loss_point=stop_loss_point
+            stop_loss_point=stop_loss_point,
+            is_following=is_following
         )
 
         return input_dto
@@ -56,7 +58,6 @@ class CreateConditionController(CliMemoryControllerInterface):
         use_case = CreateConditionUseCase(
             presenter=presenter,
             condition_repository=self.condition_repository,
-            config=self.config,
             logger=self.logger,
             session_repository=self.session_repository
         )

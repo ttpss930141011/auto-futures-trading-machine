@@ -18,6 +18,7 @@ pytest-cov = "^5.0.0"
 pytest-cover = "^3.0.0"
 pytest-coverage = "^0.0"
 pytest-mock = "^3.14.0"
+pytest-asyncio = "^0.23.6"
 
 [build-system]
 requires = ["poetry-core"]

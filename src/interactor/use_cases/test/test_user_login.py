@@ -25,7 +25,7 @@ def test_user_login(mocker, fixture_user):
     presenter_mock = mocker.patch.object(UserLoginPresenterInterface, "present")
     repository_mock = mocker.patch.object(UserRepositoryInterface, "create")
     config_mock = mocker.patch("src.app.cli_pfcf.config.Config")
-    config_mock.DEALER_CLIENT.PFCLogin = mocker.MagicMock()
+    config_mock.EXCHANGE_CLIENT.PFCLogin = mocker.MagicMock()
     session_manager_mock = mocker.patch.object(SessionRepositoryInterface, "create_session")
 
     input_dto_validator_mock = mocker.patch("src.interactor.use_cases.user_login.UserLoginInputDtoValidator")
@@ -49,7 +49,7 @@ def test_user_login(mocker, fixture_user):
     input_dto_validator_mock.assert_called_once_with(input_dto.to_dict())
     input_dto_validator_instance = input_dto_validator_mock.return_value
     input_dto_validator_instance.validate.assert_called_once_with()
-    config_mock.DEALER_CLIENT.PFCLogin.assert_called_once_with(
+    config_mock.EXCHANGE_CLIENT.PFCLogin.assert_called_once_with(
         fixture_user["account"],
         fixture_user["password"],
         fixture_user["ip_address"]
@@ -64,7 +64,6 @@ def test_user_login(mocker, fixture_user):
     # Testing None return value from repository
     repository_mock.create.return_value = None
     user_account = fixture_user["account"]
-    print(f"User account: {user_account}")
     with pytest.raises(ItemNotCreatedException) as exception_info:
         use_case.execute(input_dto)
     assert str(exception_info.value) == f"User '{user_account}' was not created correctly"

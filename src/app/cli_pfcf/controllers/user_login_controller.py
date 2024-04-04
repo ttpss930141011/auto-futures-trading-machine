@@ -22,7 +22,7 @@ class UserLoginController(CliMemoryControllerInterface):
         account = input("Enter the account: ")
         password = input("Enter the password: ")
         is_production = input("Is this login for production?[y/n](blank for n): ")
-        ip_address = self.config.DEALER_PROD_URL if is_production == "y" else self.config.DEALER_TEST_URL
+        ip_address = self.config.EXCHANGE_PROD_URL if is_production == "y" else self.config.EXCHANGE_TEST_URL
         return UserLoginInputDto(account, password, ip_address)
 
     def execute(self):

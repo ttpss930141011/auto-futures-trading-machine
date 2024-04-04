@@ -18,3 +18,27 @@ class SessionRepositoryInterface(ABC):
     @abstractmethod
     def destroy_session(self) -> None:
         pass
+
+    @abstractmethod
+    def renew_session(self) -> None:
+        pass
+
+    @abstractmethod
+    def get_order_account(self) -> str:
+        pass
+
+    @abstractmethod
+    def set_order_account(self, account: str) -> None:
+        pass
+
+    @abstractmethod
+    def set_order_account_set(self, account_set: str) -> None:
+        pass
+
+    @abstractmethod
+    def set_item_code(self, item_code: str) -> None:
+        pass
+
+    @abstractmethod
+    def get_item_code(self) -> str:
+        pass

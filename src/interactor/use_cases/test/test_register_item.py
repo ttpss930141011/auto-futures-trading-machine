@@ -23,13 +23,13 @@ def test_register_item(mocker, fixture_register_item):
     validator_mock_instance = validator_mock.return_value
     presenter_mock.present.return_value = "Test output"
     session_manager_mock.return_value = "Test user"
-    config_mock.DEALER_CLIENT.DQuoteLib.RegItem = mocker.MagicMock()
-    config_mock.DEALER_CLIENT.DQuoteLib.OnTickDataTrade = mocker.MagicMock()
-    config_mock.DEALER_CLIENT.PFCGetFutureData = mocker.MagicMock()
+    config_mock.EXCHANGE_CLIENT.DQuoteLib.RegItem = mocker.MagicMock()
+    config_mock.EXCHANGE_CLIENT.DQuoteLib.OnTickDataTrade = mocker.MagicMock()
+    config_mock.EXCHANGE_CLIENT.PFCGetFutureData = mocker.MagicMock()
 
     # Mock data for items_object_list
     items_object_list = [Item(fixture_register_item["item_code"]), Item("COM5678")]
-    config_mock.DEALER_CLIENT.PFCGetFutureData.return_value = items_object_list
+    config_mock.EXCHANGE_CLIENT.PFCGetFutureData.return_value = items_object_list
 
     use_case = RegisterItemUseCase(
         presenter_mock,
@@ -48,7 +48,7 @@ def test_register_item(mocker, fixture_register_item):
 
     session_manager_mock.get_current_user.assert_called_once()
 
-    config_mock.DEALER_CLIENT.DQuoteLib.RegItem.assert_called_once_with(fixture_register_item["item_code"])
+    config_mock.EXCHANGE_CLIENT.DQuoteLib.RegItem.assert_called_once_with(fixture_register_item["item_code"])
 
     output_dto = RegisterItemOutputDto(
         account=fixture_register_item["account"],
@@ -91,7 +91,6 @@ def test_register_item_if_user_is_none(mocker, fixture_register_item):
     validator_mock_instance.validate.assert_called_once_with()
 
     session_manager_mock.get_current_user.assert_called_once()
-    logger_mock.log_info.assert_called_once_with(f"Login failed: Account {fixture_register_item['account']} not login")
 
     assert str(exc.value) == f"Login failed: Account {fixture_register_item['account']} not login"
 
@@ -106,13 +105,13 @@ def test_register_item_if_item_code_not_in_items_list(mocker, fixture_register_i
     validator_mock = mocker.patch("src.interactor.use_cases.register_item.RegisterItemInputDtoValidator")
     validator_mock_instance = validator_mock.return_value
     presenter_mock.present.return_value = "Test output"
-    config_mock.DEALER_CLIENT.DQuoteLib.RegItem = mocker.MagicMock()
-    config_mock.DEALER_CLIENT.DQuoteLib.OnTickDataTrade = mocker.MagicMock()
-    config_mock.DEALER_CLIENT.PFCGetFutureData = mocker.MagicMock()
+    config_mock.EXCHANGE_CLIENT.DQuoteLib.RegItem = mocker.MagicMock()
+    config_mock.EXCHANGE_CLIENT.DQuoteLib.OnTickDataTrade = mocker.MagicMock()
+    config_mock.EXCHANGE_CLIENT.PFCGetFutureData = mocker.MagicMock()
 
     # Mock data for items_object_list
     items_object_list = [Item("COM1234"), Item("COM5678")]
-    config_mock.DEALER_CLIENT.PFCGetFutureData.return_value = items_object_list
+    config_mock.EXCHANGE_CLIENT.PFCGetFutureData.return_value = items_object_list
 
     use_case = RegisterItemUseCase(
         presenter_mock,
@@ -132,7 +131,5 @@ def test_register_item_if_item_code_not_in_items_list(mocker, fixture_register_i
     validator_mock_instance.validate.assert_called_once_with()
 
     session_manager_mock.get_current_user.assert_called_once()
-
-    logger_mock.log_info.assert_called_once_with(f"Item not found: {fixture_register_item['item_code']} is not found")
 
     assert str(exc.value) == f"Item not found: {fixture_register_item['item_code']} is not found"

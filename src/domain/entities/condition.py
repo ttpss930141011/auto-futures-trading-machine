@@ -1,9 +1,8 @@
 """ This module has definition of the Condition entity
 """
 from dataclasses import asdict, dataclass, field
-from typing import Literal
 
-from src.domain.value_objects import ConditionId
+from src.domain.value_objects import ConditionId, OrderOperation
 
 
 @dataclass
@@ -25,7 +24,7 @@ class Condition:
     """
 
     condition_id: ConditionId
-    action: Literal["buy", "sell"]
+    action: OrderOperation
     trigger_price: int
     quantity: int
     turning_point: int = field(default=15)
@@ -49,11 +48,11 @@ class Condition:
         if self.quantity is None:
             raise ValueError("Quantity is required")
 
-        if self.action == "buy":
+        if self.action == OrderOperation.BUY:
             self.order_price = self.trigger_price + self.turning_point
             self.take_profit_price = self.order_price + self.take_profit_point
             self.stop_loss_price = self.order_price - self.stop_loss_point
-        elif self.action == "sell":
+        elif self.action == OrderOperation.SELL:
             self.order_price = self.trigger_price - self.turning_point
             self.take_profit_price = self.order_price - self.take_profit_point
             self.stop_loss_price = self.order_price + self.stop_loss_point

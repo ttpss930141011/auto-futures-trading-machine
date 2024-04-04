@@ -20,6 +20,8 @@ class SessionInMemoryRepository(SessionRepositoryInterface):
         self._session_data['account'] = account
         self._session_data['logged_in'] = True
         self._session_data['expiration_time'] = time.time() + self.session_timeout
+        self._session_data['order_account'] = None
+        self._session_data['order_account_set'] = None
 
     def get_current_user(self):
         if self._session_expired():
@@ -42,3 +44,18 @@ class SessionInMemoryRepository(SessionRepositoryInterface):
     def renew_session(self):
         if self.is_user_logged_in():
             self._session_data['expiration_time'] = time.time() + self.session_timeout
+
+    def set_order_account(self, account):
+        self._session_data['order_account'] = account
+
+    def get_order_account(self):
+        return self._session_data.get('order_account')
+
+    def set_order_account_set(self, account_set):
+        self._session_data['order_account_set'] = account_set
+
+    def set_item_code(self, item_code):
+        self._session_data['item_code'] = item_code
+
+    def get_item_code(self):
+        return self._session_data.get('item_code')

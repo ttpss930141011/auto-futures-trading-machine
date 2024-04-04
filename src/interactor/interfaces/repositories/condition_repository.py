@@ -2,9 +2,10 @@
 """
 import uuid
 from abc import ABC, abstractmethod
-from typing import Optional, Literal
+from typing import Optional
 
 from src.domain.entities.condition import Condition
+from src.domain.value_objects import OrderOperation
 
 
 class ConditionRepositoryInterface(ABC):
@@ -27,7 +28,7 @@ class ConditionRepositoryInterface(ABC):
         """
 
     @abstractmethod
-    def create(self, action: Literal["buy", "sell"], trigger_price: int, turning_point: int,
+    def create(self, action: OrderOperation, trigger_price: int, turning_point: int,
                quantity: int, take_profit_point: int, stop_loss_point: int,
                is_following: bool) -> Optional[Condition]:
         """ Create a new Condition"""

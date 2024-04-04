@@ -43,19 +43,16 @@ class RegisterItemUseCase:
         user = self.session_repository.get_current_user()
 
         if user is None:
-            error = LoginFailedException(f"Account {input_dto.account} not login")
-            self.logger.log_info(str(error))
-            raise error
+            raise LoginFailedException(f"Account {input_dto.account} not login")
 
-        items_object_list = self.config.DEALER_CLIENT.PFCGetFutureData("")
+        items_object_list = self.config.EXCHANGE_CLIENT.PFCGetFutureData("")
         items_list = [items_object_list[i].COMMODITYID for i in range(len(items_object_list))]
 
         if input_dto.item_code not in items_list:
-            error = NotFountItemException(f"{input_dto.item_code} is not found")
-            self.logger.log_info(str(error))
-            raise error
+            raise NotFountItemException(f"{input_dto.item_code} is not found")
 
-        self.config.DEALER_CLIENT.DQuoteLib.RegItem(input_dto.item_code)  # Register item
+        self.config.EXCHANGE_CLIENT.DQuoteLib.RegItem(input_dto.item_code)  # Register item
+        self.session_repository.set_item_code(input_dto.item_code)
 
         output_dto = RegisterItemOutputDto(account=input_dto.account, item_code=input_dto.item_code, is_registered=True)
         presenter_response = self.presenter.present(output_dto)

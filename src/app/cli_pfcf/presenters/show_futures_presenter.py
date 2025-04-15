@@ -14,16 +14,25 @@ class ShowFuturesPresenter(ShowFuturesPresenterInterface):
 
         futures_dtos = []
         for data in futures_data:
-            future_dto = FutureDataDto(
-                commodity_id=data.COMMODITYID,
-                product_name=data.PRODUCTNAME,
-                underlying_id=data.UNDERLYINGID,
-                delivery_month=data.DELIVERYMONTH,
-                market_code=data.MARKETCODE,
-                position_price=data.POSITIONPRICE,
-                expiration_date=data.EXPIRATIONDATE
-            )
-            futures_dtos.append(future_dto)
+            try:
+                future_dto = FutureDataDto(
+                    commodity_id=str(data.COMMODITYID),
+                    product_name=str(data.desc),
+                    underlying_id="",  # Not available in this data structure
+                    delivery_month=str(data.month),
+                    market_code=str(data.Class),
+                    position_price=str(data.Premium),
+                    expiration_date="",  # Not available in this data structure
+                    max_price=float(data.MaxPrice) if data.MaxPrice else 0.0,
+                    min_price=float(data.MinPrice) if data.MinPrice else 0.0
+                )
+                futures_dtos.append(future_dto)
+            except (AttributeError, ValueError) as e:
+                # If there's an error converting the data, skip this item
+                continue
+
+        if not futures_dtos:
+            return ShowFuturesOutputDto(success=False, message="No valid futures data found")
 
         return ShowFuturesOutputDto(
             success=True,

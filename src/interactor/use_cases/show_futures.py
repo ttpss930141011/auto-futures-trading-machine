@@ -33,29 +33,17 @@ class ShowFuturesUseCase:
             
             # If futures_code is specified, use it; otherwise, get all futures data
             futures_code = input_dto.futures_code if input_dto.futures_code else "ALL"
+
+            print('futures_code', futures_code)
             
             self.logger.log_info(f"Getting futures data for code: {futures_code}")
             
             if futures_code == "ALL":
-                # Logic to get all futures data 
-                # This depends on the API's capabilities - if it can't get all at once,
-                # we might need to call it for each known code
-                futures_data = []
-                known_codes = ["TXF", "MXF", "FXF", "EXF", "ZXF", "TJF"]  # Example codes
-                
-                for code in known_codes:
-                    try:
-                        data = api.PFCGetFutureData(code)
-                        print(data)
-                        if data:
-                            futures_data.extend(data)
-                    except Exception as e:
-                        self.logger.log_error(f"Error getting data for {code}: {str(e)}")
+                data = api.PFCGetFutureData('')
             else:
                 # Get data for specific futures code
-                futures_data = api.PFCGetFutureData(futures_code)
-                print(futures_data)
-            return self.presenter.present_futures_data(futures_data)
+                data = api.PFCGetFutureData(futures_code)
+            return self.presenter.present_futures_data(data)
             
         except Exception as e:
             self.logger.log_error(f"Error in ShowFuturesUseCase: {str(e)}")

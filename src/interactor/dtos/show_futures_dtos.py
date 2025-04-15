@@ -11,6 +11,8 @@ class FutureDataDto:
     market_code: str
     position_price: str
     expiration_date: str
+    max_price: float = 0.0
+    min_price: float = 0.0
     # Add any other fields that might be relevant
 
 

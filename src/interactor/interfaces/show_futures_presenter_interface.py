@@ -7,7 +7,7 @@ class ShowFuturesPresenterInterface(ABC):
     """
 
     @abstractmethod
-    def present_futures_data(self, futures_data) -> ShowFuturesOutputDto:
+    def present_futures_data(self, futures_data: list[str]) -> ShowFuturesOutputDto:
         """ Present futures data
         """
         pass

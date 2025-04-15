@@ -21,6 +21,7 @@ class Condition:
     :param is_trigger: if the price is triggered, the order will be prepared to be placed
     :param is_following: if the order needs keep following the price
     :param is_ordered: if the order is placed
+    :param is_exited: if the order is exited
     """
 
     condition_id: ConditionId
@@ -36,6 +37,7 @@ class Condition:
     is_following: bool = field(default=False)
     is_trigger: bool = field(init=False, default=False)
     is_ordered: bool = field(init=False, default=False)
+    is_exited: bool = field(init=False, default=False)
 
     def __post_init__(self):
         """Validate the entity"""

@@ -1,5 +1,5 @@
 from src.interactor.dtos.show_futures_dtos import FutureDataDto, ShowFuturesOutputDto
-from src.interactor.interfaces.show_futures_presenter_interface import ShowFuturesPresenterInterface
+from src.interactor.interfaces.presenters.show_futures_presenter import ShowFuturesPresenterInterface
 
 
 class ShowFuturesPresenter(ShowFuturesPresenterInterface):

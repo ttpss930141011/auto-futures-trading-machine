@@ -21,7 +21,12 @@ class CreateConditionInputDto:
     def to_dict(self):
         """ Convert data into dictionary
         """
-        return asdict(self)
+        # Create a copy of self as a dictionary
+        data = asdict(self)
+        # Convert OrderOperation enum to string value
+        if isinstance(self.action, OrderOperation):
+            data['action'] = self.action.value
+        return data
 
 
 @dataclass

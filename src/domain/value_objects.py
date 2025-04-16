@@ -14,10 +14,7 @@ class OrderOperation(enum.Enum):
     SELL = "sell"
 
     def __str__(self):
-        return {
-            OrderOperation.BUY: "buy",
-            OrderOperation.SELL: "sell",
-        }[self]
+        return self.value
 
 
 @enum.unique

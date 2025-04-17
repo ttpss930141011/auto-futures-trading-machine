@@ -40,6 +40,7 @@ class SupportResistanceStrategy:
         """
         # Extract current price from the tick event
         price = int(tick_event.tick.match_price)
+        print(f"Price: {price}")
         
         # Get all active conditions
         conditions = self.condition_repository.get_all()

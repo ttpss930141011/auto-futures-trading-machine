@@ -1,19 +1,23 @@
 """Event dispatcher for futures trading machine.
 
-This module provides a realtime event dispatcher that supports both event source
-and event type based subscription models, with enhanced support for event buffering.
+This module provides a realtime event dispatcher that supports various
+event subscription models and event handling strategies.
 """
 import asyncio
 import logging
 from datetime import datetime
-from typing import Callable, Dict, List, Optional, Any, Set, Tuple
+from typing import Callable, Dict, List, Optional, Any, Set, Type, TypeVar
 
-from src.infrastructure.events.event import Event, EventSource, FifoQueueEventSource
+from src.infrastructure.events.event import Event, EventSource
 
 
+# Type definitions
 EventHandler = Callable[[Event], Any]
 IdleHandler = Callable[[], Any]
 SchedulerJob = Callable[[], Any]
+
+# Type variable for Event subclasses
+E = TypeVar('E', bound=Event)
 
 
 class ScheduledJob:
@@ -41,7 +45,7 @@ class SchedulerQueue:
         """Initialize an empty scheduler queue."""
         self._queue: List[ScheduledJob] = []
 
-    def push(self, when: datetime, job: SchedulerJob):
+    def push(self, when: datetime, job: SchedulerJob) -> None:
         """Add a job to the queue.
         
         Args:
@@ -58,7 +62,7 @@ class SchedulerQueue:
             The next job function if one is ready, otherwise None
         """
         import heapq
-        if self._queue and self._queue[0].when <= datetime.utcnow():
+        if self._queue and self._queue[0].when <= datetime.now():
             return heapq.heappop(self._queue).job
         return None
 
@@ -73,78 +77,11 @@ class SchedulerQueue:
         return None
 
 
-class EventMultiplexer:
-    """Multiplex events from multiple sources.
-    
-    This class manages multiple event sources and provides a unified
-    interface to retrieve events from all sources in the correct order.
-    """
-    
-    def __init__(self):
-        """Initialize an empty event multiplexer."""
-        self._sources: Set[EventSource] = set()
-        self._prefetched_events: Dict[EventSource, Optional[Event]] = {}
-
-    def add_source(self, source: EventSource) -> None:
-        """Add an event source to the multiplexer.
-        
-        Args:
-            source: The event source to add
-        """
-        if source not in self._sources:
-            self._sources.add(source)
-            self._prefetched_events[source] = None
-
-    def peek_next_event_time(self) -> Optional[datetime]:
-        """Get the time of the next available event across all sources.
-        
-        Returns:
-            The datetime of the next event, or None if no events are available
-        """
-        self._prefetch_events()
-        
-        # Find the event with the earliest timestamp
-        next_events = [event for event in self._prefetched_events.values() if event]
-        if not next_events:
-            return None
-        
-        return min(event.when for event in next_events)
-
-    def pop_next_event(self) -> Tuple[Optional[EventSource], Optional[Event]]:
-        """Get the oldest event from any source.
-        
-        Returns:
-            A tuple of (source, event), or (None, None) if no events are available
-        """
-        self._prefetch_events()
-        
-        next_source = None
-        next_event = None
-        
-        # Find the event with the earliest timestamp
-        for source, event in self._prefetched_events.items():
-            if event and (next_event is None or event.when < next_event.when):
-                next_source = source
-                next_event = event
-        
-        # Consume the event if found
-        if next_source:
-            self._prefetched_events[next_source] = None
-            
-        return (next_source, next_event)
-    
-    def _prefetch_events(self) -> None:
-        """Prefetch the next event from each source for sorting."""
-        for source in self._sources:
-            if self._prefetched_events[source] is None:
-                self._prefetched_events[source] = source.pop()
-
-
 class RealtimeDispatcher:
-    """Event dispatcher that supports both event source and event type subscriptions.
+    """Event dispatcher for realtime event processing.
     
-    This dispatcher integrates event buffering capabilities with FifoQueueEventSource
-    while maintaining compatibility with direct event handling.
+    This dispatcher supports both event type based and event source based
+    subscription models, and provides scheduling capabilities.
     """
     
     def __init__(self, logger=None):
@@ -158,13 +95,7 @@ class RealtimeDispatcher:
         
         # Store event handlers by event source
         self._source_handlers: Dict[EventSource, List[EventHandler]] = {}
-        
-        # Event source multiplexer
-        self._event_mux = EventMultiplexer()
-        
-        # Event buffers for high-frequency events
-        self._event_buffers: Dict[str, FifoQueueEventSource] = {}
-        
+                
         # Scheduler for timed jobs
         self._scheduler_queue = SchedulerQueue()
         
@@ -173,6 +104,7 @@ class RealtimeDispatcher:
         
         # Running state
         self._running = False
+        self._stopped = False
         
         # Logger
         self._logger = logger or logging.getLogger(__name__)
@@ -181,7 +113,7 @@ class RealtimeDispatcher:
         """Subscribe to events of a specific type.
         
         Args:
-            event_type: The type of event to subscribe to
+            event_type: The type of event to subscribe to (string identifier)
             handler: Function to call when an event of this type is published
         """
         if event_type not in self._event_handlers:
@@ -192,23 +124,10 @@ class RealtimeDispatcher:
     def publish_event(self, event_type: str, event: Event) -> None:
         """Publish an event to all subscribers of the specified type.
         
-        If there are no immediate subscribers, the event is buffered
-        for later processing using a FifoQueueEventSource.
-        
         Args:
             event_type: The type of event being published
             event: The event object
         """
-        # Create buffer if one doesn't exist for this event type
-        if event_type not in self._event_buffers:
-            self._event_buffers[event_type] = FifoQueueEventSource()
-            # Add to multiplexer if we're using source-based dispatch
-            self._event_mux.add_source(self._event_buffers[event_type])
-        
-        # Add to buffer for deferred processing
-        self._event_buffers[event_type].push(event)
-        
-        # Also dispatch immediately if there are subscribers
         if event_type in self._event_handlers:
             for handler in self._event_handlers[event_type]:
                 try:
@@ -224,33 +143,10 @@ class RealtimeDispatcher:
             event_handler: Function to call when the source produces an event
         """
         assert not self._running, "Subscribing once we're running is not currently supported."
-        
-        # Register source with multiplexer
-        self._event_mux.add_source(source)
-        
-        # Store handler
         handlers = self._source_handlers.setdefault(source, [])
         if event_handler not in handlers:
             handlers.append(event_handler)
-
-    def buffer_events(self, event_type: str, max_events: int = 100) -> FifoQueueEventSource:
-        """Get or create an event buffer for a specific event type.
-        
-        This can be used to manually buffer events for batch processing.
-        
-        Args:
-            event_type: The type of event to buffer
-            max_events: Maximum number of events to buffer (not yet implemented)
-            
-        Returns:
-            A FifoQueueEventSource that buffers events of the specified type
-        """
-        if event_type not in self._event_buffers:
-            self._event_buffers[event_type] = FifoQueueEventSource()
-            self._event_mux.add_source(self._event_buffers[event_type])
-        
-        return self._event_buffers[event_type]
-
+    
     def schedule(self, when: datetime, job: SchedulerJob) -> None:
         """Schedule a job to run at a specific time.
         
@@ -272,8 +168,9 @@ class RealtimeDispatcher:
     async def run(self) -> None:
         """Run the event dispatcher loop."""
         self._running = True
+        self._stopped = False
         try:
-            while self._running:
+            while not self._stopped:
                 # Process scheduled jobs
                 self._process_scheduled_jobs()
                 
@@ -297,10 +194,10 @@ class RealtimeDispatcher:
 
     async def stop(self) -> None:
         """Stop the event dispatcher."""
-        self._running = False
+        self._stopped = True
 
     def _process_scheduled_jobs(self) -> None:
-        """Process all scheduled jobs that are due."""
+        """Process all scheduled jobs that are ready."""
         while job := self._scheduler_queue.pop():
             try:
                 job()
@@ -309,11 +206,10 @@ class RealtimeDispatcher:
 
     def _process_source_events(self) -> None:
         """Process events from all sources."""
-        source, event = self._event_mux.pop_next_event()
-        if source and event:
-            # Dispatch to handlers for this source
-            if source in self._source_handlers:
-                for handler in self._source_handlers[source]:
+        for source, handlers in self._source_handlers.items():
+            event = source.pop()
+            if event:
+                for handler in handlers:
                     try:
                         handler(event)
                     except Exception as e:

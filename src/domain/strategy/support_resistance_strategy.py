@@ -1,56 +1,63 @@
 """Support Resistance Strategy Implementation.
 
-This strategy monitors price movement and triggers signals based on support and resistance levels.
+This strategy monitors price movement and triggers signals based on support and resistance levels,
+communicating signals via ZeroMQ.
 """
-from src.infrastructure.events.dispatcher import RealtimeDispatcher
+from src.infrastructure.messaging import ZmqPusher, serialize # Import ZMQ Pusher and serializer
 from src.infrastructure.events.tick import TickEvent
-from src.infrastructure.event_sources.trading_signal import TradingSignal
+from src.infrastructure.events.trading_signal import TradingSignal 
 from src.domain.value_objects import OrderOperation
 from src.interactor.interfaces.repositories.condition_repository import ConditionRepositoryInterface
 from src.interactor.interfaces.logger.logger import LoggerInterface
 from src.domain.entities.condition import Condition
-
+from typing import Optional
 
 class SupportResistanceStrategy:
-    """Strategy that uses support and resistance levels to generate trading signals."""
+    """Strategy that uses support and resistance levels to generate trading signals via ZMQ."""
     
     def __init__(self, 
-                 event_dispatcher: RealtimeDispatcher, 
                  condition_repository: ConditionRepositoryInterface,
+                 signal_pusher: ZmqPusher, # Inject ZmqPusher
                  logger: LoggerInterface = None):
         """Initialize the support and resistance strategy.
         
         Args:
-            event_dispatcher: The event dispatcher to subscribe to for tick events and publish signals
+            # event_dispatcher: The event dispatcher to subscribe to for tick events and publish signals
             condition_repository: Repository for accessing trading conditions
+            signal_pusher: The ZeroMQ pusher for sending trading signals.
             logger: Optional logger for recording strategy events
         """
-        self.event_dispatcher = event_dispatcher
+        # self.event_dispatcher = event_dispatcher
         self.condition_repository = condition_repository
+        self.signal_pusher = signal_pusher # Store the pusher
         self.logger = logger
         
-        # Subscribe to tick events
-        event_dispatcher.subscribe_event_type("TICK", self.on_tick)
+        # Remove subscription to tick events
+        # event_dispatcher.subscribe_event_type("TICK", self.on_tick)
     
-    def on_tick(self, tick_event: TickEvent):
-        """Process a tick event and generate trading signals if conditions are met.
+    # Rename on_tick to process_tick_event, as it's no longer an event handler callback
+    def process_tick_event(self, tick_event: TickEvent):
+        """Process a TickEvent received (e.g., via ZMQ) and generate trading signals if conditions are met.
         
         Args:
             tick_event: The tick event containing current price information
         """
         # Extract current price from the tick event
         price = int(tick_event.tick.match_price)
-        print(f"Price: {price}")
+        # print(f"Price: {price}")
         
-        # Get all active conditions
+        # Get all active conditions (Consider optimizing this for HFT)
         conditions = self.condition_repository.get_all()
         
         # Process each condition
         for condition in conditions.values():
             self._process_condition(condition, price, tick_event)
             
-            # Update the condition in the repository
-            self.condition_repository.update(condition)
+            # Update the condition in the repository (Consider making this async/batched)
+            # If a condition resulted in deletion (is_exited), it might not be found here.
+            # Check if condition still exists before updating.
+            if not condition.is_exited: 
+                 self.condition_repository.update(condition)
     
     def _process_condition(self, condition: Condition, price: int, tick_event: TickEvent):
         """Process a single condition against the current price.
@@ -70,6 +77,7 @@ class SupportResistanceStrategy:
         elif not condition.is_ordered:
             if self._should_order(condition, price):
                 self._log(f"Condition {condition.condition_id} ordering at price {price}")
+                # Use the injected pusher to send the signal
                 self._send_trading_signal(condition.action, tick_event)
                 condition.is_ordered = True
         
@@ -81,13 +89,15 @@ class SupportResistanceStrategy:
                 
                 # Determine the exit action (opposite of entry)
                 exit_action = OrderOperation.SELL if condition.action == OrderOperation.BUY else OrderOperation.BUY
+                # Use the injected pusher to send the exit signal
                 self._send_trading_signal(exit_action, tick_event)
                 
                 condition.is_exited = True
+                # Delete the condition AFTER sending the signal
                 self.condition_repository.delete(condition.condition_id)
         
-        # Handle trailing conditions
-        if condition.is_following and not condition.is_ordered:
+        # Handle trailing conditions (only if not exited)
+        if condition.is_following and not condition.is_ordered and not condition.is_exited:
             self._update_trailing_condition(condition, price)
     
     def _should_trigger(self, condition: Condition, price: int) -> bool:
@@ -124,7 +134,7 @@ class SupportResistanceStrategy:
             # For sell, order when price falls to entry point after triggering
             return price <= condition.order_price
     
-    def _should_exit(self, condition: Condition, price: int) -> str:
+    def _should_exit(self, condition: Condition, price: int) -> Optional[str]: # Return type changed Optional[str]
         """Check if position should be exited.
         
         Args:
@@ -156,38 +166,69 @@ class SupportResistanceStrategy:
             condition: The condition with trailing enabled
             price: Current price
         """
+        # Ensure turning_point is positive
+        turning_point_abs = abs(condition.turning_point or 0)
+        if turning_point_abs == 0:
+            if self.logger:
+                self.logger.log_warning(f"Trailing condition {condition.condition_id} has zero turning point. Trailing disabled.")
+            return
+
         if condition.action == OrderOperation.BUY:
             # For buy, update trigger and order prices as price moves lower
             if price <= condition.trigger_price:
-                self._log(f"Updating trailing buy condition {condition.condition_id} to price {price}")
+                new_order_price = price + turning_point_abs
+                self._log(f"Updating trailing buy condition {condition.condition_id} to trigger price {price}, order price {new_order_price}")
                 condition.trigger_price = price
-                condition.order_price = price + condition.turning_point
+                condition.order_price = new_order_price
         else:  # OrderOperation.SELL
             # For sell, update trigger and order prices as price moves higher
             if price >= condition.trigger_price:
-                self._log(f"Updating trailing sell condition {condition.condition_id} to price {price}")
+                new_order_price = price - turning_point_abs
+                self._log(f"Updating trailing sell condition {condition.condition_id} to trigger price {price}, order price {new_order_price}")
                 condition.trigger_price = price
-                condition.order_price = price - condition.turning_point
+                condition.order_price = new_order_price
     
     def _send_trading_signal(self, action: OrderOperation, tick_event: TickEvent):
-        """Send a trading signal through the event dispatcher.
+        """Send a trading signal via the injected ZMQ Pusher.
         
         Args:
             action: Buy or sell action
-            tick_event: The originating tick event
+            tick_event: The originating tick event (used for commodity_id and timestamp)
         """
         signal = TradingSignal(
-            tick_event.when,
+            tick_event.when, # Use timestamp from the original event
             action,
             tick_event.tick.commodity_id
         )
-        self.event_dispatcher.publish_event("TRADING_SIGNAL", signal)
+        try:
+            # Serialize the signal
+            serialized_signal = serialize(signal)
+            # Send using the pusher
+            self.signal_pusher.send(serialized_signal)
+            self._log(f"Sent trading signal via ZMQ: {action.name} {tick_event.tick.commodity_id}")
+        except Exception as e:
+            self._log(f"Failed to send trading signal via ZMQ: {e}", level="error")
+
+        # Remove event dispatcher publishing
+        # self.event_dispatcher.publish_event("TRADING_SIGNAL", signal)
     
-    def _log(self, message: str):
+    def _log(self, message: str, level: str = "info"):
         """Log a message if logger is available.
         
         Args:
             message: The message to log
+            level: Log level ('info', 'error', 'warning', etc.)
         """
         if self.logger:
-            self.logger.log_info(message)
+            log_func = getattr(self.logger, f"log_{level}", self.logger.log_info)
+            log_func(message)
+        else:
+            # Basic print fallback if no logger
+            print(f"[{level.upper()}] {message}")
+            
+    # Add a close method for the pusher if needed
+    def close(self):
+        if self.logger:
+              self.logger.log_info("Closing Strategy resources (ZMQ pusher).")
+        # self.signal_pusher.close() # Pusher might be shared, close at higher level
+        pass

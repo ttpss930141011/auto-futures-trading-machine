@@ -1,6 +1,5 @@
 uc.py
 test.py
-redis-test.py
 .env
 pfcf_client.py
 main.py

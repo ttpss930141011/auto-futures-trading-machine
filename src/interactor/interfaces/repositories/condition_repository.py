@@ -2,7 +2,7 @@
 """
 import uuid
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, Dict
 
 from src.domain.entities.condition import Condition
 from src.domain.value_objects import OrderOperation
@@ -21,9 +21,17 @@ class ConditionRepositoryInterface(ABC):
         """
 
     @abstractmethod
-    def get_all(self) -> Optional[Condition]:
+    def get_all(self) -> Dict[uuid.UUID, Condition]:
         """ Get all Conditions
 
+        :return: Dict[ConditionId, Condition]
+        """
+
+    @abstractmethod
+    def search_by_trigger_price(self, trigger_price: int) -> Optional[Condition]:
+        """ Search Condition by trigger_price
+
+        :param trigger_price: int
         :return: Dict[ConditionId, Condition]
         """
 
@@ -46,4 +54,12 @@ class ConditionRepositoryInterface(ABC):
         """ Delete all users
 
         :return: bool
+        """
+
+    @abstractmethod
+    def update(self, condition: Condition) -> Optional[Condition]:
+        """ Update a Condition
+
+        :param condition: Condition
+        :return:
         """

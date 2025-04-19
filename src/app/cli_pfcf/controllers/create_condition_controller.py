@@ -33,9 +33,9 @@ class CreateConditionController(CliMemoryControllerInterface):
         take_profit_point = int(
             take_profit_point_input) if take_profit_point_input else self.config.DEFAULT_TAKE_PROFIT_POINT
         stop_loss_point = int(stop_loss_point_input) if stop_loss_point_input else self.config.DEFAULT_STOP_LOSS_POINT
-        is_following = True if following_input == "y" else False
+        is_following = True if following_input.lower() == "y" else False
 
-        input_dto = CreateConditionInputDto(
+        return CreateConditionInputDto(
             action=action,
             trigger_price=target_price,
             turning_point=turning_point,
@@ -44,8 +44,6 @@ class CreateConditionController(CliMemoryControllerInterface):
             stop_loss_point=stop_loss_point,
             is_following=is_following
         )
-
-        return input_dto
 
     def execute(self):
         """ Execute the creating condition controller

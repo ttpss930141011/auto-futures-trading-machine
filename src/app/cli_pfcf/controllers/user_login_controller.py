@@ -1,3 +1,5 @@
+from getpass import getpass
+
 from src.app.cli_pfcf.interfaces.cli_memory_controller_interface import CliMemoryControllerInterface
 from src.app.cli_pfcf.presenters.user_login_presenter import UserLoginPresenter
 from src.app.cli_pfcf.views.user_login_view import UserLoginView
@@ -6,8 +8,6 @@ from src.infrastructure.services.service_container import ServiceContainer
 from src.interactor.dtos.user_login_dtos import UserLoginInputDto
 from src.interactor.use_cases.user_login import UserLoginUseCase
 
-
-# from getpass import getpass
 
 class UserLoginController(CliMemoryControllerInterface):
     """ User login controller
@@ -19,8 +19,10 @@ class UserLoginController(CliMemoryControllerInterface):
         self.session_repository = service_container.session_repository
 
     def _get_user_info(self) -> UserLoginInputDto:
+        """ Get user information from input
+        """
         account = input("Enter the account: ")
-        password = input("Enter the password: ")
+        password = getpass("Enter the password: ")
         is_production = input("Is this login for production?[y/n](blank for n): ")
         ip_address = self.config.EXCHANGE_PROD_URL if is_production == "y" else self.config.EXCHANGE_TEST_URL
         return UserLoginInputDto(account, password, ip_address)

@@ -80,3 +80,12 @@ class ConditionInMemoryRepository(ConditionRepositoryInterface):
         """
         self._data = {}
         return True
+
+    def update(self, condition: Condition) -> Condition:
+        """
+        Update Condition
+        :param condition: Condition
+        :return: Condition
+        """
+        self._data[condition.condition_id] = condition
+        return condition

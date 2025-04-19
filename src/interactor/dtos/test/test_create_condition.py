@@ -18,7 +18,7 @@ def test_create_condition_input_dto_valid(fixture_create_condition):
     assert input_dto.action == fixture_create_condition["action"]
     assert input_dto.trigger_price == fixture_create_condition["trigger_price"]
     assert input_dto.to_dict() == {
-        "action": fixture_create_condition["action"],
+        "action": fixture_create_condition["action"].value,
         "trigger_price": fixture_create_condition["trigger_price"],
         "turning_point": fixture_create_condition["turning_point"],
         "quantity": fixture_create_condition["quantity"],

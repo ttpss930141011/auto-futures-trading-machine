@@ -20,8 +20,8 @@ from src.interactor.use_cases.start_application import StartApplicationUseCase
 from src.infrastructure.services.status_checker import StatusChecker
 
 # Define ZMQ addresses (Consider making these configurable)
-ZMQ_TICK_PUB_ADDRESS = "tcp://*:5555" 
-ZMQ_SIGNAL_PULL_ADDRESS = "tcp://*:5556" 
+ZMQ_TICK_PUB_ADDRESS = "tcp://*:5555"
+ZMQ_SIGNAL_PULL_ADDRESS = "tcp://*:5556"
 # Addresses for clients (Strategy, OrderExecutor) to connect to
 ZMQ_TICK_SUB_CONNECT_ADDRESS = "tcp://localhost:5555"
 ZMQ_SIGNAL_PUSH_CONNECT_ADDRESS = "tcp://localhost:5556"

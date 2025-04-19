@@ -5,7 +5,7 @@ import datetime
 import enum
 
 from src.infrastructure.events.tick import Tick, TickEvent
-from src.infrastructure.event_sources.trading_signal import TradingSignal
+from src.infrastructure.events.trading_signal import TradingSignal
 from src.domain.value_objects import OrderOperation
 
 # Define a type variable for specific serializable types

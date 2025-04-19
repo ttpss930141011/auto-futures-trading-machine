@@ -12,7 +12,7 @@ from src.domain.value_objects import OrderOperation
 from src.app.cli_pfcf.interfaces.cli_memory_controller_interface import CliMemoryControllerInterface
 from src.infrastructure.services.service_container import ServiceContainer
 from src.infrastructure.messaging import ZmqPublisher, ZmqPusher, ZmqPuller, serialize, deserialize # Import ZMQ components
-from src.infrastructure.pfcf_client.tick_producer import TickProducer
+from src.infrastructure.adapters.tick_producer import TickProducer
 from src.domain.strategy.support_resistance_strategy import SupportResistanceStrategy
 from src.domain.order.order_executor import OrderExecutor
 from src.interactor.errors.error_classes import LoginFailedException, NotFountItemException

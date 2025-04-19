@@ -5,6 +5,6 @@ pfcf_client.py
 main.py
 logs
 __pycache__
-src/infrastructure/pfcf_client/**
+src/infrastructure/pfcf_client/dll
 docs/pcfc-documentation.html
 .venv

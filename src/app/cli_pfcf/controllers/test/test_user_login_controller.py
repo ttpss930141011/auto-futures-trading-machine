@@ -16,6 +16,9 @@ def test_user_login(monkeypatch, mocker, fixture_user):
     # manually set the user inputs
     fake_user_inputs = iter([account, password, is_production])
     monkeypatch.setattr('builtins.input', lambda _: next(fake_user_inputs))
+    # monkeypatch.setattr('getpass.getpass', lambda _: password)  # Mock getpass - Replaced
+    mock_getpass = mocker.patch('src.app.cli_pfcf.controllers.user_login_controller.getpass')
+    mock_getpass.return_value = password
 
     # initialize the RegisterItemController
     service_container_mock = mocker.patch('src.app.cli_pfcf.controllers.user_login_controller.ServiceContainer')
@@ -65,6 +68,7 @@ def test_user_login(monkeypatch, mocker, fixture_user):
     input_dto = UserLoginInputDto(account, password, ip_address)
     mock_use_case_instance.execute.assert_called_once_with(input_dto)
     mock_view_instance.show.assert_called_once_with(result_use_case)
+    mock_getpass.assert_called_once_with("Enter the password: ")
 
 
 def test_user_login_with_user_already_logged_in(monkeypatch, mocker, fixture_user):

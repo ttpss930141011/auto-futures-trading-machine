@@ -1,4 +1,3 @@
-
 # Futures trading machine
 
 <p align="center">
@@ -11,6 +10,8 @@ Documentation is still in progress. The project is an automatic futures trading 
 contracts on
 every exchange due to Clean Architecture. The first presentation method is using CLI. With Clean Architecture, the
 project is testable, scalable, and flexible to add new features and exchanges.
+
+This version utilizes ZeroMQ for Inter-Process Communication (IPC), enabling a more distributed and potentially lower-latency architecture compared to a purely in-process event dispatcher model.
 
 ## Test Coverage
 
@@ -27,339 +28,241 @@ The event storming diagram for the project is as follows:
 Updated Link on Miro: [Event Storming](https://miro.com/app/board/uXjVKbXfevY=/?share_link_id=268562178581)
 
 
-# Futures Trading System Component Relationship Document
+# Futures Trading System Component Relationship Document (ZeroMQ Architecture)
 
 ## 1. System Architecture Overview
 
-The futures trading system adopts an event-driven architecture, composed of multiple components that interact through events. The diagram below illustrates the main components and their relationships:
+The futures trading system adopts a distributed, event-driven architecture using ZeroMQ for communication between core processes. The main components run in separate processes: Gateway (Handles API interaction), Strategy Engine, and Order Executor.
 
 ```
-┌─────────────────────┐                  ┌───────────────────┐
-│    PFCF API Client   │                  │   Start Controller │
-│ (External Interface) │◀────────────────┤   (Initializer)    │
-└──────────┬──────────┘                  └─────────┬─────────┘
-           │                                       │
-           │ Raw Market Data                        │ Create and Initialize
-           ▼                                       │
-┌──────────────────────┐                           │
-│     TickProducer     │◀──────────────────────────┘
-│  (Event Generator)   │                           │
-└──────────┬───────────┘                           │
-           │                                       │
-           │ Tick Event                             │
-           ▼                                       │
-┌──────────────────────┐                           │
-│   EventDispatcher    │◀──────────────────────────┘
-│   (Event Router)     │                           │
-└┬────────────┬────────┘                           │
- │            │                                    │
- │            │                                    │
- │            ▼                                    │
- │    ┌───────────────────┐                        │
- │    │  SupportResistance│◀───────────────────────┘
- │    │     Strategy      │                        │
- │    └────────┬──────────┘                        │
- │             │                                   │
- │             │ Trading Signal                    │
- │             ▼                                   │
- │    ┌───────────────────┐                        │
- │    │   OrderExecutor   │◀───────────────────────┘
- │    │   (Action Taker)  │
- │    └────────┬──────────┘
- │             │
- │             │ Execute Order
- ▼             ▼
-┌─────────────────────┐
-│   External Systems  │
-│ (Exchange, Database)│
-└─────────────────────┘
+┌───────────────────────┐       ┌────────────────────────────┐        ┌───────────────────────────┐
+│     Gateway Process   │       │     Strategy Process(es)   │        │   Order Executor Process  │
+│                       │       │                            │        │                           │
+│ ┌───────────────────┐ │ ZMQ   │ ┌──────────────────────┐ │ ZMQ   │ ┌───────────────────────┐ │
+│ │  PFCF API Client  │ │──────▶│ │   ZMQ Tick Subscriber│ │──────▶│ │  ZMQ Signal Puller    │ │
+│ └─────────┬─────────┘ │(Tick) │ └──────────┬───────────┘ │(Signal)│ └──────────┬────────────┘ │
+│           │           │ (PUB) │            │             │ (PUSH) │            │              │
+│           │ Raw Data  │       │            │ TickEvent   │        │            │ Signal       │
+│           ▼           │       │            ▼             │        │            ▼              │
+│ ┌───────────────────┐ │       │ ┌──────────────────────┐ │        │ ┌───────────────────────┐ │
+│ │   TickProducer    ├─┼───────┤ │ SupportResistance    ├─┼────────┤ │     OrderExecutor     │ │
+│ │ (Publishes Ticks) │ │       │ │ Strategy (Pushes Sig)│ │        │ │ (Executes Orders)     │ │
+│ └───────────────────┘ │       │ └──────────┬───────────┘ │        │ └──────────┬────────────┘ │
+│                       │       │            │             │        │            │              │
+│                       │       │            │ Condition   │        │            │ Order Cmd    │
+│                       │       │            │ Repository  │        │            ▼              │
+│                       │       │            │ Interaction │        │ ┌───────────────────────┐ │
+│                       │       │            └─────────────┘        │ │ SendMarketOrderUseCase│ │
+│                       │       │                            │        │ └───────────────────────┘ │
+└───────────────────────┘       └────────────────────────────┘        └───────────────────────────┘
+        │                                                                         │
+        └─────────────────────────────────── External Systems ────────────────────┘
+                         (Exchange API, Condition Database, Session Repo)
+
 ```
+*Note: Condition Repository and Session Repository interactions are simplified in the diagram.*
 
-## 2. Core Components and Relationships
+## 2. Core Components and Relationships (ZeroMQ Context)
 
-### 2.1 StartController
+### 2.1 Gateway Process (Containing `StartController` and `TickProducer`)
 
-**Role**: System Initializer and Coordinator
+**Role**: Interacts with the external exchange API (PFCF), produces standardized tick events, and publishes them via ZeroMQ.
+**Components**:
+  - `StartController`: Initializes gateway components, ZMQ sockets (PUB for ticks), connects API callbacks.
+  - `TickProducer`: Receives raw market data from PFCF API callbacks, converts data into `TickEvent` objects, serializes them using `msgpack`, and publishes them on a ZMQ PUB socket.
 
 **Relationships**:
-- Creates and initializes all core components
-- Connects PFCF API callbacks to TickProducer
-- Schedules periodic tasks to process event buffers
-- Starts the event dispatch loop
-
-**Code Example**:
-```python
-def _initialize_components(self) -> None:
-    # Initialize all components
-    self.tick_producer = TickProducer(...)
-    self.strategy = SupportResistanceStrategy(...)
-    self.order_executor = OrderExecutor(...)
-    self._connect_api_callbacks()
-```
-
-### 2.2 TickProducer
-
-**Role**: Market Data Processor
-
-**Relationships**:
-- Receives raw market data from PFCF API
-- Converts data into standardized Tick events
-- Maintains an event buffer (FifoQueueEventSource)
-- Publishes events via EventDispatcher
+- `StartController` initializes `TickProducer` and the ZMQ PUB socket.
+- `TickProducer` receives data from the API client (via callbacks registered by `StartController`).
+- `TickProducer` publishes serialized `TickEvent` messages via the `ZmqPublisher`.
 
 **Data Flow**:
-1. PFCF API → `handle_tick_data()` → Create Tick Event
-2. Event is added to the buffer and published to EventDispatcher
+1. PFCF API Callback → `TickProducer.handle_tick_data()` → Create `TickEvent`
+2. `TickEvent` → `serialize()` → `ZmqPublisher.publish(TICK_TOPIC, serialized_event)`
 
-**Code Example**:
+**Code Example (`TickProducer`)**:
 ```python
 def handle_tick_data(self, commodity_id, ...):
-    # Create Tick Event
+    # Create TickEvent
     tick_event = TickEvent(datetime.now(), tick)
-    
-    # Add to buffer and publish
-    self.tick_buffer.push(tick_event)
-    self.event_dispatcher.publish_event("TICK", tick_event)
+    # Serialize and publish via ZMQ
+    serialized_event = serialize(tick_event)
+    self.tick_publisher.publish(TICK_TOPIC, serialized_event)
 ```
 
-### 2.3 Event System
+### 2.2 Strategy Process (Containing `SupportResistanceStrategy`)
 
-#### 2.3.1 Event
-
-**Role**: Base class for all events
-
-**Relationships**:
-- Inherited by all specific event types
-- Contains basic timestamp information
-
-#### 2.3.2 FifoQueueEventSource
-
-**Role**: Event Buffer
+**Role**: Subscribes to tick data via ZeroMQ, applies trading logic based on conditions, and pushes trading signals via ZeroMQ.
+**Components**:
+  - `ZmqSubscriber`: Connects to the Gateway's ZMQ PUB socket and subscribes to `TICK_TOPIC`.
+  - `SupportResistanceStrategy`: Receives deserialized `TickEvent`s, interacts with `ConditionRepository`, applies logic, and if conditions are met, creates `TradingSignal` objects.
+  - `ZmqPusher`: Serializes `TradingSignal` objects using `msgpack` and sends them via a ZMQ PUSH socket.
 
 **Relationships**:
-- Stores events and maintains FIFO order
-- Provides buffer management methods (push, pop, peek, size)
-- Supports temporary storage of high-frequency events
-
-**Code Example**:
-```python
-def push(self, event: E) -> bool:
-    """Add event to the end of the queue"""
-    if self._max_size > 0 and len(self._queue) >= self._max_size:
-        return False
-    self._queue.append(event)
-    return True
-```
-
-#### 2.3.3 RealtimeDispatcher
-
-**Role**: Event Router and Dispatcher
-
-**Relationships**:
-- Maintains mapping from event types to handlers
-- Routes events to the correct handlers
-- Manages execution of scheduled tasks
-- Processes events from the event source
+- Runs in a loop, polling the `ZmqSubscriber` for new ticks.
+- Deserializes received tick messages.
+- Passes `TickEvent` to `SupportResistanceStrategy.process_tick_event()`.
+- If `_send_trading_signal` is called within the strategy, it serializes the signal and uses the injected `ZmqPusher` to send it.
 
 **Data Flow**:
-1. Receives events via `publish_event()`
-2. Finds handlers subscribed to the event type
-3. Calls handlers to process the event
-4. Manages scheduled tasks and calls idle handlers when idle
+1. `ZmqSubscriber.receive()` → `deserialize()` → `TickEvent`
+2. `TickEvent` → `Strategy.process_tick_event()` → Apply Logic
+3. If Signal: Create `TradingSignal` → `serialize()` → `ZmqPusher.send(serialized_signal)`
 
-**Code Example**:
+**Code Example (`SupportResistanceStrategy`)**:
 ```python
-def publish_event(self, event_type: str, event: Event) -> None:
-    """Publish event to all subscribers"""
-    if event_type in self._event_handlers:
-        for handler in self._event_handlers[event_type]:
-            try:
-                handler(event)
-            except Exception as e:
-                self._log_error(f"Error handling event: {e}")
+def _send_trading_signal(self, action: OrderOperation, tick_event: TickEvent):
+    signal = TradingSignal(...)
+    try:
+        serialized_signal = serialize(signal)
+        self.signal_pusher.send(serialized_signal) # Use injected pusher
+    except Exception as e:
+        # ... error logging ...
 ```
 
-### 2.4 SupportResistanceStrategy
+### 2.3 Order Executor Process (Containing `OrderExecutor`)
 
-**Role**: Trading Strategy
+**Role**: Receives trading signals via ZeroMQ and executes orders through the appropriate use cases.
+**Components**:
+  - `ZmqPuller`: Binds a ZMQ PULL socket to receive signals from the Strategy process(es).
+  - `OrderExecutor`: Receives deserialized `TradingSignal` objects, interacts with `SessionRepository`, and uses `SendMarketOrderUseCase` to place orders.
 
 **Relationships**:
-- Subscribes to Tick events
-- Analyzes price data and checks trading conditions
-- Generates trading signals
-- Manages trading conditions using ConditionRepository
+- Runs in a loop, polling the `ZmqPuller` for new signals.
+- Deserializes received signal messages.
+- Calls `OrderExecutor.process_received_signal()` which handles the deserialized signal and triggers the `SendMarketOrderUseCase`.
 
 **Data Flow**:
-1. Receives Tick event → `on_tick()`
-2. Checks all active conditions
-3. Generates trading signal when conditions are met
-4. Publishes trading signal to EventDispatcher
+1. `ZmqPuller.receive()` → `deserialize()` → `TradingSignal`
+2. `TradingSignal` → `OrderExecutor.process_received_signal()` → Create DTO
+3. DTO → `SendMarketOrderUseCase.execute()` → Interact with Exchange API (via Session/Config)
 
-**Code Example**:
+**Code Example (`OrderExecutor`)**:
 ```python
-def on_tick(self, tick_event: TickEvent):
-    # Extract price
-    price = int(tick_event.tick.match_price)
-    
-    # Process conditions
-    for condition in self.condition_repository.get_all().values():
-        self._process_condition(condition, price, tick_event)
+def process_received_signal(self) -> bool:
+    serialized_signal = self.signal_puller.receive(non_blocking=True)
+    if serialized_signal:
+        try:
+            signal: TradingSignal = deserialize(serialized_signal)
+            # ... validation ...
+            input_dto = SendMarketOrderInputDto(...)
+            self.send_order_use_case.execute(input_dto)
+            # ... logging ...
+            return True
+        except Exception as e:
+            # ... error handling ...
+            return True
+    return False # No signal received
 ```
 
-### 2.5 OrderExecutor
+### 2.4 ZeroMQ Messaging Infrastructure (`src/infrastructure/messaging`)
 
-**Role**: Order Executor
+**Role**: Provides reusable classes for ZMQ communication and serialization.
+**Components**:
+  - `ZmqPublisher`, `ZmqSubscriber`, `ZmqPusher`, `ZmqPuller`: Wrappers around ZMQ sockets for specific patterns (PUB/SUB, PUSH/PULL).
+  - `serializer.py`: Contains `serialize` and `deserialize` functions using `msgpack` with custom handlers for types like `datetime` and `Enum`.
 
-**Relationships**:
-- Subscribes to trading signal events
-- Executes orders using SendMarketOrderUseCase
-- Retrieves account information from SessionRepository
+**Relationships**: These components are injected into the core application components (`TickProducer`, `Strategy`, `OrderExecutor`) to handle communication.
 
-**Data Flow**:
-1. Receives trading signal → `on_trading_signal()`
-2. Constructs market order DTO
-3. Calls SendMarketOrderUseCase
-4. Records execution result
+## 3. Detailed Data Flow (ZeroMQ)
 
-**Code Example**:
-```python
-def on_trading_signal(self, signal: TradingSignal):
-    # Create order DTO
-    input_dto = SendMarketOrderInputDto(
-        order_account=self.session_repository.get_order_account(),
-        item_code=signal.commodity_id,
-        side=signal.operation,
-        # ...other parameters
-    )
-    
-    # Execute order
-    result = self.send_order_use_case.execute(input_dto)
-```
+### 3.1 Tick Data Flow
 
-## 3. Detailed Data Flow
-
-### 3.1 Event Processing Flow
-
-The complete event processing flow is as follows:
-
-1. **Market Data Reception**:
+1. **Market Data Reception (Gateway)**:
    ```
-   PFCF API → TickProducer.handle_tick_data()
+   PFCF API Callback → TickProducer.handle_tick_data()
+   ```
+2. **Tick Publishing (Gateway)**:
+   ```
+   TickProducer → Create TickEvent → serialize() → ZmqPublisher.publish(TICK_TOPIC)
+   ```
+3. **Tick Reception (Strategy)**:
+   ```
+   ZmqSubscriber.receive() → deserialize() → TickEvent
+   ```
+4. **Strategy Processing (Strategy)**:
+   ```
+   TickEvent → Strategy.process_tick_event() → Analyze conditions
    ```
 
-2. **Event Creation and Publishing**:
-   ```
-   TickProducer → Create TickEvent → Add to tick_buffer → EventDispatcher.publish_event()
-   ```
+### 3.2 Trading Signal Flow
 
-3. **Event Routing and Processing**:
+1. **Signal Generation (Strategy)**:
    ```
-   EventDispatcher → Strategy.on_tick() → Analyze conditions
+   Strategy → Conditions met → Create TradingSignal → serialize()
    ```
-
-4. **Signal Generation**:
+2. **Signal Sending (Strategy)**:
    ```
-   Strategy → Conditions met → Create TradingSignal → EventDispatcher.publish_event()
+   serialized_signal → ZmqPusher.send()
    ```
-
-5. **Order Execution**:
+3. **Signal Reception (Order Executor)**:
    ```
-   EventDispatcher → OrderExecutor.on_trading_signal() → SendMarketOrderUseCase.execute()
+   ZmqPuller.receive() → deserialize() → TradingSignal
    ```
-
-### 3.2 Buffer Processing Flow
-
-Buffer processing is performed asynchronously:
-
-1. **Buffer Filling**:
+4. **Order Execution Trigger (Order Executor)**:
    ```
-   TickProducer.handle_tick_data() → tick_buffer.push()
-   ```
-
-2. **Periodic Processing**:
-   ```
-   StartController._schedule_buffer_processing() → Triggered every second → TickProducer.process_buffer()
-   ```
-
-3. **Batch Processing**:
-   ```
-   TickProducer.process_buffer() → Process multiple events → Record statistics
+   TradingSignal → OrderExecutor.process_received_signal() → SendMarketOrderUseCase.execute()
    ```
 
 ## 4. Key Design Decisions
 
-### 4.1 Use of Direct Publishing and Buffer
+### 4.1 Use of ZeroMQ for Inter-Process Communication
 
-The system uses both event handling mechanisms:
+- **Decision**: Replaced the in-process `RealtimeDispatcher` with ZeroMQ for communication between the Gateway, Strategy, and Order Execution components.
+- **Rationale**:
+    - Enables a multi-process architecture, bypassing Python's GIL limitations for better parallelism and potentially lower latency.
+    - Decouples components, improving modularity and fault isolation.
+    - Aligns with common patterns in distributed trading systems.
+    - ZeroMQ is known for its high performance and low latency characteristics.
+- **Patterns**:
+    - **PUB/SUB** for Tick Data: Allows one Gateway (`TickProducer`) to broadcast ticks to multiple Strategy instances efficiently.
+    - **PUSH/PULL** for Trading Signals: Provides a load-balancing/queueing mechanism from potentially multiple Strategy instances (`ZmqPusher`) to a single `OrderExecutor` (`ZmqPuller`).
+- **Serialization**: `msgpack` chosen for its efficiency over JSON. Custom handlers implemented for `datetime` and `Enum`.
 
-1. **Direct Publishing**:
-   - Advantages: Low latency, real-time response
-   - Usage: Ensures immediate response to critical market data
+### 4.2 Removal of Internal Buffering and Scheduling in Gateway
 
-2. **Buffer**:
-   - Advantages: Prevents system overload, smoothes load handling
-   - Usage: Maintains system stability in high-frequency data streams
+- **Decision**: Removed the `FifoQueueEventSource` buffer and the `schedule` based processing from `TickProducer` and `StartController`.
+- **Rationale**: With ZeroMQ, the transport layer itself provides buffering capabilities. Ticks are published immediately upon generation. Backpressure handling (if needed) would occur at the ZMQ socket level or within the receiving processes. This simplifies the Gateway and reduces potential in-process latency introduced by scheduled batch processing.
 
-### 4.2 Generic Event Buffer
+### 4.3 Component Responsibilities
 
-Design using generic `FifoQueueEventSource[E]`:
+- **Gateway (`StartController`, `TickProducer`)**: Focuses solely on API interaction and publishing market data.
+- **Strategy (`SupportResistanceStrategy`)**: Focuses on consuming market data, applying logic, and producing signals.
+- **Order Executor (`OrderExecutor`)**: Focuses on consuming signals and executing trades via use cases.
 
-- Enhances type safety
-- Makes buffer reusable for different event types
-- Simplifies buffer implementation for specific event types
-
-### 4.3 Scheduler and Scheduled Tasks
-
-Use `SchedulerQueue` to manage scheduled tasks:
-
-- Allows periodic buffer processing
-- Implements delayed execution and recurring tasks
-- Keeps event loop efficient
+This clear separation aligns with Clean Architecture and Single Responsibility Principle.
 
 ## 5. Dependency Analysis
 
-Dependencies between components follow Clean Architecture principles:
+Dependencies are managed via ZeroMQ interfaces:
 
-```
-Outer layers depend on inner layers, inner layers do not depend on outer layers
-```
+- **Gateway** publishes ticks; does not know about subscribers.
+- **Strategy** subscribes to ticks (depends on Gateway's tick address/topic) and pushes signals (depends on Executor's signal address).
+- **Order Executor** pulls signals (depends on its own bound address); does not know about signal pushers.
 
-1. **StartController** depends on all other components (outermost layer)
-   - Dependencies: TickProducer, Strategy, OrderExecutor, EventDispatcher
-
-2. **TickProducer** depends on the event system
-   - Dependencies: EventDispatcher, Event, FifoQueueEventSource
-
-3. **Strategy** depends on the event system and domain layer
-   - Dependencies: EventDispatcher, ConditionRepository
-
-4. **OrderExecutor** depends on the event system and use case layer
-   - Dependencies: EventDispatcher, SendMarketOrderUseCase, SessionRepository
-
-5. **EventDispatcher** only depends on basic event classes (innermost layer)
-   - Dependencies: Event, EventSource
-
-This dependency structure ensures the system's testability and maintainability, allowing components to be independently replaced or modified.
+Core domain/use case layers remain independent of the ZMQ infrastructure layer, which is injected where needed.
 
 ## 6. System Configuration Parameters
 
 Important system parameters and their default values:
 
-| Parameter          | Default Value | Description                          | Location                          |
-|--------------------|---------------|--------------------------------------|-----------------------------------|
-| buffer_size        | 1000          | Tick event buffer size               | TickProducer.__init__             |
-| max_events         | 50            | Maximum number of events per process | StartController._process_buffers  |
-| processing_interval| 1 second      | Buffer processing interval           | StartController._schedule_buffer_processing |
+| Parameter                     | Default Value             | Description                                    | Location                                      |
+|-------------------------------|---------------------------|------------------------------------------------|-----------------------------------------------|
+| ZMQ_TICK_PUB_ADDRESS          | `tcp://*:5555`            | Address the Tick Publisher binds to            | `start_controller.py`                         |
+| ZMQ_SIGNAL_PULL_ADDRESS       | `tcp://*:5556`            | Address the Signal Puller binds to             | `start_controller.py` (Used by OrderExecutor) |
+| ZMQ_TICK_SUB_CONNECT_ADDRESS  | `tcp://localhost:5555`    | Address the Tick Subscriber connects to        | Strategy Process Configuration                  |
+| ZMQ_SIGNAL_PUSH_CONNECT_ADDRESS| `tcp://localhost:5556`    | Address the Signal Pusher connects to         | Strategy Process Configuration                  |
+| ZMQ Poll Timeouts             | 10ms                      | Socket polling timeouts in ZMQ wrappers        | `zmq_subscriber.py`, `zmq_puller.py`          |
 
-You can adjust these parameters as needed to adapt to different market conditions and hardware environments.
+These addresses and timeouts should ideally be loaded from a configuration file or environment variables.
 
 ## 7. Conclusion
 
-Components in the system collaborate in a loosely coupled manner through an event-driven model, forming a complete trading process. This design:
+The refactored system uses ZeroMQ for inter-process communication, creating a more distributed and potentially performant architecture. Key benefits include:
 
-1. Supports high-frequency event processing, preventing system overload through buffering mechanisms
-2. Ensures events are processed in chronological order, guaranteeing correct trading decisions
-3. Provides clear separation of component responsibilities, adhering to SOLID principles
-4. Supports system scalability, allowing the addition of new event types and handlers
+1. **Improved Parallelism**: Bypasses the Python GIL by running components in separate processes.
+2. **Lower Latency Potential**: Reduces in-process bottlenecks and leverages ZeroMQ's efficiency.
+3. **Enhanced Modularity**: Components are decoupled and communicate via defined message queues.
+4. **Scalability**: Strategy instances can potentially be scaled horizontally.
 
-The system architecture adheres to Clean Architecture and SOLID principles, ensuring code maintainability, testability, and flexibility.
+This architecture adheres to Clean Architecture and SOLID principles, promoting maintainability, testability, and flexibility, while taking a step towards handling higher frequency event streams. However, it introduces the complexity of managing multiple processes and the ZeroMQ infrastructure.

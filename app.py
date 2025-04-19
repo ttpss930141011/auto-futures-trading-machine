@@ -8,7 +8,6 @@ from src.app.cli_pfcf.cli_pfcf_process_handler import CliMemoryProcessHandler
 from src.app.cli_pfcf.config import Config
 from src.app.cli_pfcf.controllers.create_condition_controller import CreateConditionController
 from src.app.cli_pfcf.controllers.exit_controller import ExitController
-from src.app.cli_pfcf.controllers.my_test_controller import MYTestController
 from src.app.cli_pfcf.controllers.register_item_controller import RegisterItemController
 from src.app.cli_pfcf.controllers.select_order_account_controller import SelectOrderAccountController
 from src.app.cli_pfcf.controllers.send_market_order_controller import SendMarketOrderController

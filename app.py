@@ -67,9 +67,6 @@ def main():
     # Add start controller - new core option
     process.add_option("8", StartController(service_container), "protected")
     
-    # Add test controller
-    process.add_option("9", MYTestController(service_container))
-    
     # Execute CLI process
     process.execute()
 

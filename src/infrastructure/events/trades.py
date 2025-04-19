@@ -66,20 +66,3 @@ class TradeEvent(Event):
         super().__init__(when)
         #: The trade.
         self.trade: Trade = trade
-
-# Generate TradeEvent events from websocket messages.
-# class WebSocketEventSource(core_ws.ChannelEventSource):
-#     def __init__(self, pair: Pair, producer: event.Producer):
-#         super().__init__(producer=producer)
-#         self._pair: Pair = pair
-#
-#     async def push_from_message(self, message: dict):
-#         event = message["data"]
-#         self.push(TradeEvent(
-#             helpers.timestamp_to_datetime(int(event["E"])),
-#             Trade(self._pair, event)
-#         ))
-#
-#
-# def get_channel(pair: Pair) -> str:
-#     return "{}@trade".format(helpers.pair_to_order_book_symbol(pair).lower())

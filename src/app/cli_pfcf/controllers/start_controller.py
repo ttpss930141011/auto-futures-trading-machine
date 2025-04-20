@@ -15,7 +15,7 @@ from src.infrastructure.messaging import (
     ZmqPusher,
     ZmqPuller,
 )
-from src.infrastructure.adapters.tick_producer import TickProducer
+from src.infrastructure.pfcf_client.tick_producer import TickProducer
 from src.domain.strategy.support_resistance_strategy import SupportResistanceStrategy
 from src.domain.order.order_executor import OrderExecutor
 from src.interactor.use_cases.start_application import StartApplicationUseCase

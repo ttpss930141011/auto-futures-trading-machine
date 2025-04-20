@@ -13,15 +13,16 @@ if TYPE_CHECKING:
     from pytest_mock.plugin import MockerFixture
 
 
-def test_user_logout_success(mocker: 'MockerFixture', fixture_user):
-    """ Test user logout successfully when logged in
-    """
+def test_user_logout_success(mocker: "MockerFixture", fixture_user):
+    """Test user logout successfully when logged in"""
     account = fixture_user["account"]
 
     # Mock ServiceContainer and its dependencies
-    service_container_mock = mocker.patch('src.app.cli_pfcf.controllers.user_logout_controller.ServiceContainer')
+    service_container_mock = mocker.patch(
+        "src.app.cli_pfcf.controllers.user_logout_controller.ServiceContainer"
+    )
     logger_mock = mocker.patch.object(LoggerInterface, "log_info")
-    config_mock = mocker.patch('src.app.cli_pfcf.config.Config')
+    config_mock = mocker.patch("src.app.cli_pfcf.config.Config")
     session_repository_mock = mocker.patch.object(SessionRepositoryInterface, "is_user_logged_in")
 
     service_container_mock.logger = logger_mock
@@ -34,12 +35,13 @@ def test_user_logout_success(mocker: 'MockerFixture', fixture_user):
 
     # Mock the components used within the controller's execute method
     mock_presenter = mocker.patch(
-        'src.app.cli_pfcf.controllers.user_logout_controller.UserLogoutPresenter')
+        "src.app.cli_pfcf.controllers.user_logout_controller.UserLogoutPresenter"
+    )
     mock_use_case = mocker.patch(
-        'src.app.cli_pfcf.controllers.user_logout_controller.UserLogoutUseCase')
+        "src.app.cli_pfcf.controllers.user_logout_controller.UserLogoutUseCase"
+    )
     mock_use_case_instance = mock_use_case.return_value
-    mock_view = mocker.patch(
-        'src.app.cli_pfcf.controllers.user_logout_controller.UserLogoutView')
+    mock_view = mocker.patch("src.app.cli_pfcf.controllers.user_logout_controller.UserLogoutView")
     mock_view_instance = mock_view.return_value
 
     # Define the expected result from the use case
@@ -59,23 +61,21 @@ def test_user_logout_success(mocker: 'MockerFixture', fixture_user):
     session_repository_mock.get_current_user.assert_called_once_with()
     mock_presenter.assert_called_once_with()
     mock_use_case.assert_called_once_with(
-        mock_presenter.return_value,
-        config_mock,
-        logger_mock,
-        session_repository_mock
+        mock_presenter.return_value, config_mock, logger_mock, session_repository_mock
     )
     input_dto = UserLogoutInputDto(account=account)
     mock_use_case_instance.execute.assert_called_once_with(input_dto)
     mock_view.assert_called_once_with()
     mock_view_instance.show.assert_called_once_with(result_use_case)
-    logger_mock.log_info.assert_not_called() # Ensure "User not login" wasn't logged
+    logger_mock.log_info.assert_not_called()  # Ensure "User not login" wasn't logged
 
 
-def test_user_logout_when_not_logged_in(mocker: 'MockerFixture'):
-    """ Test user logout attempt when not logged in
-    """
+def test_user_logout_when_not_logged_in(mocker: "MockerFixture"):
+    """Test user logout attempt when not logged in"""
     # Mock ServiceContainer and its dependencies
-    service_container_mock = mocker.patch('src.app.cli_pfcf.controllers.user_logout_controller.ServiceContainer')
+    service_container_mock = mocker.patch(
+        "src.app.cli_pfcf.controllers.user_logout_controller.ServiceContainer"
+    )
     logger_mock = mocker.patch.object(LoggerInterface, "log_info")
     session_repository_mock = mocker.patch.object(SessionRepositoryInterface, "is_user_logged_in")
 
@@ -87,11 +87,12 @@ def test_user_logout_when_not_logged_in(mocker: 'MockerFixture'):
 
     # Mock components that should NOT be called
     mock_presenter = mocker.patch(
-        'src.app.cli_pfcf.controllers.user_logout_controller.UserLogoutPresenter')
+        "src.app.cli_pfcf.controllers.user_logout_controller.UserLogoutPresenter"
+    )
     mock_use_case = mocker.patch(
-        'src.app.cli_pfcf.controllers.user_logout_controller.UserLogoutUseCase')
-    mock_view = mocker.patch(
-        'src.app.cli_pfcf.controllers.user_logout_controller.UserLogoutView')
+        "src.app.cli_pfcf.controllers.user_logout_controller.UserLogoutUseCase"
+    )
+    mock_view = mocker.patch("src.app.cli_pfcf.controllers.user_logout_controller.UserLogoutView")
 
     # Instantiate and execute the controller
     controller = UserLogoutController(service_container_mock)

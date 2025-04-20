@@ -10,6 +10,8 @@ load_dotenv(encoding="utf8", dotenv_path=".env")
 
 
 class Config(object):
+    """Configuration for the application"""
+
     EXCHANGE_CLIENT = None
     EXCHANGE_TRADE = None
     EXCHANGE_DECIMAL = None

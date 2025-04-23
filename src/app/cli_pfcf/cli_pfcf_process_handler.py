@@ -8,8 +8,7 @@ from src.infrastructure.services.service_container import ServiceContainer
 
 
 class CliMemoryProcessHandler:
-    """ The ProcessHandler for Cli that uses Memory repository
-    """
+    """The ProcessHandler for Cli that uses Memory repository"""
 
     def __init__(self, service_container: ServiceContainer) -> None:
         self.logger = service_container.logger
@@ -19,12 +18,12 @@ class CliMemoryProcessHandler:
         self.protected_options = []
 
     def add_option(
-            self,
-            option: str,
-            controller: CliMemoryControllerInterface,
-            controller_type: Literal["public", "protected"] = "public"
+        self,
+        option: str,
+        controller: CliMemoryControllerInterface,
+        controller_type: Literal["public", "protected"] = "public",
     ) -> None:
-        """ Add an option to the ProcessHandler
+        """Add an option to the ProcessHandler
         @param option:
         @param controller:
         @param controller_type:
@@ -39,7 +38,7 @@ class CliMemoryProcessHandler:
             raise ValueError("Invalid controller type")
 
     def show_options(self):
-        """ Print  the options to the ProcessHandler
+        """Print  the options to the ProcessHandler
         :return: None
         """
         for option, controller in self.options.items():
@@ -49,7 +48,7 @@ class CliMemoryProcessHandler:
                 print(f"{option}: {controller.__class__.__name__}")
 
     def execute(self) -> None:
-        """ Execute the ProcessHandler
+        """Execute the ProcessHandler
         :return: None
         """
         while True:
@@ -61,7 +60,7 @@ class CliMemoryProcessHandler:
                 try:
                     option.execute()
                 except Exception as exception:
-                    print(f'\nERROR: {str(exception)}\n')
+                    print(f"\nERROR: {str(exception)}\n")
                     self.logger.log_exception(str(exception))
             else:
                 print("Invalid choice.")

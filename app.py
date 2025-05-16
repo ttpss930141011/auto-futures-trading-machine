@@ -3,7 +3,6 @@
 This module initializes the components and starts the CLI process handler.
 """
 
-import asyncio
 import os
 
 from src.app.cli_pfcf.cli_pfcf_process_handler import CliMemoryProcessHandler
@@ -25,7 +24,6 @@ from src.infrastructure.repositories.condition_in_memory_repository import (
 )
 from src.infrastructure.repositories.session_in_memory_repository import SessionInMemoryRepository
 from src.infrastructure.services.service_container import ServiceContainer
-from src.app.cli_pfcf.presenters.null_presenter import NullPresenter
 from src.infrastructure.pfcf_client.api import PFCFApi
 
 
@@ -49,9 +47,6 @@ def main():
         session_repository=session_repository,
         condition_repository=condition_repository,
     )
-
-    # Create market order use case, for StartController
-    null_presenter = NullPresenter()
 
     # Initialize CLI process handler
     process = CliMemoryProcessHandler(service_container)

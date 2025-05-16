@@ -4,6 +4,7 @@ This module initializes the components and starts the CLI process handler.
 """
 
 import asyncio
+import os
 
 from src.app.cli_pfcf.cli_pfcf_process_handler import CliMemoryProcessHandler
 from src.app.cli_pfcf.config import Config
@@ -15,7 +16,9 @@ from src.app.cli_pfcf.controllers.select_order_account_controller import (
 )
 from src.app.cli_pfcf.controllers.send_market_order_controller import SendMarketOrderController
 from src.app.cli_pfcf.controllers.show_futures_controller import ShowFuturesController
-from src.app.cli_pfcf.controllers.start_controller import StartController
+from src.app.cli_pfcf.controllers.gateway_controller import GatewayController
+from src.app.cli_pfcf.controllers.system_controller import SystemController
+from src.app.cli_pfcf.controllers.all_in_one_controller import AllInOneController
 from src.app.cli_pfcf.controllers.user_login_controller import UserLoginController
 from src.app.cli_pfcf.controllers.user_logout_controller import UserLogoutController
 from src.infrastructure.loggers.logger_default import LoggerDefault
@@ -31,6 +34,11 @@ from src.infrastructure.pfcf_client.api import PFCFApi
 
 def main():
     """Main application entry point."""
+    # Create tmp/pids directory if it doesn't exist
+    os.makedirs(
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "tmp", "pids"), exist_ok=True
+    )
+
     exchange_api = PFCFApi()
     config = Config(exchange_api)
     logger_default = LoggerDefault()
@@ -68,9 +76,11 @@ def main():
     process.add_option("5", SelectOrderAccountController(service_container), "protected")
     process.add_option("6", SendMarketOrderController(service_container), "protected")
     process.add_option("7", ShowFuturesController(service_container), "protected")
+    process.add_option("8", GatewayController(service_container), "protected")
+    process.add_option("9", SystemController(service_container), "protected")
 
-    # Add start controller - new core option
-    process.add_option("8", StartController(service_container), "protected")
+    # Add new all-in-one controller
+    process.add_option("10", AllInOneController(service_container), "protected")
 
     # Execute CLI process
     process.execute()

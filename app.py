@@ -16,8 +16,6 @@ from src.app.cli_pfcf.controllers.select_order_account_controller import (
 )
 from src.app.cli_pfcf.controllers.send_market_order_controller import SendMarketOrderController
 from src.app.cli_pfcf.controllers.show_futures_controller import ShowFuturesController
-from src.app.cli_pfcf.controllers.gateway_controller import GatewayController
-from src.app.cli_pfcf.controllers.system_controller import SystemController
 from src.app.cli_pfcf.controllers.all_in_one_controller import AllInOneController
 from src.app.cli_pfcf.controllers.user_login_controller import UserLoginController
 from src.app.cli_pfcf.controllers.user_logout_controller import UserLogoutController
@@ -27,7 +25,6 @@ from src.infrastructure.repositories.condition_in_memory_repository import (
 )
 from src.infrastructure.repositories.session_in_memory_repository import SessionInMemoryRepository
 from src.infrastructure.services.service_container import ServiceContainer
-from src.interactor.use_cases.send_market_order import SendMarketOrderUseCase
 from src.app.cli_pfcf.presenters.null_presenter import NullPresenter
 from src.infrastructure.pfcf_client.api import PFCFApi
 
@@ -55,14 +52,6 @@ def main():
 
     # Create market order use case, for StartController
     null_presenter = NullPresenter()
-    send_market_order_use_case = SendMarketOrderUseCase(
-        null_presenter,  # Use NullPresenter, as OrderExecutor doesn't need UI
-        config,
-        logger_default,
-        session_repository,
-    )
-    # Add use case to service container
-    service_container.send_market_order_use_case = send_market_order_use_case
 
     # Initialize CLI process handler
     process = CliMemoryProcessHandler(service_container)
@@ -76,10 +65,8 @@ def main():
     process.add_option("5", SelectOrderAccountController(service_container), "protected")
     process.add_option("6", SendMarketOrderController(service_container), "protected")
     process.add_option("7", ShowFuturesController(service_container), "protected")
-    process.add_option("8", GatewayController(service_container), "protected")
-    process.add_option("9", SystemController(service_container), "protected")
 
-    # Add new all-in-one controller
+    # Add all-in-one controller (option 10)
     process.add_option("10", AllInOneController(service_container), "protected")
 
     # Execute CLI process

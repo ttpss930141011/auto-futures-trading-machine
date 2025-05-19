@@ -16,15 +16,13 @@ from typing import Dict, Any, Optional
 # Ensure the project root is in the path so imports work correctly
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from src.infrastructure.messaging import ZmqSubscriber, ZmqPusher, deserialize, serialize
+from src.infrastructure.messaging import ZmqSubscriber, ZmqPusher, deserialize
 from src.infrastructure.events.tick import TickEvent
 from src.domain.strategy.support_resistance_strategy import SupportResistanceStrategy
 from src.infrastructure.repositories.condition_in_memory_repository import (
     ConditionInMemoryRepository,
 )
 from src.infrastructure.loggers.logger_default import LoggerDefault
-from src.app.cli_pfcf.config import Config
-from src.infrastructure.pfcf_client.api import PFCFApi
 
 
 class StrategyProcess:

@@ -21,6 +21,31 @@ class Config(object):
     DEFAULT_TAKE_PROFIT_POINT = 90
     DEFAULT_STOP_LOSS_POINT = 30
 
+    # ZMQ configuration
+    ZMQ_HOST = os.getenv("ZMQ_HOST", "127.0.0.1")
+    ZMQ_TICK_PORT = int(os.getenv("ZMQ_TICK_PORT", "5555"))
+    ZMQ_SIGNAL_PORT = int(os.getenv("ZMQ_SIGNAL_PORT", "5556"))
+
+    @property
+    def ZMQ_TICK_PUB_ADDRESS(self) -> str:
+        """Get the ZMQ tick publisher address."""
+        return f"tcp://{self.ZMQ_HOST}:{self.ZMQ_TICK_PORT}"
+
+    @property
+    def ZMQ_SIGNAL_PULL_ADDRESS(self) -> str:
+        """Get the ZMQ signal puller address."""
+        return f"tcp://{self.ZMQ_HOST}:{self.ZMQ_SIGNAL_PORT}"
+
+    @property
+    def ZMQ_TICK_SUB_CONNECT_ADDRESS(self) -> str:
+        """Get the ZMQ tick subscriber connect address."""
+        return f"tcp://localhost:{self.ZMQ_TICK_PORT}"
+
+    @property
+    def ZMQ_SIGNAL_PUSH_CONNECT_ADDRESS(self) -> str:
+        """Get the ZMQ signal pusher connect address."""
+        return f"tcp://localhost:{self.ZMQ_SIGNAL_PORT}"
+
     def __init__(self, exchange_api=None):
 
         self.EXCHANGE_CLIENT = exchange_api.client if exchange_api is not None else None

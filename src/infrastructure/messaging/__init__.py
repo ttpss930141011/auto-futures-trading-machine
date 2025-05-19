@@ -1,3 +1,8 @@
+"""ZeroMQ Messaging Module.
+
+This module contains ZeroMQ-based implementations for various messaging patterns.
+"""
+
 from .serializer import serialize, deserialize
 from .zmq_publisher import ZmqPublisher
 from .zmq_subscriber import ZmqSubscriber
@@ -11,4 +16,4 @@ __all__ = [
     "ZmqSubscriber",
     "ZmqPusher",
     "ZmqPuller",
-] 
+]

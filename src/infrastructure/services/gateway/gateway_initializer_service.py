@@ -106,7 +106,7 @@ class GatewayInitializerService(GatewayInitializerServiceInterface):
                 return False
 
             # Connect API callbacks to the tick producer for real-time data
-            exchange_client.DQuoteLib.OnTick += self._tick_producer.handle_tick_data
+            exchange_client.DQuoteLib.OnTickDataTrade += self._tick_producer.handle_tick_data
             # exchange_client.DQuoteLib.OnTickBidAsk += self._tick_producer.handle_tick_data
             # exchange_client.DQuoteLib.OnTickClose += self._tick_producer.on_tick_close
             # exchange_client.DQuoteLib.OnTickGTCStatusChange += (

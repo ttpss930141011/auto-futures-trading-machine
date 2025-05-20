@@ -5,16 +5,16 @@ This script runs the Support Resistance Strategy in a separate process,
 subscribing to market data ticks and publishing trading signals.
 """
 
-import os
 import sys
 import time
 import signal
 import zmq
 import argparse
 from typing import Dict, Any, Optional
+from pathlib import Path
 
 # Ensure the project root is in the path so imports work correctly
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(str(Path(__file__).resolve().parent))
 
 from src.infrastructure.messaging import ZmqSubscriber, ZmqPusher, deserialize
 from src.infrastructure.events.tick import TickEvent

@@ -5,16 +5,16 @@ This script runs the OrderExecutor in a separate process,
 receiving trading signals and executing market orders.
 """
 
-import os
 import sys
 import time
 import signal
 import zmq
 import argparse
 from typing import Dict, Any, Optional
+from pathlib import Path
 
 # Ensure the project root is in the path so imports work correctly
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(str(Path(__file__).resolve().parent))
 
 from src.infrastructure.messaging import ZmqPuller, deserialize
 from src.infrastructure.events.trading_signal import TradingSignal
@@ -128,6 +128,7 @@ class OrderExecutorProcess:
                 logger=self.logger,
                 context=self.context,
                 poll_timeout_ms=self.poll_timeout_ms,
+                bind_mode=False,  # Connect to the existing PULL endpoint
             )
             self.logger.log_info(f"Pulling signals from {self.config_dict['signal_pull_address']}")
 

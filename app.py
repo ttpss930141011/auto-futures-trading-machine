@@ -3,7 +3,7 @@
 This module initializes the components and starts the CLI process handler.
 """
 
-import os
+from pathlib import Path
 
 from src.app.cli_pfcf.cli_pfcf_process_handler import CliMemoryProcessHandler
 from src.app.cli_pfcf.config import Config
@@ -29,10 +29,9 @@ from src.infrastructure.pfcf_client.api import PFCFApi
 
 def main():
     """Main application entry point."""
-    # Create tmp/pids directory if it doesn't exist
-    os.makedirs(
-        os.path.join(os.path.dirname(os.path.abspath(__file__)), "tmp", "pids"), exist_ok=True
-    )
+    # Ensure the PID directory exists using pathlib for clarity
+    pid_dir: Path = Path(__file__).resolve().parent / "tmp" / "pids"
+    pid_dir.mkdir(parents=True, exist_ok=True)
 
     exchange_api = PFCFApi()
     config = Config(exchange_api)

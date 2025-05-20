@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import json
-import os
 import uuid
+from pathlib import Path
 from typing import Dict, Optional, List
 
 from src.domain.entities.condition import Condition
@@ -19,8 +19,9 @@ class ConditionJsonFileRepository(ConditionRepositoryInterface):
     by reading from and writing to a single JSON file on disk.
     """
 
-    DEFAULT_FILENAME: str = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "data", "conditions.json"
+    # Use pathlib for safer, clearer path construction
+    DEFAULT_FILENAME: str = str(
+        Path(__file__).resolve().parent.parent.parent / "data" / "conditions.json"
     )
 
     def __init__(self, file_path: str | None = None) -> None:
@@ -31,8 +32,9 @@ class ConditionJsonFileRepository(ConditionRepositoryInterface):
                 repository will use the :pyattr:`DEFAULT_FILENAME`.
         """
         self._file_path: str = file_path or self.DEFAULT_FILENAME
+
         # Ensure parent directory exists.
-        os.makedirs(os.path.dirname(self._file_path), exist_ok=True)
+        Path(self._file_path).parent.mkdir(parents=True, exist_ok=True)
 
         # Load existing data if available, otherwise initialize empty store.
         self._data: Dict[uuid.UUID, Condition] = {}
@@ -43,7 +45,7 @@ class ConditionJsonFileRepository(ConditionRepositoryInterface):
     # ---------------------------------------------------------------------
     def _load(self) -> None:
         """Load data from the JSON file into memory."""
-        if not os.path.isfile(self._file_path):
+        if not Path(self._file_path).is_file():
             # Nothing to load; keep empty store.
             return
 

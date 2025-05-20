@@ -19,8 +19,8 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from src.infrastructure.messaging import ZmqSubscriber, ZmqPusher, deserialize
 from src.infrastructure.events.tick import TickEvent
 from src.domain.strategy.support_resistance_strategy import SupportResistanceStrategy
-from src.infrastructure.repositories.condition_in_memory_repository import (
-    ConditionInMemoryRepository,
+from src.infrastructure.repositories.condition_json_file_repository import (
+    ConditionJsonFileRepository,
 )
 from src.infrastructure.loggers.logger_default import LoggerDefault
 
@@ -41,8 +41,8 @@ class StrategyProcess:
         # Create ZMQ context
         self.context = zmq.Context.instance()
 
-        # Initialize repositories
-        self.condition_repository = ConditionInMemoryRepository()
+        # Initialize repositories (shared file-based repository)
+        self.condition_repository = ConditionJsonFileRepository()
 
         # Initialize ZMQ components
         self.tick_subscriber: Optional[ZmqSubscriber] = None

@@ -19,8 +19,8 @@ from src.app.cli_pfcf.controllers.all_in_one_controller import AllInOneControlle
 from src.app.cli_pfcf.controllers.user_login_controller import UserLoginController
 from src.app.cli_pfcf.controllers.user_logout_controller import UserLogoutController
 from src.infrastructure.loggers.logger_default import LoggerDefault
-from src.infrastructure.repositories.condition_in_memory_repository import (
-    ConditionInMemoryRepository,
+from src.infrastructure.repositories.condition_json_file_repository import (
+    ConditionJsonFileRepository,
 )
 from src.infrastructure.repositories.session_in_memory_repository import SessionInMemoryRepository
 from src.infrastructure.services.service_container import ServiceContainer
@@ -38,7 +38,7 @@ def main():
     config = Config(exchange_api)
     logger_default = LoggerDefault()
     session_repository = SessionInMemoryRepository(config.DEFAULT_SESSION_TIMEOUT)
-    condition_repository = ConditionInMemoryRepository()
+    condition_repository = ConditionJsonFileRepository()
 
     # Create service container
     service_container = ServiceContainer(

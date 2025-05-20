@@ -1,5 +1,6 @@
 """ This module has definition of the Condition entity
 """
+
 from dataclasses import asdict, dataclass, field
 
 from src.domain.value_objects import ConditionId, OrderOperation
@@ -64,7 +65,25 @@ class Condition:
     @classmethod
     def from_dict(cls, data):
         """Convert data from a dictionary"""
-        return cls(**data)
+        # Create a copy of data to avoid modifying the original
+        input_data = data.copy()
+
+        # Filter out fields that are marked as init=False
+        init_params = [
+            "condition_id",
+            "action",
+            "trigger_price",
+            "quantity",
+            "turning_point",
+            "take_profit_point",
+            "stop_loss_point",
+            "is_following",
+        ]
+
+        # Keep only initialization parameters
+        filtered_data = {k: v for k, v in input_data.items() if k in init_params}
+
+        return cls(**filtered_data)
 
     def to_dict(self):
         """Convert data into dictionary"""

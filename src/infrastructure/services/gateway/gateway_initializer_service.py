@@ -64,7 +64,9 @@ class GatewayInitializerService(GatewayInitializerServiceInterface):
             )
 
             # Initialize Tick Producer to bridge API events to ZMQ
-            self._tick_producer = TickProducer(tick_publisher=self._tick_publisher)
+            self._tick_producer = TickProducer(
+                tick_publisher=self._tick_publisher, logger=self.logger
+            )
 
             # Mark as initialized if everything completed successfully
             self._is_initialized = True

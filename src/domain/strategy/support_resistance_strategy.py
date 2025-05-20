@@ -48,7 +48,7 @@ class SupportResistanceStrategy:
         """
         # Extract current price from the tick event
         price = int(tick_event.tick.match_price)
-        # print(f"Price: {price}")
+        print(f"Price: {price}")
 
         # Get all active conditions (Consider optimizing this for HFT)
         conditions = self.condition_repository.get_all()
@@ -200,6 +200,8 @@ class SupportResistanceStrategy:
                 )
                 condition.trigger_price = price
                 condition.order_price = new_order_price
+                condition.take_profit_price = new_order_price + (condition.take_profit_point or 0)
+                condition.stop_loss_price = new_order_price - (condition.stop_loss_point or 0)
         else:  # OrderOperation.SELL
             # For sell, update trigger and order prices as price moves higher
             if price >= condition.trigger_price:
@@ -209,6 +211,8 @@ class SupportResistanceStrategy:
                 )
                 condition.trigger_price = price
                 condition.order_price = new_order_price
+                condition.take_profit_price = new_order_price - (condition.take_profit_point or 0)
+                condition.stop_loss_price = new_order_price + (condition.stop_loss_point or 0)
 
     def _send_trading_signal(self, action: OrderOperation, tick_event: TickEvent):
         """Send a trading signal via the injected ZMQ Pusher.

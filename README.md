@@ -19,6 +19,44 @@ The test coverage tag for the project is as follows:
 
 ![image](https://ttpss930141011.github.io/auto-futures-trading-machine/coverage.svg)
 
+## Quick Start
+
+### Prerequisites
+- Python 3.x
+- Dependencies: install via `poetry install` (or `pip install -r requirements.txt`).
+
+### Running the Application
+```bash
+python app.py
+```
+
+### CLI Menu Options
+| Option | Description                                                                         |
+| ------ | ----------------------------------------------------------------------------------- |
+| 0      | Exit the application                                                                |
+| 1      | User Login                                                                          |
+| 2      | User Logout                                                                         |
+| 3      | Register Item (select the futures contract to trade)                                |
+| 4      | Create Condition (define trading conditions)                                        |
+| 5      | Select Order Account (choose account for sending orders)                            |
+| 6      | Send Market Order (place manual market orders)                                      |
+| 7      | Show Futures (display available futures with current prices)                        |
+| 10     | Start All-in-One System (start Gateway, Strategy, and Order Executor in background) |
+
+### All-in-One System Startup
+After selecting option `10`, the controller will verify prerequisites:
+- User is logged in
+- Item is registered
+- Order account is selected
+- At least one trading condition is defined
+
+If requirements are met, it will:
+1. Start the Gateway in a background thread
+2. Start the Strategy process
+3. Start the Order Executor process
+4. Return to the CLI menu while components run in the background
+5. Automatically clean up all processes on application exit
+
 ## Event Storming
 
 The event storming diagram for the project is as follows:

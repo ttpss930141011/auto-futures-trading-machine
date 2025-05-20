@@ -16,6 +16,8 @@ class ZmqPuller:
         logger: Optional[LoggerInterface] = None,
         context: Optional[zmq.Context] = None,
         poll_timeout_ms: int = 10,  # Short timeout for responsiveness
+        *,
+        bind_mode: bool = True,
         connect_retry_attempts: int = 3,
         connect_retry_delay: float = 0.5,
     ) -> None:
@@ -27,6 +29,7 @@ class ZmqPuller:
             logger: Optional logger instance.
             context: Optional ZeroMQ context. If None, a new one is created.
             poll_timeout_ms: Timeout in milliseconds for polling the socket.
+            bind_mode: If True, binds the socket; if False, connects to an existing endpoint.
             connect_retry_attempts: Number of times to retry binding if it fails.
             connect_retry_delay: Delay in seconds between binding attempts.
         """
@@ -36,6 +39,7 @@ class ZmqPuller:
         self._socket: Optional[zmq.Socket] = None
         self._poller = zmq.Poller()
         self._poll_timeout_ms = poll_timeout_ms
+        self._bind_mode = bind_mode
         self._is_initialized = False
         self._connect_retry_attempts = connect_retry_attempts
         self._connect_retry_delay = connect_retry_delay
@@ -77,14 +81,20 @@ class ZmqPuller:
                 self._socket.setsockopt(zmq.LINGER, 0)  # Don't wait on close
                 self._socket.setsockopt(zmq.RCVHWM, 1000)  # High water mark
 
-                # Attempt to bind
+                # Attempt to bind / connect depending on mode
                 attempt += 1
                 if self._logger:
                     self._logger.log_info(
-                        f"Binding to {self._address} (attempt {attempt}/{self._connect_retry_attempts})"
+                        (
+                            f"{'Binding' if self._bind_mode else 'Connecting'} to {self._address} "
+                            f"(attempt {attempt}/{self._connect_retry_attempts})"
+                        )
                     )
 
-                self._socket.bind(self._address)
+                if self._bind_mode:
+                    self._socket.bind(self._address)
+                else:
+                    self._socket.connect(self._address)
 
                 # Register with poller
                 self._poller.register(self._socket, zmq.POLLIN)
@@ -95,14 +105,15 @@ class ZmqPuller:
                 self._is_initialized = True
                 if self._logger:
                     self._logger.log_info(
-                        f"ZMQ Puller socket successfully bound to {self._address}"
+                        f"ZMQ Puller socket successfully {'bound' if self._bind_mode else 'connected'} to {self._address}"
                     )
                 break
 
             except zmq.ZMQError as e:
                 if self._logger:
                     self._logger.log_error(
-                        f"Failed to bind ZMQ Puller socket to {self._address}: {str(e)}"
+                        f"Failed to {'bind' if self._bind_mode else 'connect'} ZMQ Puller socket "
+                        f"to {self._address}: {str(e)}"
                     )
                 # Close socket if it was created but failed to bind
                 if self._socket:

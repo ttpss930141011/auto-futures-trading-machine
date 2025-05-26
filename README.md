@@ -11,6 +11,29 @@ contracts on
 every exchange due to Clean Architecture. The first presentation method is using CLI. With Clean Architecture, the
 project is testable, scalable, and flexible to add new features and exchanges.
 
+## Project Overview
+
+This section provides a concise overview of the system architecture, core runtime components, and communication flows.
+
+### Architecture Layers
+- **Service layer**: PortCheckerService, GatewayInitializerService, ProcessManagerService
+- **UseCase layer**: RunGatewayUseCase, StartStrategyUseCase, StartOrderExecutorUseCase, ApplicationStartupStatusUseCase
+- **Controller layer**: CLI controllers (e.g. UserLoginController, AllInOneController)
+
+### Runtime Processes
+- **Gateway Process**: Interfaces with the PFCF exchange API, generates `TickEvent`s and publishes them over ZeroMQ PUB (port 5555).
+- **Strategy Process**: Subscribes to ticks via ZeroMQ SUB (port 5555), applies `SupportResistanceStrategy`, and pushes `TradingSignal`s via ZeroMQ PUSH (port 5556).
+- **Order Executor Process**: Binds a ZeroMQ PULL socket (port 5556) to receive signals, deserializes `TradingSignal`s, and executes market orders via `SendMarketOrderUseCase`.
+
+### Communication Flow
+1. Gateway → **PUB** (ticks) → Strategy
+2. Strategy → **PUSH** (signals) → Order Executor
+3. Order Executor → Exchange API (orders)
+
+### CLI Entry Point
+- `app.py` initializes shared services, repositories, and registers CLI commands.
+- Selecting option `10` (AllInOneController) launches Gateway, Strategy, and OrderExecutor in the background, returning control to the CLI.
+
 This version utilizes ZeroMQ for Inter-Process Communication (IPC), enabling a more distributed and potentially lower-latency architecture compared to a purely in-process event dispatcher model.
 
 ## Test Coverage

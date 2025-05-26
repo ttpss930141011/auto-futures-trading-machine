@@ -8,5 +8,5 @@ __pycache__
 src/infrastructure/pfcf_client/dll
 docs/pcfc-documentation.html
 .venv
-data/conditions.json
+src/data/
 tmp/

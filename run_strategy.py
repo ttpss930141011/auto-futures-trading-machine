@@ -149,6 +149,7 @@ class StrategyProcess:
 
                         if isinstance(tick_event, TickEvent):
                             # Process tick event in strategy
+                            # print(f"Received tick event: {tick_event}")
                             self.strategy.process_tick_event(tick_event)
                         else:
                             self.logger.log_warning(

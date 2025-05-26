@@ -5,7 +5,7 @@
 這次重構主要改善了以下方面：
 
 1. **消除控制器間的依賴** - 刪除了 GatewayController，將其功能移至 RunGatewayUseCase
-2. **簡化 ApplicationStartupComponentsUseCase** - 移除了不必要的複雜依賴
+2. **簡化 ApplicationStartupStatusUseCase** - 移除了複雜的啟動流程組合
 3. **統一啟動邏輯** - AllInOneController 直接協調各 UseCase 的執行
 4. **符合 SOLID 原則** - 特別是單一職責和依賴反轉原則
 
@@ -32,7 +32,7 @@ class RunGatewayUseCase:
 ### 2. 刪除舊的控制器
 
 - 刪除 GatewayController - 功能已遷移至 RunGatewayUseCase
-- 刪除對 ApplicationStartupComponentsUseCase 的依賴 - 邏輯直接移至 AllInOneController
+- 刪除對 ApplicationStartupComponentsUseCase 的依賴（現改由 ApplicationStartupStatusUseCase 檢查前置條件）
 
 ### 3. 簡化 AllInOneController
 
@@ -46,9 +46,9 @@ def execute(self) -> None:
     # 啟動 OrderExecutor
 ```
 
-### 4. 適配器模式
+### 4. (已移除) 適配器模式
 
-為了維持現有的 CLI 界面，我們添加了 RunGatewayController 作為輕量級適配器，連接 CLI 和 RunGatewayUseCase。
+此項不再適用，目前直接由 AllInOneController 協調 RunGatewayUseCase。
 
 ## 架構改進
 

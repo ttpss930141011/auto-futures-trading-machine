@@ -128,7 +128,6 @@ class OrderExecutorProcess:
                 logger=self.logger,
                 context=self.context,
                 poll_timeout_ms=self.poll_timeout_ms,
-                bind_mode=False,  # Connect to the existing PULL endpoint
             )
             self.logger.log_info(f"Pulling signals from {self.config_dict['signal_pull_address']}")
 

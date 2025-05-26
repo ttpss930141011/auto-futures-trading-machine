@@ -8,3 +8,5 @@ __pycache__
 src/infrastructure/pfcf_client/dll
 docs/pcfc-documentation.html
 .venv
+src/data/
+tmp/

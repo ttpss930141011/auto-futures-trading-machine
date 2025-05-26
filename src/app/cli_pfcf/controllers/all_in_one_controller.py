@@ -10,7 +10,9 @@ from src.app.cli_pfcf.interfaces.cli_memory_controller_interface import CliMemor
 from src.infrastructure.services.service_container import ServiceContainer
 from src.infrastructure.services.status_checker import StatusChecker
 from src.infrastructure.services.gateway.port_checker_service import PortCheckerService
-from src.infrastructure.services.gateway.gateway_initializer_service import GatewayInitializerService
+from src.infrastructure.services.gateway.gateway_initializer_service import (
+    GatewayInitializerService,
+)
 from src.infrastructure.services.process.process_manager_service import ProcessManagerService
 from src.interactor.use_cases.application_startup_status import ApplicationStartupStatusUseCase
 from src.interactor.use_cases.start_strategy_use_case import StartStrategyUseCase
@@ -42,22 +44,20 @@ class AllInOneController(CliMemoryControllerInterface):
         self.startup_status_use_case = ApplicationStartupStatusUseCase(
             logger=self.logger, status_checker=self.status_checker
         )
-        
+
         self.run_gateway_use_case = RunGatewayUseCase(
             logger=self.logger,
             port_checker_service=self.port_checker_service,
             gateway_initializer_service=self.gateway_initializer_service,
-            session_repository=self.session_repository
+            session_repository=self.session_repository,
         )
 
         self.start_strategy_use_case = StartStrategyUseCase(
-            logger=self.logger, 
-            process_manager_service=self.process_manager_service
+            logger=self.logger, process_manager_service=self.process_manager_service
         )
 
         self.start_order_executor_use_case = StartOrderExecutorUseCase(
-            logger=self.logger, 
-            process_manager_service=self.process_manager_service
+            logger=self.logger, process_manager_service=self.process_manager_service
         )
 
     def execute(self) -> None:
@@ -71,7 +71,7 @@ class AllInOneController(CliMemoryControllerInterface):
 
             # Check application status directly
             status_summary = self.startup_status_use_case.execute()
-            
+
             # Check if we can proceed
             if not all(status_summary.values()):
                 self.logger.log_warning(
@@ -80,62 +80,68 @@ class AllInOneController(CliMemoryControllerInterface):
                 # Display status for user information
                 self._display_status_summary(status_summary)
                 return
-            
+
             # Initialize results dictionary
             results = {
                 "status_check": True,
                 "gateway": False,
                 "strategy": False,
-                "order_executor": False
+                "order_executor": False,
             }
-            
+
             # Start Gateway in a thread
             print("\n=== Starting All Trading System Components ===")
             print("\nStarting Gateway thread...")
             gateway_success = self._start_gateway_thread()
             results["gateway"] = gateway_success
-            
+
             if not gateway_success:
                 self.logger.log_error("Failed to start Gateway thread. Aborting system startup.")
                 self._display_startup_results(results)
                 return
-            
+
             # Wait for Gateway to initialize
             print("Waiting for Gateway to initialize...")
             import time
+
             time.sleep(3)
-            
+
             # Start Strategy
             print("\nStarting Strategy process...")
             strategy_success = self.start_strategy_use_case.execute()
             results["strategy"] = strategy_success
-            
+
             if not strategy_success:
                 self.logger.log_warning("Failed to start Strategy process.")
                 # We continue anyway to allow partial system operation
-            
+
             # Start Order Executor
             print("\nStarting Order Executor process...")
             order_executor_success = self.start_order_executor_use_case.execute()
             results["order_executor"] = order_executor_success
-            
+            # Allow Order Executor to print its startup messages
+            time.sleep(0.5)
+
             if not order_executor_success:
                 self.logger.log_warning("Failed to start Order Executor process.")
                 # We continue anyway to allow partial system operation
-            
+
             # Show results to user
             self._display_startup_results(results)
-            
+
             # Register cleanup handler
             import atexit
+
             atexit.register(self.process_manager_service.cleanup_processes)
-            
+
             # Display additional information if all components started
             if all(results.values()):
                 print("\nAll system components have been started.")
-                print("You can continue using the main menu. The processes will run in the background.")
+                print(
+                    "You can continue using the main menu. The processes will run in the background."
+                )
                 print("The system will automatically clean up when you exit the application.")
-            
+
         except Exception as e:
             self.logger.log_error(f"All-in-one controller error: {str(e)}")
             print(f"\nERROR: Failed to start system components: {str(e)}")
@@ -143,15 +149,16 @@ class AllInOneController(CliMemoryControllerInterface):
 
     def _start_gateway_thread(self) -> bool:
         """Start the Gateway in a separate thread using RunGatewayUseCase.
-        
+
         Returns:
             bool: True if gateway thread started successfully, False otherwise
         """
+
         # Create a function for the process manager to execute in a thread
         def gateway_runner():
             # Use threaded mode for the gateway
             self.run_gateway_use_case.execute(is_threaded_mode=True)
-        
+
         # Use the process manager to start the gateway thread
         return self.process_manager_service.start_gateway_thread(gateway_runner)
 
@@ -167,7 +174,7 @@ class AllInOneController(CliMemoryControllerInterface):
         print(f"Strategy: {'✓' if results['strategy'] else '✗'}")
         print(f"Order Executor: {'✓' if results['order_executor'] else '✗'}")
         print("=============================\n")
-        
+
     def _display_status_summary(self, status_summary: Dict[str, bool]) -> None:
         """Display status summary to the user.
 

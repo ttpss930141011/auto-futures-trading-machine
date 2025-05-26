@@ -12,7 +12,7 @@ from src.interactor.interfaces.logger.logger import LoggerInterface
 from src.interactor.interfaces.services.gateway_initializer_service_interface import (
     GatewayInitializerServiceInterface,
 )
-from src.infrastructure.messaging import ZmqPublisher, ZmqPuller
+from src.infrastructure.messaging import ZmqPublisher
 from src.infrastructure.pfcf_client.tick_producer import TickProducer
 
 
@@ -34,7 +34,6 @@ class GatewayInitializerService(GatewayInitializerServiceInterface):
 
         # Store component references
         self._tick_publisher: Optional[ZmqPublisher] = None
-        self._signal_puller: Optional[ZmqPuller] = None
         self._tick_producer: Optional[TickProducer] = None
 
         # Flag to control the initialization state
@@ -49,18 +48,12 @@ class GatewayInitializerService(GatewayInitializerServiceInterface):
         try:
             # Log initialization attempt
             self.logger.log_info(
-                f"Initializing ZMQ components with tick_pub: {self.config.ZMQ_TICK_PUB_ADDRESS}, "
-                f"signal_pull: {self.config.ZMQ_SIGNAL_PULL_ADDRESS}"
+                f"Initializing ZMQ components with tick_pub: {self.config.ZMQ_TICK_PUB_ADDRESS}"
             )
 
             # Initialize Tick Publisher
             self._tick_publisher = ZmqPublisher(
                 context=self.zmq_context, address=self.config.ZMQ_TICK_PUB_ADDRESS
-            )
-
-            # Initialize Signal Puller
-            self._signal_puller = ZmqPuller(
-                context=self.zmq_context, address=self.config.ZMQ_SIGNAL_PULL_ADDRESS
             )
 
             # Initialize Tick Producer to bridge API events to ZMQ
@@ -80,13 +73,13 @@ class GatewayInitializerService(GatewayInitializerServiceInterface):
 
     def get_components(
         self,
-    ) -> Tuple[Optional[ZmqPublisher], Optional[ZmqPuller], Optional[TickProducer]]:
+    ) -> Tuple[Optional[ZmqPublisher], Optional[TickProducer]]:
         """Get the initialized ZMQ components.
 
         Returns:
-            Tuple containing the tick publisher, signal puller, and tick producer
+            Tuple containing the tick publisher and tick producer
         """
-        return self._tick_publisher, self._signal_puller, self._tick_producer
+        return self._tick_publisher, self._tick_producer
 
     def connect_api_callbacks(self) -> bool:
         """Connect exchange API callbacks to the tick producer.
@@ -141,13 +134,6 @@ class GatewayInitializerService(GatewayInitializerServiceInterface):
                 self.logger.log_info("Tick Publisher closed successfully.")
             except Exception as e:
                 self.logger.log_error(f"Error closing Tick Publisher: {str(e)}")
-
-        if hasattr(self, "_signal_puller") and self._signal_puller:
-            try:
-                self._signal_puller.close()
-                self.logger.log_info("Signal Puller closed successfully.")
-            except Exception as e:
-                self.logger.log_error(f"Error closing Signal Puller: {str(e)}")
 
         if hasattr(self, "_tick_producer") and self._tick_producer:
             try:

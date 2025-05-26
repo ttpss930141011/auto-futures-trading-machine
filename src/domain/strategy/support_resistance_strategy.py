@@ -4,6 +4,8 @@ This strategy monitors price movement and triggers signals based on support and 
 communicating signals via ZeroMQ.
 """
 
+from typing import Optional
+
 from src.infrastructure.messaging import ZmqPusher, serialize  # Import ZMQ Pusher and serializer
 from src.infrastructure.events.tick import TickEvent
 from src.infrastructure.events.trading_signal import TradingSignal
@@ -11,7 +13,6 @@ from src.domain.value_objects import OrderOperation
 from src.interactor.interfaces.repositories.condition_repository import ConditionRepositoryInterface
 from src.interactor.interfaces.logger.logger import LoggerInterface
 from src.domain.entities.condition import Condition
-from typing import Optional
 
 
 class SupportResistanceStrategy:
@@ -48,7 +49,7 @@ class SupportResistanceStrategy:
         """
         # Extract current price from the tick event
         price = int(tick_event.tick.match_price)
-        print(f"Price: {price}")
+        # print(f"Price: {price}")
 
         # Get all active conditions (Consider optimizing this for HFT)
         conditions = self.condition_repository.get_all()

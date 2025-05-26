@@ -30,15 +30,14 @@
 
 ### 2. UseCase 層 (Interactor)
 
-- **StartGatewayUseCase** - 負責啟動 Gateway
+- **RunGatewayUseCase** - 負責啟動並運行 Gateway
 - **StartStrategyUseCase** - 負責啟動 Strategy
 - **StartOrderExecutorUseCase** - 負責啟動 OrderExecutor
-- **ApplicationStartupComponentsUseCase** - 負責協調啟動所有元件
+- **ApplicationStartupStatusUseCase** - 負責檢查系統啟動的前置條件
 
 ### 3. Controller 層
 
-- **GatewayController** - 負責處理用戶啟動 Gateway 的請求
-- **AllInOneController** - 負責處理用戶啟動所有元件的請求
+- **AllInOneController** - 負責協調用戶一次性啟動 Gateway、Strategy、OrderExecutor
 
 ### 4. 介面層
 
@@ -56,13 +55,6 @@
 5. **便於測試** - 可以替換實作進行單元測試
 
 ## 使用方式
-
-### GatewayController
-
-```python
-gateway_controller = GatewayController(service_container)
-gateway_controller.execute()
-```
 
 ### AllInOneController
 

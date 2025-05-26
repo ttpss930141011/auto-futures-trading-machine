@@ -3,7 +3,7 @@
 
 from typing import Dict
 
-from cerberus import Validator  # type: ignore
+"""This module provides the base class for input validation without external dependencies."""
 
 
 class BaseInputValidator:
@@ -20,14 +20,41 @@ class BaseInputValidator:
         :return: None
         :raises ValueError: If the input data is invalid.
         """
-        validator = Validator(schema)
-        if not validator.validate(self.data):
-            self.errors = validator.errors
+        self.errors = {}
+        for field, rules in schema.items():
+            data_present = field in self.data
+            value = self.data.get(field)
+            if rules.get('required', False) and not data_present:
+                self.errors.setdefault(field, []).append('required field')
+                continue
+            if not data_present or value is None:
+                continue
+            expected_type = rules.get('type')
+            if expected_type == 'string':
+                if not isinstance(value, str):
+                    self.errors.setdefault(field, []).append('must be a string')
+                    continue
+                if not rules.get('empty', True) and value == '':
+                    self.errors.setdefault(field, []).append('empty values not allowed')
+                length = len(value)
+                if 'minlength' in rules and length < rules['minlength']:
+                    self.errors.setdefault(field, []).append(f"min length is {rules['minlength']}")
+                if 'maxlength' in rules and length > rules['maxlength']:
+                    self.errors.setdefault(field, []).append(f"max length is {rules['maxlength']}")
+            elif expected_type == 'integer':
+                if not isinstance(value, int):
+                    self.errors.setdefault(field, []).append('must be an integer')
+            elif expected_type == 'boolean':
+                if not isinstance(value, bool):
+                    self.errors.setdefault(field, []).append('must be a boolean')
+            if 'allowed' in rules and value not in rules['allowed']:
+                self.errors.setdefault(field, []).append(f"value must be one of {rules['allowed']}")
+        if self.errors:
             self._raise_validation_error()
 
     def _raise_validation_error(self):
-        error_messages = []
-        for field, messages in self.errors.items():
-            for message in messages:
-                error_messages.append(f"{field.capitalize()}: {message}")
-        raise ValueError("\n".join(error_messages))
+        messages = []
+        for field in sorted(self.errors):
+            for msg in self.errors[field]:
+                messages.append(f"{field.capitalize()}: {msg}")
+        raise ValueError("\n".join(messages))

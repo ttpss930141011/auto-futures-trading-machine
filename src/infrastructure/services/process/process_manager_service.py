@@ -69,6 +69,7 @@ class ProcessManagerService(ProcessManagerServiceInterface):
             self._strategy_process = subprocess.Popen(
                 [
                     sys.executable,
+                    "-u",
                     str(self.strategy_script_path),
                     "--tick-address",
                     tick_sub_address,
@@ -110,6 +111,7 @@ class ProcessManagerService(ProcessManagerServiceInterface):
             self._order_executor_process = subprocess.Popen(
                 [
                     sys.executable,
+                    "-u",
                     str(self.order_executor_script_path),
                     "--signal-address",
                     signal_pull_address,

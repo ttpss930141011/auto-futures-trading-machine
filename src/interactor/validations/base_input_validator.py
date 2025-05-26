@@ -23,11 +23,14 @@ class BaseInputValidator:
         self.errors = {}
         for field, rules in schema.items():
             data_present = field in self.data
-            value = self.data.get(field)
             if rules.get('required', False) and not data_present:
                 self.errors.setdefault(field, []).append('required field')
                 continue
-            if not data_present or value is None:
+            if not data_present:
+                continue
+            value = self.data[field]
+            if value is None:
+                self.errors.setdefault(field, []).append('null value not allowed')
                 continue
             expected_type = rules.get('type')
             if expected_type == 'string':
@@ -36,6 +39,7 @@ class BaseInputValidator:
                     continue
                 if not rules.get('empty', True) and value == '':
                     self.errors.setdefault(field, []).append('empty values not allowed')
+                    continue
                 length = len(value)
                 if 'minlength' in rules and length < rules['minlength']:
                     self.errors.setdefault(field, []).append(f"min length is {rules['minlength']}")
@@ -48,7 +52,7 @@ class BaseInputValidator:
                 if not isinstance(value, bool):
                     self.errors.setdefault(field, []).append('must be a boolean')
             if 'allowed' in rules and value not in rules['allowed']:
-                self.errors.setdefault(field, []).append(f"value must be one of {rules['allowed']}")
+                self.errors.setdefault(field, []).append(f"unallowed value {value}")
         if self.errors:
             self._raise_validation_error()
 

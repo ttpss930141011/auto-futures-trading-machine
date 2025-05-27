@@ -19,5 +19,5 @@ class SelectOrderAccountInputDto:
 @dataclass
 class SelectOrderAccountOutputDto:
     """ Data Transfer Object for selecting order account"""
-    is_select_order_account: bool
     order_account: str
+    is_select_order_account: bool = True

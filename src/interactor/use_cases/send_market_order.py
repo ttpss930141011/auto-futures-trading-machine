@@ -65,8 +65,6 @@ class SendMarketOrderUseCase:
 
         order_result = self.config.EXCHANGE_CLIENT.DTradeLib.Order(order)
 
-        print(f"order_result: {order_result}")
-
         if order_result is None:
             raise ItemNotCreatedException(input_dto.order_account, "Order")
         if order_result.ERRORMSG != "":

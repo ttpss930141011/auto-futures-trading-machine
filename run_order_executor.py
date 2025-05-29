@@ -20,7 +20,7 @@ from src.infrastructure.messaging import ZmqPuller, deserialize
 from src.infrastructure.events.trading_signal import TradingSignal
 from src.domain.order.order_executor import OrderExecutor
 from src.domain.value_objects import OrderOperation, OpenClose, DayTrade, TimeInForce, OrderTypeEnum
-from src.infrastructure.repositories.session_in_memory_repository import SessionInMemoryRepository
+from src.infrastructure.repositories.session_json_file_repository import SessionJsonFileRepository
 from src.infrastructure.loggers.logger_default import LoggerDefault
 from src.app.cli_pfcf.config import Config
 from src.infrastructure.pfcf_client.api import PFCFApi
@@ -53,7 +53,7 @@ class OrderExecutorProcess:
         self.config = Config(self.exchange_api)
 
         # Initialize repositories
-        self.session_repository = SessionInMemoryRepository(self.config.DEFAULT_SESSION_TIMEOUT)
+        self.session_repository = SessionJsonFileRepository(self.config.DEFAULT_SESSION_TIMEOUT)
 
         # Initialize use case
         self.presenter = SendMarketOrderPresenter()
@@ -166,15 +166,16 @@ class OrderExecutorProcess:
                     # Process the message if received
                     if message is not None:
                         # Deserialize trading signal
-                        signal = deserialize(message)
+                        trading_signal = deserialize(message)
+                        print(f"Received signal: {trading_signal}")
 
-                        if isinstance(signal, TradingSignal):
+                        if isinstance(trading_signal, TradingSignal):
                             # Process signal in order executor
                             self.logger.log_info(
-                                f"Received trading signal: {signal.action.name} for {signal.commodity_id}"
+                                f"Received trading signal: {trading_signal.operation.name} for {trading_signal.commodity_id}"
                             )
                             print(
-                                f"Executing order: {signal.action.name} for {signal.commodity_id}"
+                                f"Executing order: {trading_signal.operation.name} for {trading_signal.commodity_id}"
                             )
 
                             # Create the input DTO for SendMarketOrderUseCase
@@ -194,12 +195,12 @@ class OrderExecutorProcess:
                                 input_dto = SendMarketOrderInputDto(
                                     order_account=order_account,
                                     item_code=item_code,
-                                    side=signal.action,
+                                    side=trading_signal.operation,
                                     order_type=OrderTypeEnum.Market,
                                     price=0,  # market order does not need price
                                     quantity=1,  # Default quantity, could be retrieved from signal
                                     open_close=OpenClose.AUTO,
-                                    note="Automated order from trading strategy",
+                                    note="From AFTM",
                                     day_trade=DayTrade.No,
                                     time_in_force=TimeInForce.IOC,
                                 )
@@ -222,7 +223,7 @@ class OrderExecutorProcess:
                                 print(f"Error executing order: {str(e)}")
                         else:
                             self.logger.log_warning(
-                                f"Received non-TradingSignal message: {type(signal)}"
+                                f"Received non-TradingSignal message: {type(trading_signal)}"
                             )
 
                     # Small sleep to prevent CPU hogging when using non-blocking mode

@@ -208,16 +208,7 @@ class OrderExecutorProcess:
                                 # Execute the order
                                 result = self.send_market_order_use_case.execute(input_dto)
 
-                                if result.is_success:
-                                    self.logger.log_info(
-                                        f"Order executed successfully: {result.message}"
-                                    )
-                                    print(f"Order executed successfully: {result.message}")
-                                else:
-                                    self.logger.log_error(
-                                        f"Order execution failed: {result.message}"
-                                    )
-                                    print(f"Order execution failed: {result.message}")
+                                print(f"Order executed successfully: {result}")
                             except Exception as e:
                                 self.logger.log_error(f"Error executing order: {str(e)}")
                                 print(f"Error executing order: {str(e)}")

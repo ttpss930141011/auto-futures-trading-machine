@@ -6,6 +6,7 @@ import sys
 
 try:
     from dotenv import load_dotenv
+
     load_dotenv(encoding="utf8", dotenv_path=".env")
 except ImportError:
     pass
@@ -50,9 +51,15 @@ class Config(object):
 
     def __init__(self, exchange_api=None):
 
-        self.EXCHANGE_CLIENT = getattr(exchange_api, 'client', None) if exchange_api is not None else None
-        self.EXCHANGE_TRADE = getattr(exchange_api, 'trade', None) if exchange_api is not None else None
-        self.EXCHANGE_DECIMAL = getattr(exchange_api, 'decimal', None) if exchange_api is not None else None
+        self.EXCHANGE_CLIENT = (
+            getattr(exchange_api, "client", None) if exchange_api is not None else None
+        )
+        self.EXCHANGE_TRADE = (
+            getattr(exchange_api, "trade", None) if exchange_api is not None else None
+        )
+        self.EXCHANGE_DECIMAL = (
+            getattr(exchange_api, "decimal", None) if exchange_api is not None else None
+        )
         self.EXCHANGE_TEST_URL = os.getenv("DEALER_TEST_URL", "")
         self.EXCHANGE_PROD_URL = os.getenv("DEALER_PROD_URL", "")
 

@@ -99,21 +99,21 @@ The futures trading system adopts a distributed, event-driven architecture using
 ┌───────────────────────┐       ┌────────────────────────────┐        ┌───────────────────────────┐
 │     Gateway Process   │       │     Strategy Process(es)   │        │   Order Executor Process  │
 │                       │       │                            │        │                           │
-│ ┌───────────────────┐ │ ZMQ   │ ┌──────────────────────┐ │ ZMQ   │ ┌───────────────────────┐ │
-│ │  PFCF API Client  │ │──────▶│ │   ZMQ Tick Subscriber│ │──────▶│ │  ZMQ Signal Puller    │ │
-│ └─────────┬─────────┘ │(Tick) │ └──────────┬───────────┘ │(Signal)│ └──────────┬────────────┘ │
-│           │           │ (PUB) │            │             │ (PUSH) │            │              │
-│           │ Raw Data  │       │            │ TickEvent   │        │            │ Signal       │
-│           ▼           │       │            ▼             │        │            ▼              │
-│ ┌───────────────────┐ │       │ ┌──────────────────────┐ │        │ ┌───────────────────────┐ │
-│ │   TickProducer    ├─┼───────┤ │ SupportResistance    ├─┼────────┤ │     OrderExecutor     │ │
-│ │ (Publishes Ticks) │ │       │ │ Strategy (Pushes Sig)│ │        │ │ (Executes Orders)     │ │
-│ └───────────────────┘ │       │ └──────────┬───────────┘ │        │ └──────────┬────────────┘ │
-│                       │       │            │             │        │            │              │
-│                       │       │            │ Condition   │        │            │ Order Cmd    │
-│                       │       │            │ Repository  │        │            ▼              │
-│                       │       │            │ Interaction │        │ ┌───────────────────────┐ │
-│                       │       │            └─────────────┘        │ │ SendMarketOrderUseCase│ │
+│ ┌───────────────────┐ │ ZMQ   │ ┌──────────────────────┐   │  ZMQ   │ ┌───────────────────────┐ │
+│ │  PFCF API Client  │ │──────▶│ │  ZMQ Tick Subscriber │   │──────▶│ │  ZMQ Signal Puller    │ │
+│ └─────────┬─────────┘ │(Tick) │ └──────────┬───────────┘   │(Signal)│ └──────────┬────────────┘ │
+│           │           │ (PUB) │            │               │ (PUSH) │            │              │
+│           │ Raw Data  │       │            │ TickEvent     │        │            │ Signal       │
+│           ▼           │       │            ▼               │        │            ▼              │
+│ ┌───────────────────┐ │       │ ┌──────────────────────┐   │        │ ┌───────────────────────┐ │
+│ │   TickProducer    ├─┼───────┤ │ SupportResistance    ├───┼────────┤ │     OrderExecutor     │ │
+│ │ (Publishes Ticks) │ │       │ │ Strategy (Pushes Sig)│   │        │ │ (Executes Orders)     │ │
+│ └───────────────────┘ │       │ └──────────┬───────────┘   │        │ └──────────┬────────────┘ │
+│                       │       │            │               │        │            │              │
+│                       │       │            │ Condition     │        │            │ Order Cmd    │
+│                       │       │            │ Repository    │        │            ▼              │
+│                       │       │            │ Interaction   │        │ ┌───────────────────────┐ │
+│                       │       │            └───────────────┘        │ │ SendMarketOrderUseCase│ │
 │                       │       │                            │        │ └───────────────────────┘ │
 └───────────────────────┘       └────────────────────────────┘        └───────────────────────────┘
         │                                                                         │

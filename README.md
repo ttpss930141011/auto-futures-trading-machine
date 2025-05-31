@@ -96,26 +96,26 @@ Updated Link on Miro: [Event Storming](https://miro.com/app/board/uXjVKbXfevY=/?
 The futures trading system adopts a distributed, event-driven architecture using ZeroMQ for communication between core processes. The main components run in separate processes: Gateway (Handles API interaction), Strategy Engine, and Order Executor.
 
 ```
-┌───────────────────────┐       ┌────────────────────────────┐        ┌───────────────────────────┐
-│     Gateway Process   │       │     Strategy Process(es)   │        │   Order Executor Process  │
-│                       │       │                            │        │                           │
-│ ┌───────────────────┐ │ ZMQ   │ ┌──────────────────────┐   │  ZMQ   │ ┌───────────────────────┐ │
-│ │  PFCF API Client  │ │──────▶│ │  ZMQ Tick Subscriber │   │──────▶│ │  ZMQ Signal Puller    │ │
-│ └─────────┬─────────┘ │(Tick) │ └──────────┬───────────┘   │(Signal)│ └──────────┬────────────┘ │
-│           │           │ (PUB) │            │               │ (PUSH) │            │              │
-│           │ Raw Data  │       │            │ TickEvent     │        │            │ Signal       │
-│           ▼           │       │            ▼               │        │            ▼              │
-│ ┌───────────────────┐ │       │ ┌──────────────────────┐   │        │ ┌───────────────────────┐ │
-│ │   TickProducer    ├─┼───────┤ │ SupportResistance    ├───┼────────┤ │     OrderExecutor     │ │
-│ │ (Publishes Ticks) │ │       │ │ Strategy (Pushes Sig)│   │        │ │ (Executes Orders)     │ │
-│ └───────────────────┘ │       │ └──────────┬───────────┘   │        │ └──────────┬────────────┘ │
-│                       │       │            │               │        │            │              │
-│                       │       │            │ Condition     │        │            │ Order Cmd    │
-│                       │       │            │ Repository    │        │            ▼              │
-│                       │       │            │ Interaction   │        │ ┌───────────────────────┐ │
-│                       │       │            └───────────────┘        │ │ SendMarketOrderUseCase│ │
-│                       │       │                            │        │ └───────────────────────┘ │
-└───────────────────────┘       └────────────────────────────┘        └───────────────────────────┘
+┌───────────────────────┐        ┌────────────────────────────┐        ┌───────────────────────────┐
+│     Gateway Process   │        │     Strategy Process(es)   │        │   Order Executor Process  │
+│                       │        │                            │        │                           │
+│ ┌───────────────────┐ │ ZMQ    │ ┌──────────────────────┐   │  ZMQ   │ ┌───────────────────────┐ │
+│ │  PFCF API Client  │ │──────▶│ │  ZMQ Tick Subscriber │    │──────▶│ │  ZMQ Signal Puller    │ │
+│ └─────────┬─────────┘ │(Tick)  │ └──────────┬───────────┘   │(Signal)│ └──────────┬────────────┘ │
+│           │           │ (PUB)  │            │               │ (PUSH) │            │              │
+│           │ Raw Data  │        │            │ TickEvent     │        │            │ Signal       │
+│           ▼           │        │            ▼               │        │            ▼              │
+│ ┌───────────────────┐ │        │ ┌──────────────────────┐   │        │ ┌───────────────────────┐ │
+│ │   TickProducer    ├─┼────────┤ │ SupportResistance    ├───┼────────┤ │     OrderExecutor     │ │
+│ │ (Publishes Ticks) │ │        │ │ Strategy (Pushes Sig)│   │        │ │ (Executes Orders)     │ │
+│ └───────────────────┘ │        │ └──────────┬───────────┘   │        │ └──────────┬────────────┘ │
+│                       │        │            │               │        │            │              │
+│                       │        │            │ Condition     │        │            │ Order Cmd    │
+│                       │        │            │ Repository    │        │            ▼              │
+│                       │        │            │ Interaction   │        │ ┌───────────────────────┐ │
+│                       │        │            └───────────────┘        │ │ SendMarketOrderUseCase│ │
+│                       │        │                            │        │ └───────────────────────┘ │
+└───────────────────────┘        └────────────────────────────┘        └───────────────────────────┘
         │                                                                         │
         └─────────────────────────────────── External Systems ────────────────────┘
                          (Exchange API, Condition Database, Session Repo)

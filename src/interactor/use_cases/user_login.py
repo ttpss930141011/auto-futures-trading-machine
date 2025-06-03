@@ -1,5 +1,6 @@
 """ This module is responsible for creating a new profession.
 """
+
 from datetime import datetime
 from typing import Dict
 
@@ -14,16 +15,15 @@ from src.interactor.validations.user_login_validator import UserLoginInputDtoVal
 
 
 class UserLoginUseCase:
-    """ This class is responsible for creating a new profession.
-    """
+    """This class is responsible for creating a new profession."""
 
     def __init__(
-            self,
-            presenter: UserLoginPresenterInterface,
-            repository: UserRepositoryInterface,
-            config: Config,
-            logger: LoggerInterface,
-            session_repository: SessionRepositoryInterface
+        self,
+        presenter: UserLoginPresenterInterface,
+        repository: UserRepositoryInterface,
+        config: Config,
+        logger: LoggerInterface,
+        session_repository: SessionRepositoryInterface,
     ):
         self.presenter = presenter
         self.repository = repository
@@ -31,11 +31,8 @@ class UserLoginUseCase:
         self.logger = logger
         self.session_repository = session_repository
 
-    def execute(
-            self,
-            input_dto: UserLoginInputDto
-    ) -> Dict:
-        """ This method is responsible for creating a new user.
+    def execute(self, input_dto: UserLoginInputDto) -> Dict:
+        """This method is responsible for creating a new user.
         :param input_dto: The input data transfer object.
         :type input_dto: UserLoginInputDto
         :return: Dict
@@ -46,10 +43,13 @@ class UserLoginUseCase:
 
         # Login to the dealer client
         try:
-            self.config.EXCHANGE_CLIENT.PFCLogin(input_dto.account,
-                                                 input_dto.password, input_dto.ip_address)
+            self.config.EXCHANGE_CLIENT.PFCLogin(
+                input_dto.account, input_dto.password, input_dto.ip_address
+            )
         except LoginFailedException as e:
-            self.logger.log_exception(f"Account {input_dto.account} login exception raised at {datetime.now()}: {e}")
+            self.logger.log_exception(
+                f"Account {input_dto.account} login exception raised at {datetime.now()}: {e}"
+            )
             raise LoginFailedException("Login failed")
 
         # Find the user in the repository, if not found, create a new user
@@ -59,7 +59,7 @@ class UserLoginUseCase:
                 account=input_dto.account,
                 password=input_dto.password,
                 ip_address=input_dto.ip_address,
-                client=self.config.EXCHANGE_CLIENT
+                client=self.config.EXCHANGE_CLIENT,
             )
             if not user:
                 self.logger.log_error(f"User {input_dto.account} not created")
@@ -67,6 +67,17 @@ class UserLoginUseCase:
 
         # Create a new session in the session manager
         self.session_repository.create_session(account=user.account)
+
+        # TEMPORARY: Store auth details for order executor process
+        # WARNING: This is only for development/testing
+        # In production, use proper credential management or token-based auth
+        if hasattr(self.session_repository, "set_auth_details"):
+            self.logger.log_warning(
+                "DEVELOPMENT MODE: Temporarily storing auth details. " "DO NOT USE IN PRODUCTION!"
+            )
+            self.session_repository.set_auth_details(
+                password=input_dto.password, ip_address=input_dto.ip_address
+            )
 
         output_dto = UserLoginOutputDto(user)
         presenter_response = self.presenter.present(output_dto)

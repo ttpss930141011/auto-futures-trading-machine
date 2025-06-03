@@ -51,6 +51,9 @@ class SendMarketOrderUseCase:
             raise LoginFailedException("User not logged in")
 
         pfcf_input = input_dto.to_pfcf_dict(self.config)
+
+        print(pfcf_input)
+
         order = self.config.EXCHANGE_TRADE.OrderObject()
         order.ACTNO = pfcf_input.get("ACTNO")
         order.PRODUCTID = pfcf_input.get("PRODUCTID")
@@ -65,11 +68,22 @@ class SendMarketOrderUseCase:
 
         order_result = self.config.EXCHANGE_CLIENT.DTradeLib.Order(order)
 
+        print("order_result.ISSEND", order_result.ISSEND)
+        print("order_result.ERRORCODE", order_result.ERRORCODE)
+        print("order_result.ERRORMSG", order_result.ERRORMSG)
+        print("order_result.SEQ", order_result.SEQ)
+        print("order_result.NOTE", order_result.NOTE)
+
         if order_result is None:
             raise ItemNotCreatedException(input_dto.order_account, "Order")
         if order_result.ERRORMSG != "":
             raise SendMarketOrderFailedException(
                 f"Order not created: {order_result.ERRORMSG} with code {order_result.ERRORCODE}"
+            )
+
+        if not order_result.ISSEND:
+            raise SendMarketOrderFailedException(
+                f"Order not sent (ISSEND=False), code={order_result.ERRORCODE}, msg={order_result.ERRORMSG}"
             )
 
         output_dto = SendMarketOrderOutputDto(

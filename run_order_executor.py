@@ -16,21 +16,20 @@ from pathlib import Path
 # Ensure the project root is in the path so imports work correctly
 sys.path.append(str(Path(__file__).resolve().parent))
 
-from src.infrastructure.messaging import ZmqPuller, deserialize
-from src.infrastructure.events.trading_signal import TradingSignal
+from src.infrastructure.messaging import ZmqPuller
 from src.domain.order.order_executor import OrderExecutor
-from src.domain.value_objects import OrderOperation, OpenClose, DayTrade, TimeInForce, OrderTypeEnum
 from src.infrastructure.repositories.session_json_file_repository import SessionJsonFileRepository
 from src.infrastructure.loggers.logger_default import LoggerDefault
 from src.app.cli_pfcf.config import Config
 from src.infrastructure.pfcf_client.api import PFCFApi
 from src.interactor.use_cases.send_market_order import SendMarketOrderUseCase
-from src.interactor.dtos.send_market_order_dtos import SendMarketOrderInputDto
 from src.app.cli_pfcf.presenters.send_market_order_presenter import SendMarketOrderPresenter
 
 
 class OrderExecutorProcess:
-    """Process for running the Order Executor."""
+    """Process running the order executor.
+
+    Continuously pulls trading signals via ZMQ and delegates processing to OrderExecutor."""
 
     def __init__(self, config_dict: Dict[str, Any]):
         """Initialize the order executor process.
@@ -80,6 +79,14 @@ class OrderExecutorProcess:
                 )
                 sys.exit(1)
 
+            # Authenticate the exchange client for this process
+            if not self._authenticate_exchange_client():
+                self.logger.log_error(
+                    "Failed to authenticate exchange client. Please ensure user is logged in in the main application."
+                )
+                print("ERROR: Failed to authenticate exchange client.")
+                sys.exit(1)
+
             # Initialize ZMQ components
             self._initialize_zmq()
 
@@ -118,6 +125,64 @@ class OrderExecutorProcess:
         # This is a placeholder that would need to be replaced with actual shared session management
         return True
 
+    def _authenticate_exchange_client(self) -> bool:
+        """Authenticate the exchange client for this process.
+
+        Returns:
+            bool: True if authentication is successful, False otherwise
+        """
+        try:
+            # Read session data to get user account
+            session_data = self.session_repository._read_data()
+            if not session_data or not session_data.get("logged_in"):
+                self.logger.log_error("No active session found")
+                return False
+
+            user_account = session_data.get("account")
+            if not user_account:
+                self.logger.log_error("No user account found in session")
+                return False
+
+            # TEMPORARY: Get auth details for development
+            # In production, use secure credential management
+            auth_details = None
+            if hasattr(self.session_repository, "get_auth_details"):
+                auth_details = self.session_repository.get_auth_details()
+
+            if not auth_details:
+                self.logger.log_error(
+                    "No authentication details available. "
+                    "Please login through the main application first."
+                )
+                return False
+
+            # Perform the actual login
+            try:
+                self.logger.log_info(f"Authenticating exchange client for account: {user_account}")
+                self.config.EXCHANGE_CLIENT.PFCLogin(
+                    user_account, auth_details["password"], auth_details["ip_address"]
+                )
+
+                # Verify login was successful by checking UserOrderSet
+                order_set = self.config.EXCHANGE_CLIENT.UserOrderSet
+                if order_set is not None:
+                    self.logger.log_info(
+                        f"Exchange client authenticated successfully. "
+                        f"Found {len(order_set)} order accounts."
+                    )
+                    return True
+                else:
+                    self.logger.log_error("Login appeared successful but no order accounts found")
+                    return False
+
+            except Exception as e:
+                self.logger.log_error(f"Failed to authenticate with exchange: {str(e)}")
+                return False
+
+        except Exception as e:
+            self.logger.log_error(f"Error during exchange authentication: {str(e)}")
+            return False
+
     def _initialize_zmq(self):
         """Initialize ZMQ puller."""
         try:
@@ -152,7 +217,11 @@ class OrderExecutorProcess:
             raise
 
     def _run_loop(self):
-        """Run the main processing loop."""
+        """Run the main processing loop.
+
+        Continuously polls for trading signals and delegates processing to OrderExecutor.
+        Sleeps briefly when no message is received.
+        """
         self.logger.log_info("Entering main processing loop")
         print("Order executor process started. Waiting for trading signals...")
         print("Press Ctrl+C to stop.")
@@ -160,75 +229,15 @@ class OrderExecutorProcess:
         try:
             while self.running:
                 try:
-                    # Receive message using non-blocking mode instead of has_message
-                    message = self.signal_puller.receive(non_blocking=True)
-
-                    # Process the message if received
-                    if message is not None:
-                        # Deserialize trading signal
-                        trading_signal = deserialize(message)
-                        print(f"Received signal: {trading_signal}")
-
-                        if isinstance(trading_signal, TradingSignal):
-                            # Process signal in order executor
-                            self.logger.log_info(
-                                f"Received trading signal: {trading_signal.operation.name} for {trading_signal.commodity_id}"
-                            )
-                            print(
-                                f"Executing order: {trading_signal.operation.name} for {trading_signal.commodity_id}"
-                            )
-
-                            # Create the input DTO for SendMarketOrderUseCase
-                            # Based on src/app/cli_pfcf/controllers/send_market_order_controller.py
-                            try:
-                                # Get required parameters from the session
-                                order_account = self.session_repository.get_order_account()
-                                item_code = self.session_repository.get_item_code()
-
-                                if not order_account or not item_code:
-                                    error_msg = "Missing order account or item code in session"
-                                    self.logger.log_error(error_msg)
-                                    print(f"Order execution failed: {error_msg}")
-                                    continue
-
-                                # Create the input DTO
-                                input_dto = SendMarketOrderInputDto(
-                                    order_account=order_account,
-                                    item_code=item_code,
-                                    side=trading_signal.operation,
-                                    order_type=OrderTypeEnum.Market,
-                                    price=0,  # market order does not need price
-                                    quantity=1,  # Default quantity, could be retrieved from signal
-                                    open_close=OpenClose.AUTO,
-                                    note="From AFTM",
-                                    day_trade=DayTrade.No,
-                                    time_in_force=TimeInForce.IOC,
-                                )
-
-                                # Execute the order
-                                result = self.send_market_order_use_case.execute(input_dto)
-
-                                print(f"Order executed successfully: {result}")
-                            except Exception as e:
-                                self.logger.log_error(f"Error executing order: {str(e)}")
-                                print(f"Error executing order: {str(e)}")
-                        else:
-                            self.logger.log_warning(
-                                f"Received non-TradingSignal message: {type(trading_signal)}"
-                            )
-
-                    # Small sleep to prevent CPU hogging when using non-blocking mode
-                    time.sleep(0.001)
-
+                    processed = self.order_executor.process_received_signal()
+                    if not processed:
+                        time.sleep(self.poll_timeout_ms / 1000.0)
                 except zmq.ZMQError as e:
-                    self.logger.log_error(f"ZMQ error in main loop: {str(e)}")
-                    if e.errno == zmq.ETERM:
-                        # Context was terminated
+                    self.logger.log_error(f"ZMQ error in main loop: {e}")
+                    if getattr(e, "errno", None) == zmq.ETERM:
                         break
                 except Exception as e:
-                    self.logger.log_error(f"Error in main loop: {str(e)}")
-                    # Continue processing despite errors
-
+                    self.logger.log_error(f"Error in main loop: {e}")
         except KeyboardInterrupt:
             self.logger.log_info("Keyboard interrupt received")
         finally:

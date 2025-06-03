@@ -1,5 +1,6 @@
 """ This module is responsible for user logout.
 """
+
 from typing import Dict
 
 from src.app.cli_pfcf.config import Config
@@ -11,29 +12,30 @@ from src.interactor.validations.user_logout_validator import UserLogoutInputDtoV
 
 
 class UserLogoutUseCase:
-    """ This class is responsible for user logout.
-    """
+    """This class is responsible for user logout."""
 
     def __init__(
-            self,
-            presenter: UserLogoutPresenterInterface,
-            config: Config,
-            logger: LoggerInterface,
-            session_manager: SessionRepositoryInterface
+        self,
+        presenter: UserLogoutPresenterInterface,
+        config: Config,
+        logger: LoggerInterface,
+        session_manager: SessionRepositoryInterface,
     ):
         self.presenter = presenter
         self.config = config
         self.logger = logger
         self.session_manager = session_manager
 
-    def execute(
-            self,
-            input_dto: UserLogoutInputDto
-    ) -> Dict:
+    def execute(self, input_dto: UserLogoutInputDto) -> Dict:
         validator = UserLogoutInputDtoValidator(input_dto.to_dict())
         validator.validate()
 
         self.config.EXCHANGE_CLIENT.PFCLogout()
+
+        # Clear temporary auth details if they exist
+        if hasattr(self.session_manager, "clear_auth_details"):
+            self.session_manager.clear_auth_details()
+
         self.session_manager.destroy_session()
 
         output_dto = UserLogoutOutputDto(account=input_dto.account, is_success=True)

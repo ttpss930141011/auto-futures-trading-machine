@@ -3,6 +3,7 @@
 
 import os
 import sys
+from src.infrastructure.pfcf_client.api import PFCFApi
 
 try:
     from dotenv import load_dotenv
@@ -49,7 +50,7 @@ class Config(object):
         """Get the ZMQ signal pusher connect address."""
         return f"tcp://localhost:{self.ZMQ_SIGNAL_PORT}"
 
-    def __init__(self, exchange_api=None):
+    def __init__(self, exchange_api=PFCFApi):
 
         self.EXCHANGE_CLIENT = (
             getattr(exchange_api, "client", None) if exchange_api is not None else None

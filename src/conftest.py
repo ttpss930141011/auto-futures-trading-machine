@@ -1,7 +1,16 @@
+import sys
+import types
 import pytest
 
 from src.domain.value_objects import OrderOperation, OrderTypeEnum, TimeInForce, OpenClose, DayTrade
 from src.infrastructure.repositories.session_in_memory_repository import SessionInMemoryRepository
+
+# Stub out the proprietary PFCF DLL so modules importing it won't fail during tests.
+dummy_dll = types.ModuleType("src.infrastructure.pfcf_client.dll")
+dummy_dll.PFCFAPI = lambda *args, **kwargs: None
+dummy_dll.DTrade = None
+dummy_dll.Decimal = None
+sys.modules.setdefault("src.infrastructure.pfcf_client.dll", dummy_dll)
 
 
 @pytest.fixture

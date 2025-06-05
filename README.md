@@ -327,3 +327,11 @@ The refactored system uses ZeroMQ for inter-process communication, creating a mo
 4. **Scalability**: Strategy instances can potentially be scaled horizontally.
 
 This architecture adheres to Clean Architecture and SOLID principles, promoting maintainability, testability, and flexibility, while taking a step towards handling higher frequency event streams. However, it introduces the complexity of managing multiple processes and the ZeroMQ infrastructure.
+
+
+## 8. Equity trend chart
+
+This is the daily change in equity
+<!-- GRAPH START -->
+![equity](static/imgs/equity.png)
+<!-- GRAPH END -->

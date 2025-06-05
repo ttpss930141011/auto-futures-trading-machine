@@ -1,0 +1,41 @@
+name: Update Equity Chart
+
+on:
+  push:
+    paths:
+      - 'equity_log.csv'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: pip install pandas matplotlib
+
+    - name: Run plotting script
+      run: python scripts/plot_equity.py
+
+    - name: Update README.md with latest graph
+      run: |
+        sed -i '/<!-- GRAPH START -->/,/<!-- GRAPH END -->/c\
+        <!-- GRAPH START -->\
+        ![equity](static/imgs/equity.png)\
+        <!-- GRAPH END -->' README.md
+
+    - name: Commit changes
+      run: |
+        git config --global user.name 'github-actions'
+        git config --global user.email 'github-actions@github.com'
+        git add static/imgs/equity.png README.md
+        git commit -m "Update equity chart" || echo "No changes to commit"
+        git push

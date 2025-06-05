@@ -117,7 +117,7 @@ def test_process_received_signal_success(
         price=0,
         quantity=order_executor.default_quantity,
         open_close=OpenClose.AUTO,
-        note=f"Auto order from ZMQ signal at {signal_time}",
+        note="From AFTM",  # Updated note
         day_trade=DayTrade.No,
         time_in_force=TimeInForce.IOC,
     )

@@ -1,10 +1,18 @@
 import pytest
 
-from src.interactor.dtos.send_market_order_dtos import SendMarketOrderInputDto, SendMarketOrderOutputDto
-from src.interactor.errors.error_classes import LoginFailedException, ItemNotCreatedException, \
-    SendMarketOrderFailedException
+from src.interactor.dtos.send_market_order_dtos import (
+    SendMarketOrderInputDto,
+    SendMarketOrderOutputDto,
+)
+from src.interactor.errors.error_classes import (
+    LoginFailedException,
+    ItemNotCreatedException,
+    SendMarketOrderFailedException,
+)
 from src.interactor.interfaces.logger.logger import LoggerInterface
-from src.interactor.interfaces.presenters.send_market_order_presenter import SendMarketOrderPresenterInterface
+from src.interactor.interfaces.presenters.send_market_order_presenter import (
+    SendMarketOrderPresenterInterface,
+)
 from src.interactor.use_cases.send_market_order import SendMarketOrderUseCase
 
 
@@ -19,7 +27,7 @@ def test_send_market_order(mocker, fixture_send_market_order):
         "TIMEINFORCE": "IOC",
         "OPENCLOSE": "OPEN",
         "DTRADE": "NO",
-        "NOTE": "Test note"
+        "NOTE": "Test note",
     }
 
     # mock all dependencies in the use case
@@ -31,6 +39,8 @@ def test_send_market_order(mocker, fixture_send_market_order):
     mock_order_result.SEQ = "Test order serial"
     mock_order_result.ERRORCODE = ""
     mock_order_result.ERRORMSG = ""
+    mock_order_result.ISSEND = True
+    mock_order_result.NOTE = fixture_send_market_order["note"]
 
     mock_config.EXCHANGE_CLIENT.DTradeLib.Order.return_value = mock_order_result
 
@@ -50,10 +60,13 @@ def test_send_market_order(mocker, fixture_send_market_order):
     mock_config.EXCHANGE_TRADE.OrderObject.return_value = mock_order_obejct
     mock_logger = mocker.patch.object(LoggerInterface, "log_info")
     mock_session_repository = mocker.patch(
-        "src.infrastructure.repositories.session_in_memory_repository.SessionInMemoryRepository")
+        "src.infrastructure.repositories.session_in_memory_repository.SessionInMemoryRepository"
+    )
     mock_session_repository.get_current_user.return_value = "Test user"
 
-    mock_validator = mocker.patch("src.interactor.use_cases.send_market_order.SendMarketOrderInputDtoValidator")
+    mock_validator = mocker.patch(
+        "src.interactor.use_cases.send_market_order.SendMarketOrderInputDtoValidator"
+    )
     mock_validator_instance = mock_validator.return_value
     mock_presenter.present.return_value = "Test output"
     mock_session_repository.return_value = "Test user"
@@ -85,7 +98,7 @@ def test_send_market_order(mocker, fixture_send_market_order):
         note=input_dto.note,
         order_serial="Test order serial",
         error_code="",
-        error_message=""
+        error_message="",
     )
 
     mock_presenter.present.assert_called_once_with(output_dto)
@@ -100,10 +113,13 @@ def test_send_market_order_if_user_is_none(mocker, fixture_send_market_order):
     mock_config = mocker.patch("src.app.cli_pfcf.config.Config")
     mock_logger = mocker.patch.object(LoggerInterface, "log_info")
     mock_session_repository = mocker.patch(
-        "src.infrastructure.repositories.session_in_memory_repository.SessionInMemoryRepository")
+        "src.infrastructure.repositories.session_in_memory_repository.SessionInMemoryRepository"
+    )
     mock_session_repository.get_current_user.return_value = None
 
-    mock_validator = mocker.patch("src.interactor.use_cases.send_market_order.SendMarketOrderInputDtoValidator")
+    mock_validator = mocker.patch(
+        "src.interactor.use_cases.send_market_order.SendMarketOrderInputDtoValidator"
+    )
     mock_validator_instance = mock_validator.return_value
 
     use_case = SendMarketOrderUseCase(
@@ -141,7 +157,7 @@ def test_send_market_order_if_order_result_is_none(mocker, fixture_send_market_o
         "TIMEINFORCE": "IOC",
         "OPENCLOSE": "OPEN",
         "DTRADE": "NO",
-        "NOTE": "Test note"
+        "NOTE": "Test note",
     }
 
     # mock all dependencies in the use case
@@ -169,10 +185,13 @@ def test_send_market_order_if_order_result_is_none(mocker, fixture_send_market_o
     mock_config.EXCHANGE_TRADE.OrderObject.return_value = mock_order_obejct
     mock_logger = mocker.patch.object(LoggerInterface, "log_info")
     mock_session_repository = mocker.patch(
-        "src.infrastructure.repositories.session_in_memory_repository.SessionInMemoryRepository")
+        "src.infrastructure.repositories.session_in_memory_repository.SessionInMemoryRepository"
+    )
     mock_session_repository.get_current_user.return_value = "Test user"
 
-    mock_validator = mocker.patch("src.interactor.use_cases.send_market_order.SendMarketOrderInputDtoValidator")
+    mock_validator = mocker.patch(
+        "src.interactor.use_cases.send_market_order.SendMarketOrderInputDtoValidator"
+    )
     mock_validator_instance = mock_validator.return_value
     mock_presenter.present.return_value = "Test output"
     mock_session_repository.return_value = "Test user"
@@ -217,7 +236,7 @@ def test_send_market_order_if_order_result_has_error(mocker, fixture_send_market
         "TIMEINFORCE": "IOC",
         "OPENCLOSE": "OPEN",
         "DTRADE": "NO",
-        "NOTE": "Test note"
+        "NOTE": "Test note",
     }
 
     # mock all dependencies in the use case
@@ -229,6 +248,8 @@ def test_send_market_order_if_order_result_has_error(mocker, fixture_send_market
     mock_order_result.SEQ = ""
     mock_order_result.ERRORCODE = "Test error code"
     mock_order_result.ERRORMSG = "Test error message"
+    mock_order_result.ISSEND = True
+    mock_order_result.NOTE = fixture_send_market_order["note"]
 
     mock_config.EXCHANGE_CLIENT.DTradeLib.Order.return_value = mock_order_result
 
@@ -248,10 +269,13 @@ def test_send_market_order_if_order_result_has_error(mocker, fixture_send_market
     mock_config.EXCHANGE_TRADE.OrderObject.return_value = mock_order_obejct
     mock_logger = mocker.patch.object(LoggerInterface, "log_info")
     mock_session_repository = mocker.patch(
-        "src.infrastructure.repositories.session_in_memory_repository.SessionInMemoryRepository")
+        "src.infrastructure.repositories.session_in_memory_repository.SessionInMemoryRepository"
+    )
     mock_session_repository.get_current_user.return_value = "Test user"
 
-    mock_validator = mocker.patch("src.interactor.use_cases.send_market_order.SendMarketOrderInputDtoValidator")
+    mock_validator = mocker.patch(
+        "src.interactor.use_cases.send_market_order.SendMarketOrderInputDtoValidator"
+    )
     mock_validator_instance = mock_validator.return_value
     mock_presenter.present.return_value = "Test output"
     mock_session_repository.return_value = "Test user"
@@ -283,5 +307,7 @@ def test_send_market_order_if_order_result_has_error(mocker, fixture_send_market
     mock_presenter.present.assert_not_called()
     mock_logger.log_info.assert_not_called()
 
-    assert str(
-        exc.value) == "Send market order failed: Order not created: test error message with code test error code"
+    assert (
+        str(exc.value)
+        == "Send market order failed: Order not created: test error message with code test error code"
+    )

@@ -85,6 +85,14 @@ class OrderExecutor:
                     self.logger.log_error("Cannot execute order: No order account selected")
                     return True  # Processed signal, but failed
 
+                self.logger.log_info(f"Using order account: {order_account}")
+                self.logger.log_info(
+                    f"Signal details - commodity: {signal.commodity_id}, operation: {signal.operation}"
+                )
+
+                # signal.operation is already an OrderOperation enum, use it directly
+                side = signal.operation
+
                 # Create the order input DTO
                 input_dto = SendMarketOrderInputDto(
                     order_account=order_account,
@@ -94,9 +102,13 @@ class OrderExecutor:
                     price=0,  # Market orders don't require a price
                     quantity=self.default_quantity,
                     open_close=OpenClose.AUTO,
-                    note=f"Auto order from ZMQ signal at {signal.when}",  # Updated note
+                    note="From AFTM",  # Updated note
                     day_trade=DayTrade.No,
                     time_in_force=TimeInForce.IOC,
+                )
+
+                self.logger.log_info(
+                    f"Created order DTO: account={order_account}, item={signal.commodity_id}, side={signal.operation.name}, qty={self.default_quantity}"
                 )
 
                 # Execute the order

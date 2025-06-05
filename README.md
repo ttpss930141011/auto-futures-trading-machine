@@ -96,26 +96,26 @@ Updated Link on Miro: [Event Storming](https://miro.com/app/board/uXjVKbXfevY=/?
 The futures trading system adopts a distributed, event-driven architecture using ZeroMQ for communication between core processes. The main components run in separate processes: Gateway (Handles API interaction), Strategy Engine, and Order Executor.
 
 ```
-┌───────────────────────┐       ┌────────────────────────────┐        ┌───────────────────────────┐
-│     Gateway Process   │       │     Strategy Process(es)   │        │   Order Executor Process  │
-│                       │       │                            │        │                           │
-│ ┌───────────────────┐ │ ZMQ   │ ┌──────────────────────┐ │ ZMQ   │ ┌───────────────────────┐ │
-│ │  PFCF API Client  │ │──────▶│ │   ZMQ Tick Subscriber│ │──────▶│ │  ZMQ Signal Puller    │ │
-│ └─────────┬─────────┘ │(Tick) │ └──────────┬───────────┘ │(Signal)│ └──────────┬────────────┘ │
-│           │           │ (PUB) │            │             │ (PUSH) │            │              │
-│           │ Raw Data  │       │            │ TickEvent   │        │            │ Signal       │
-│           ▼           │       │            ▼             │        │            ▼              │
-│ ┌───────────────────┐ │       │ ┌──────────────────────┐ │        │ ┌───────────────────────┐ │
-│ │   TickProducer    ├─┼───────┤ │ SupportResistance    ├─┼────────┤ │     OrderExecutor     │ │
-│ │ (Publishes Ticks) │ │       │ │ Strategy (Pushes Sig)│ │        │ │ (Executes Orders)     │ │
-│ └───────────────────┘ │       │ └──────────┬───────────┘ │        │ └──────────┬────────────┘ │
-│                       │       │            │             │        │            │              │
-│                       │       │            │ Condition   │        │            │ Order Cmd    │
-│                       │       │            │ Repository  │        │            ▼              │
-│                       │       │            │ Interaction │        │ ┌───────────────────────┐ │
-│                       │       │            └─────────────┘        │ │ SendMarketOrderUseCase│ │
-│                       │       │                            │        │ └───────────────────────┘ │
-└───────────────────────┘       └────────────────────────────┘        └───────────────────────────┘
+┌───────────────────────┐        ┌────────────────────────────┐        ┌───────────────────────────┐
+│     Gateway Process   │        │     Strategy Process(es)   │        │   Order Executor Process  │
+│                       │        │                            │        │                           │
+│ ┌───────────────────┐ │ ZMQ    │ ┌──────────────────────┐   │  ZMQ   │ ┌───────────────────────┐ │
+│ │  PFCF API Client  │ │──────▶│ │  ZMQ Tick Subscriber │    │──────▶│ │  ZMQ Signal Puller    │ │
+│ └─────────┬─────────┘ │(Tick)  │ └──────────┬───────────┘   │(Signal)│ └──────────┬────────────┘ │
+│           │           │ (PUB)  │            │               │ (PUSH) │            │              │
+│           │ Raw Data  │        │            │ TickEvent     │        │            │ Signal       │
+│           ▼           │        │            ▼               │        │            ▼              │
+│ ┌───────────────────┐ │        │ ┌──────────────────────┐   │        │ ┌───────────────────────┐ │
+│ │   TickProducer    ├─┼────────┤ │ SupportResistance    ├───┼────────┤ │     OrderExecutor     │ │
+│ │ (Publishes Ticks) │ │        │ │ Strategy (Pushes Sig)│   │        │ │ (Executes Orders)     │ │
+│ └───────────────────┘ │        │ └──────────┬───────────┘   │        │ └──────────┬────────────┘ │
+│                       │        │            │               │        │            │              │
+│                       │        │            │ Condition     │        │            │ Order Cmd    │
+│                       │        │            │ Repository    │        │            ▼              │
+│                       │        │            │ Interaction   │        │ ┌───────────────────────┐ │
+│                       │        │            └───────────────┘        │ │ SendMarketOrderUseCase│ │
+│                       │        │                            │        │ └───────────────────────┘ │
+└───────────────────────┘        └────────────────────────────┘        └───────────────────────────┘
         │                                                                         │
         └─────────────────────────────────── External Systems ────────────────────┘
                          (Exchange API, Condition Database, Session Repo)
@@ -327,7 +327,6 @@ The refactored system uses ZeroMQ for inter-process communication, creating a mo
 4. **Scalability**: Strategy instances can potentially be scaled horizontally.
 
 This architecture adheres to Clean Architecture and SOLID principles, promoting maintainability, testability, and flexibility, while taking a step towards handling higher frequency event streams. However, it introduces the complexity of managing multiple processes and the ZeroMQ infrastructure.
-
 
 ## 8. Equity trend chart
 

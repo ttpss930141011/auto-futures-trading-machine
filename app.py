@@ -22,9 +22,10 @@ from src.infrastructure.loggers.logger_default import LoggerDefault
 from src.infrastructure.repositories.condition_json_file_repository import (
     ConditionJsonFileRepository,
 )
-from src.infrastructure.repositories.session_in_memory_repository import SessionInMemoryRepository
+from src.infrastructure.repositories.session_json_file_repository import SessionJsonFileRepository
 from src.infrastructure.services.service_container import ServiceContainer
 from src.infrastructure.pfcf_client.api import PFCFApi
+from src.app.cli_pfcf.controllers.get_position_controller import GetPositionController
 
 
 def main():
@@ -36,7 +37,7 @@ def main():
     exchange_api = PFCFApi()
     config = Config(exchange_api)
     logger_default = LoggerDefault()
-    session_repository = SessionInMemoryRepository(config.DEFAULT_SESSION_TIMEOUT)
+    session_repository = SessionJsonFileRepository(config.DEFAULT_SESSION_TIMEOUT)
     condition_repository = ConditionJsonFileRepository()
 
     # Create service container
@@ -59,6 +60,7 @@ def main():
     process.add_option("5", SelectOrderAccountController(service_container), "protected")
     process.add_option("6", SendMarketOrderController(service_container), "protected")
     process.add_option("7", ShowFuturesController(service_container), "protected")
+    process.add_option("8", GetPositionController(service_container), "protected")
 
     # Add all-in-one controller (option 10)
     process.add_option("10", AllInOneController(service_container), "protected")

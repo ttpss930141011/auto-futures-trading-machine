@@ -21,7 +21,7 @@ This section provides a concise overview of the system architecture, core runtim
 - **Controller layer**: CLI controllers (e.g. UserLoginController, AllInOneController)
 
 ### Runtime Processes
-- **Gateway Process**: Interfaces with the PFCF exchange API, generates `TickEvent`s and publishes them over ZeroMQ PUB (port 5555).
+- **RunGatewayUseCase**: Interfaces with the PFCF exchange API, generates `TickEvent`s and publishes them over ZeroMQ PUB (port 5555). When launched via the All‑in‑One controller, this gateway runs in a background thread of the main process.
 - **Strategy Process**: Subscribes to ticks via ZeroMQ SUB (port 5555), applies `SupportResistanceStrategy`, and pushes `TradingSignal`s via ZeroMQ PUSH (port 5556).
 - **Order Executor Process**: Binds a ZeroMQ PULL socket (port 5556) to receive signals, deserializes `TradingSignal`s, and executes market orders via `SendMarketOrderUseCase`.
 
@@ -97,7 +97,7 @@ The futures trading system adopts a distributed, event-driven architecture using
 
 ```
 ┌───────────────────────┐        ┌────────────────────────────┐        ┌───────────────────────────┐
-│     Gateway Process   │        │     Strategy Process(es)   │        │   Order Executor Process  │
+│     RunGatewayUseCase │        │     Strategy Process(es)   │        │   Order Executor Process  │
 │                       │        │                            │        │                           │
 │ ┌───────────────────┐ │ ZMQ    │ ┌──────────────────────┐   │  ZMQ   │ ┌───────────────────────┐ │
 │ │  PFCF API Client  │ │──────▶│ │  ZMQ Tick Subscriber │    │──────▶│ │  ZMQ Signal Puller    │ │
@@ -125,16 +125,16 @@ The futures trading system adopts a distributed, event-driven architecture using
 
 ## 2. Core Components and Relationships (ZeroMQ Context)
 
-### 2.1 Gateway Process (Containing `StartController` and `TickProducer`)
+### 2.1 RunGatewayUseCase (Containing `TickProducer`)
 
 **Role**: Interacts with the external exchange API (PFCF), produces standardized tick events, and publishes them via ZeroMQ.
 **Components**:
-  - `StartController`: Initializes gateway components, ZMQ sockets (PUB for ticks), connects API callbacks.
+  - `RunGatewayUseCase`: Initializes gateway components, ZMQ sockets (PUB for ticks), connects API callbacks.
   - `TickProducer`: Receives raw market data from PFCF API callbacks, converts data into `TickEvent` objects, serializes them using `msgpack`, and publishes them on a ZMQ PUB socket.
 
 **Relationships**:
-- `StartController` initializes `TickProducer` and the ZMQ PUB socket.
-- `TickProducer` receives data from the API client (via callbacks registered by `StartController`).
+- `RunGatewayUseCase` initializes `TickProducer` and the ZMQ PUB socket.
+- `TickProducer` receives data from the API client (via callbacks registered by `RunGatewayUseCase`).
 - `TickProducer` publishes serialized `TickEvent` messages via the `ZmqPublisher`.
 
 **Data Flow**:
@@ -282,12 +282,12 @@ def process_received_signal(self) -> bool:
 
 ### 4.2 Removal of Internal Buffering and Scheduling in Gateway
 
-- **Decision**: Removed the `FifoQueueEventSource` buffer and the `schedule` based processing from `TickProducer` and `StartController`.
+- **Decision**: Removed the `FifoQueueEventSource` buffer and the `schedule` based processing from `TickProducer` and `RunGatewayUseCase`.
 - **Rationale**: With ZeroMQ, the transport layer itself provides buffering capabilities. Ticks are published immediately upon generation. Backpressure handling (if needed) would occur at the ZMQ socket level or within the receiving processes. This simplifies the Gateway and reduces potential in-process latency introduced by scheduled batch processing.
 
 ### 4.3 Component Responsibilities
 
-- **Gateway (`StartController`, `TickProducer`)**: Focuses solely on API interaction and publishing market data.
+- **Gateway (`RunGatewayUseCase`, `TickProducer`)**: Focuses solely on API interaction and publishing market data.
 - **Strategy (`SupportResistanceStrategy`)**: Focuses on consuming market data, applying logic, and producing signals.
 - **Order Executor (`OrderExecutor`)**: Focuses on consuming signals and executing trades via use cases.
 

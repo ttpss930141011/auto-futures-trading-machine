@@ -40,7 +40,7 @@ class ProcessManagerService(ProcessManagerServiceInterface):
 
         # Paths to standalone process scripts
         self.strategy_script_path: Path = self.project_root / "run_strategy.py"
-        self.order_executor_script_path: Path = self.project_root / "run_order_executor.py"
+        self.order_executor_script_path: Path = self.project_root / "run_order_executor_gateway.py"
 
         # Directory for PID files
         self.pid_dir: Path = self.project_root / "tmp" / "pids"
@@ -96,18 +96,19 @@ class ProcessManagerService(ProcessManagerServiceInterface):
             return False
 
     def start_order_executor(self) -> bool:
-        """Start the Order Executor process.
+        """Start the Order Executor process with Gateway integration.
 
         Returns:
             bool: True if started successfully, False otherwise
         """
         try:
-            self.logger.log_info("Starting Order Executor process...")
+            self.logger.log_info("Starting Order Executor process with Gateway integration...")
 
             # Get ZMQ addresses from config
             signal_pull_address = self.config.ZMQ_SIGNAL_PULL_ADDRESS
+            dll_gateway_address = self.config.DLL_GATEWAY_CONNECT_ADDRESS
 
-            # Launch the process
+            # Launch the Gateway-enabled process
             self._order_executor_process = subprocess.Popen(
                 [
                     sys.executable,
@@ -115,24 +116,26 @@ class ProcessManagerService(ProcessManagerServiceInterface):
                     str(self.order_executor_script_path),
                     "--signal-address",
                     signal_pull_address,
+                    "--gateway-address",
+                    dll_gateway_address,
                 ]
             )
 
             # Verify process started
             if self._order_executor_process.poll() is None:
                 self.logger.log_info(
-                    f"Order Executor process started with PID {self._order_executor_process.pid}"
+                    f"Order Executor Gateway process started with PID {self._order_executor_process.pid}"
                 )
 
                 # Save PID for future reference
-                self._save_pid("order_executor", self._order_executor_process.pid)
+                self._save_pid("order_executor_gateway", self._order_executor_process.pid)
                 return True
             else:
-                self.logger.log_error("Order Executor process failed to start")
+                self.logger.log_error("Order Executor Gateway process failed to start")
                 return False
 
         except Exception as e:
-            self.logger.log_error(f"Failed to start Order Executor process: {str(e)}")
+            self.logger.log_error(f"Failed to start Order Executor Gateway process: {str(e)}")
             return False
 
     def start_gateway_thread(self, gateway_runner: Callable) -> bool:

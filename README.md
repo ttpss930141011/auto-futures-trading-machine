@@ -6,10 +6,18 @@
 
 ## Description
 
-Documentation is still in progress. The project is an automatic futures trading machine designed to trade futures
-contracts on
-every exchange due to Clean Architecture. The first presentation method is using CLI. With Clean Architecture, the
-project is testable, scalable, and flexible to add new features and exchanges.
+An automatic futures trading machine designed to trade futures contracts with **enhanced security and reliability** through the DLL Gateway Architecture. Built with Clean Architecture principles, the system is testable, scalable, and flexible to add new features and exchanges. The CLI interface provides an intuitive way to manage trading operations with enterprise-grade security.
+
+## 🚀 Latest Major Update: DLL Gateway Architecture
+
+The system now features a **production-ready DLL Gateway Architecture** that eliminates security vulnerabilities while maintaining the exact same user workflow. Key improvements:
+
+- ✅ **Enhanced Security**: Eliminated plaintext credential storage
+- ✅ **Reliability**: Single DLL instance prevents duplicate events
+- ✅ **Zero User Impact**: Same workflow, better underlying architecture
+- ✅ **Production Ready**: Comprehensive testing and monitoring
+
+See [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md) for complete usage instructions.
 
 ## Project Overview
 
@@ -21,14 +29,16 @@ This section provides a concise overview of the system architecture, core runtim
 - **Controller layer**: CLI controllers (e.g. UserLoginController, AllInOneController)
 
 ### Runtime Processes
+- **Main Process (`app.py`)**: Hosts the DLL Gateway Server (port 5557) and provides centralized exchange API access
 - **RunGatewayUseCase**: Interfaces with the PFCF exchange API, generates `TickEvent`s and publishes them over ZeroMQ PUB (port 5555). When launched via the All‑in‑One controller, this gateway runs in a background thread of the main process.
 - **Strategy Process**: Subscribes to ticks via ZeroMQ SUB (port 5555), applies `SupportResistanceStrategy`, and pushes `TradingSignal`s via ZeroMQ PUSH (port 5556).
-- **Order Executor Process**: Binds a ZeroMQ PULL socket (port 5556) to receive signals, deserializes `TradingSignal`s, and executes market orders via `SendMarketOrderUseCase`.
+- **Order Executor Process**: Binds a ZeroMQ PULL socket (port 5556) to receive signals, deserializes `TradingSignal`s, and executes orders via DLL Gateway Client (port 5557).
 
-### Communication Flow
+### Communication Flow (Enhanced with DLL Gateway)
 1. Gateway → **PUB** (ticks) → Strategy
-2. Strategy → **PUSH** (signals) → Order Executor
-3. Order Executor → Exchange API (orders)
+2. Strategy → **PUSH** (signals) → Order Executor  
+3. Order Executor → **REQ** (orders) → DLL Gateway Server → Exchange API
+4. All processes ← **Centralized logging and monitoring** ← DLL Gateway Server
 
 ### CLI Entry Point
 - `app.py` initializes shared services, repositories, and registers CLI commands.
@@ -46,7 +56,26 @@ The test coverage tag for the project is as follows:
 
 ### Prerequisites
 - Python 3.x
-- Dependencies: install via `poetry install` (or `pip install -r requirements.txt`).
+- Dependencies: install via `poetry install` (or `pip install -r requirements.txt`)
+- Exchange API credentials (set in environment variables)
+
+### Basic Usage (Unchanged Workflow)
+```bash
+# 1. Start the application (now with integrated DLL Gateway)
+python app.py
+
+# 2. Follow the familiar menu workflow:
+# Option 1: Login
+# Option 3: Register Item
+# Option 4: Create Condition  
+# Option 5: Select Order Account
+# Option 10: Start All Components (AllInOneController)
+```
+
+### Documentation
+- **[INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)**: Complete user guide with examples
+- **[README_GATEWAY.md](README_GATEWAY.md)**: Technical architecture documentation
+- **[docs/decisions/004-dll-gateway-centralization.md](docs/decisions/004-dll-gateway-centralization.md)**: Architecture decision record
 
 ### Running the Application
 ```bash

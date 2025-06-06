@@ -101,16 +101,6 @@ class RunGatewayUseCase:
                 self.gateway_initializer_service.cleanup_zmq()
                 self.running = False
 
-    def execute_in_thread(self) -> bool:
-        """Execute the gateway in threaded mode.
-        
-        This is a convenience method for starting the gateway in a separate thread.
-
-        Returns:
-            bool: True if gateway thread started successfully, False otherwise
-        """
-        return self.execute(is_threaded_mode=True)
-            
     def stop(self) -> None:
         """Stop the gateway gracefully."""
         self.logger.log_info("Stopping gateway gracefully")

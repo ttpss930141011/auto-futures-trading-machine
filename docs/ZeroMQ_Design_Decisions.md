@@ -41,7 +41,7 @@
 Exchange API
    │
    ▼
-Gateway Process (TickProducer)
+RunGatewayUseCase (TickProducer)
    │ serialize(TickEvent)
    ├─→ PUB socket (tcp://*:5555)
    ▼

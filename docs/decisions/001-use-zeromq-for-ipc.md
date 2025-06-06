@@ -23,7 +23,7 @@ We decided to replace the in-process `RealtimeDispatcher` and its associated eve
 Specific implementation details:
 
 1.  **Communication Patterns:**
-    *   **Tick Data:** Use the ZMQ **PUB/SUB** (Publish/Subscribe) pattern. The Gateway process (`TickProducer`) acts as the PUBlisher, binding to a known address. Strategy process(es) act as SUBscribers, connecting to the Gateway's address and subscribing to tick topics.
+    *   **Tick Data:** Use the ZMQ **PUB/SUB** (Publish/Subscribe) pattern. `RunGatewayUseCase` (`TickProducer`) acts as the publisher, binding to a known address. Strategy process(es) act as subscribers, connecting to the gateway's address and subscribing to tick topics.
     *   **Trading Signals:** Use the ZMQ **PUSH/PULL** pattern. Strategy process(es) act as PUSHers, connecting to a known address. The Order Executor process acts as the PULLer, binding to that address.
 2.  **Serialization:** Use the **`msgpack`** library for serializing/deserializing data (like `TickEvent` and `TradingSignal`) sent over ZMQ. `msgpack` is chosen for its efficiency and performance compared to alternatives like JSON. Custom serialization handlers are implemented for Python `datetime` objects and `Enum` types.
 3.  **Process Separation:** Core components (`TickProducer`, `SupportResistanceStrategy`, `OrderExecutor`) are refactored to operate independently, assuming they will run in separate operating system processes.
@@ -32,7 +32,7 @@ Specific implementation details:
     *   `TickProducer`: Now takes a `ZmqPublisher` dependency and publishes serialized ticks directly, removing internal buffering and scheduling.
     *   `SupportResistanceStrategy`: Removes `RealtimeDispatcher` dependency. Takes a `ZmqPusher` dependency to send serialized signals. Processes ticks received externally (e.g., from a ZMQ subscriber in its own process loop).
     *   `OrderExecutor`: Removes `RealtimeDispatcher` dependency. Takes a `ZmqPuller` dependency. Implements `process_received_signal` to poll the puller, deserialize signals, and execute orders.
-    *   `StartController`: Role shifts to initializing Gateway components and ZMQ sockets (PUB for ticks, PULL for signals listening side). No longer manages a central event loop for strategy/execution.
+    *   `RunGatewayUseCase`: Initializes gateway components and ZMQ sockets (PUB for ticks, PULL for signals listening side). It no longer manages a central event loop for strategy/execution.
 
 ## Consequences
 

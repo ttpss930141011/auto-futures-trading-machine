@@ -98,6 +98,23 @@ def test_success_threaded(capsys):
     # Ensure cleanup was called after run
     assert gw.cleaned is True
 
+def test_cleanup_called_when_loop_exits_normally():
+    logger = DummyLogger()
+    gw = DummyGatewayInit(init_ok=True, connect_ok=True)
+    uc = RunGatewayUseCase(
+        logger,
+        port_checker_service=DummyPortChecker({1: True}),
+        gateway_initializer_service=gw,
+        session_repository=DummySession(True),
+    )
+    def fake_loop(*_):
+        # Simulate a normal shutdown by clearing the running flag inside the loop
+        uc.running = False
+    uc._run_event_loop = fake_loop
+    result = uc.execute(is_threaded_mode=True)
+    assert result is True
+    assert gw.cleaned is True
+
 def test_stop_sets_running_false():
     logger = DummyLogger()
     uc = RunGatewayUseCase(logger,

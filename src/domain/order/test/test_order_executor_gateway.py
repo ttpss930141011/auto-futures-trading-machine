@@ -5,7 +5,7 @@ including signal processing, gateway integration, and error handling.
 """
 
 import pytest
-from unittest.mock import Mock, MagicMock, call
+from unittest.mock import Mock, MagicMock, call, patch
 from datetime import datetime
 
 from src.domain.order.order_executor_gateway import OrderExecutorGateway
@@ -66,7 +66,7 @@ class TestOrderExecutorGateway:
         """Create sample trading signal for testing."""
         return TradingSignal(
             commodity_id="TXFF4",
-            operation=OrderOperation.Buy,
+            operation=OrderOperation.BUY,
             when=datetime.now()
         )
 
@@ -102,7 +102,7 @@ class TestOrderExecutorGateway:
         )
         
         # Mock deserialize function
-        with pytest.mock.patch('src.domain.order.order_executor_gateway.deserialize') as mock_deserialize:
+        with patch('src.domain.order.order_executor_gateway.deserialize') as mock_deserialize:
             mock_deserialize.return_value = sample_trading_signal
             
             result = order_executor.process_received_signal()
@@ -131,7 +131,7 @@ class TestOrderExecutorGateway:
         mock_signal_puller.receive.return_value = serialized_signal
         
         # Mock deserialize to return wrong type
-        with pytest.mock.patch('src.domain.order.order_executor_gateway.deserialize') as mock_deserialize:
+        with patch('src.domain.order.order_executor_gateway.deserialize') as mock_deserialize:
             mock_deserialize.return_value = "not_a_trading_signal"
             
             result = order_executor.process_received_signal()
@@ -152,7 +152,7 @@ class TestOrderExecutorGateway:
         mock_signal_puller.receive.return_value = serialized_signal
         
         # Mock deserialize to raise exception
-        with pytest.mock.patch('src.domain.order.order_executor_gateway.deserialize') as mock_deserialize:
+        with patch('src.domain.order.order_executor_gateway.deserialize') as mock_deserialize:
             mock_deserialize.side_effect = Exception("Deserialization error")
             
             result = order_executor.process_received_signal()
@@ -369,7 +369,7 @@ class TestOrderExecutorGateway:
         )
         
         # Mock deserialize
-        with pytest.mock.patch('src.domain.order.order_executor_gateway.deserialize') as mock_deserialize:
+        with patch('src.domain.order.order_executor_gateway.deserialize') as mock_deserialize:
             mock_deserialize.return_value = sample_trading_signal
             
             # Execute the flow

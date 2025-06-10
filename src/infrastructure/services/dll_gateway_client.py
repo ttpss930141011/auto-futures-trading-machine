@@ -12,9 +12,11 @@ from dataclasses import asdict
 from src.interactor.interfaces.logger.logger import LoggerInterface
 from src.interactor.interfaces.services.dll_gateway_service_interface import (
     DllGatewayServiceInterface,
-    OrderRequest,
-    OrderResponse,
     PositionInfo,
+)
+from src.interactor.dtos.send_market_order_dtos import (
+    SendMarketOrderInputDto,
+    SendMarketOrderOutputDto,
 )
 from src.interactor.errors.dll_gateway_errors import (
     DllGatewayConnectionError,
@@ -148,14 +150,14 @@ class DllGatewayClient(DllGatewayServiceInterface):
         except Exception as e:
             self._logger.log_error(f"Error resetting connection: {e}")
 
-    def send_order(self, order_request: OrderRequest) -> OrderResponse:
+    def send_order(self, input_dto: SendMarketOrderInputDto) -> SendMarketOrderOutputDto:
         """Send a market order through the DLL Gateway.
         
         Args:
-            order_request: The order request containing all necessary parameters.
+            input_dto: SendMarketOrderInputDto containing all necessary parameters.
             
         Returns:
-            OrderResponse: Result of the order submission.
+            SendMarketOrderOutputDto: Result of the order submission.
             
         Raises:
             DllGatewayError: If the gateway service is unavailable.
@@ -163,23 +165,24 @@ class DllGatewayClient(DllGatewayServiceInterface):
         """
         try:
             self._logger.log_info(
-                f"Sending order request: {order_request.side} {order_request.quantity} "
-                f"{order_request.item_code}"
+                f"Sending order request: {input_dto.side.name} {input_dto.quantity} "
+                f"{input_dto.item_code}"
             )
             
             request_data = {
                 "operation": "send_order",
-                "parameters": asdict(order_request)
+                "parameters": input_dto.to_dict()
             }
             
             response_data = self._send_request(request_data)
             
-            # Convert response to OrderResponse object
-            return OrderResponse(
-                success=response_data.get("success", False),
-                order_id=response_data.get("order_id"),
-                error_message=response_data.get("error_message"),
-                error_code=response_data.get("error_code"),
+            # Create SendMarketOrderOutputDto from response
+            return SendMarketOrderOutputDto(
+                is_send_order=response_data.get("is_send_order", False),
+                note=response_data.get("note", ""),
+                order_serial=response_data.get("order_serial", ""),
+                error_code=response_data.get("error_code", ""),
+                error_message=response_data.get("error_message", ""),
             )
             
         except DllGatewayError:

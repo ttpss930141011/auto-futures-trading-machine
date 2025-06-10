@@ -10,7 +10,8 @@ from unittest.mock import Mock, MagicMock, patch
 
 from src.infrastructure.services.dll_gateway_client import DllGatewayClient
 from src.interactor.interfaces.logger.logger import LoggerInterface
-from src.interactor.interfaces.services.dll_gateway_service_interface import OrderRequest, OrderResponse
+from src.interactor.dtos.send_market_order_dtos import SendMarketOrderInputDto, SendMarketOrderOutputDto
+from src.domain.value_objects import OrderOperation, OrderTypeEnum, TimeInForce, OpenClose, DayTrade
 from src.interactor.errors.dll_gateway_errors import (
     DllGatewayConnectionError,
     DllGatewayTimeoutError,
@@ -77,30 +78,32 @@ class TestDllGatewayClient:
         # Setup mock response
         mock_socket.recv_string.return_value = json.dumps({
             "success": True,
-            "order_id": "ORDER123"
+            "is_send_order": True,
+            "order_serial": "ORDER123",
+            "note": "Order sent successfully"
         })
         
         # Create order request
-        order_request = OrderRequest(
+        order_request = SendMarketOrderInputDto(
             order_account="TEST001",
             item_code="TXFF4",
-            side="Buy",
-            order_type="Market",
+            side=OrderOperation.BUY,
+            order_type=OrderTypeEnum.Market,
             price=0.0,
             quantity=1,
-            open_close="AUTO",
+            open_close=OpenClose.AUTO,
             note="Test order",
-            day_trade="No",
-            time_in_force="IOC"
+            day_trade=DayTrade.No,
+            time_in_force=TimeInForce.IOC
         )
         
         # Send order
         response = gateway_client.send_order(order_request)
         
         # Verify response
-        assert isinstance(response, OrderResponse)
-        assert response.success is True
-        assert response.order_id == "ORDER123"
+        assert isinstance(response, SendMarketOrderOutputDto)
+        assert response.is_send_order is True
+        assert response.order_serial == "ORDER123"
         
         # Verify socket was called
         mock_socket.send_string.assert_called_once()
@@ -111,21 +114,24 @@ class TestDllGatewayClient:
         # Setup mock response with error
         mock_socket.recv_string.return_value = json.dumps({
             "success": False,
+            "is_send_order": False,
             "error_message": "Invalid order",
-            "error_code": "INVALID_ORDER"
+            "error_code": "INVALID_ORDER",
+            "order_serial": "",
+            "note": "Order failed"
         })
         
-        order_request = OrderRequest(
+        order_request = SendMarketOrderInputDto(
             order_account="TEST001",
             item_code="TXFF4",
-            side="Buy",
-            order_type="Market",
+            side=OrderOperation.BUY,
+            order_type=OrderTypeEnum.Market,
             price=0.0,
             quantity=1,
-            open_close="AUTO",
+            open_close=OpenClose.AUTO,
             note="Test order",
-            day_trade="No",
-            time_in_force="IOC"
+            day_trade=DayTrade.No,
+            time_in_force=TimeInForce.IOC
         )
         
         # This should raise an exception because server returned error
@@ -208,17 +214,17 @@ class TestDllGatewayClient:
             mock_zmq.Again = MockAgain
             mock_socket.recv_string.side_effect = MockAgain()
             
-            order_request = OrderRequest(
+            order_request = SendMarketOrderInputDto(
                 order_account="TEST001",
                 item_code="TXFF4",
-                side="Buy",
-                order_type="Market",
+                side=OrderOperation.BUY,
+                order_type=OrderTypeEnum.Market,
                 price=0.0,
                 quantity=1,
-                open_close="AUTO",
+                open_close=OpenClose.AUTO,
                 note="Test order",
-                day_trade="No",
-                time_in_force="IOC"
+                day_trade=DayTrade.No,
+                time_in_force=TimeInForce.IOC
             )
             
             with pytest.raises(DllGatewayTimeoutError):
@@ -242,17 +248,17 @@ class TestDllGatewayClient:
         # Return invalid JSON
         mock_socket.recv_string.return_value = "{ invalid json }"
         
-        order_request = OrderRequest(
+        order_request = SendMarketOrderInputDto(
             order_account="TEST001",
             item_code="TXFF4",
-            side="Buy",
-            order_type="Market",
+            side=OrderOperation.BUY,
+            order_type=OrderTypeEnum.Market,
             price=0.0,
             quantity=1,
-            open_close="AUTO",
+            open_close=OpenClose.AUTO,
             note="Test order",
-            day_trade="No",
-            time_in_force="IOC"
+            day_trade=DayTrade.No,
+            time_in_force=TimeInForce.IOC
         )
         
         with pytest.raises(DllGatewayError) as exc_info:
@@ -273,8 +279,9 @@ class TestDllGatewayClientIntegration:
             mock_context.return_value.socket.return_value = mock_socket
             mock_socket.recv_string.return_value = json.dumps({
                 "success": True,
-                "order_id": "ORDER456",
-                "status": "executed"
+                "is_send_order": True,
+                "order_serial": "ORDER456",
+                "note": "Integration test success"
             })
             
             client = DllGatewayClient(
@@ -286,23 +293,23 @@ class TestDllGatewayClientIntegration:
             client._socket = mock_socket
             
             # Test order sending
-            order_request = OrderRequest(
+            order_request = SendMarketOrderInputDto(
                 order_account="INTEGRATION_TEST",
                 item_code="TXFF4",
-                side="Sell",
-                order_type="Market",
+                side=OrderOperation.SELL,
+                order_type=OrderTypeEnum.Market,
                 price=0.0,
                 quantity=2,
-                open_close="AUTO",
+                open_close=OpenClose.AUTO,
                 note="Integration test order",
-                day_trade="No",
-                time_in_force="IOC"
+                day_trade=DayTrade.No,
+                time_in_force=TimeInForce.IOC
             )
             
             response = client.send_order(order_request)
             
-            assert response.success is True
-            assert response.order_id == "ORDER456"
+            assert response.is_send_order is True
+            assert response.order_serial == "ORDER456"
             
             # Verify logging
             mock_logger.log_info.assert_called()

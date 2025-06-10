@@ -13,6 +13,32 @@ if TYPE_CHECKING:
 
 
 @dataclass
+class OrderRequest:
+    """Data class representing an order request."""
+    
+    order_account: str
+    item_code: str
+    side: str
+    order_type: str
+    price: float
+    quantity: int
+    open_close: str
+    note: str
+    day_trade: str
+    time_in_force: str
+
+
+@dataclass
+class OrderResponse:
+    """Data class representing an order response."""
+    
+    success: bool
+    order_id: str = None
+    error_message: str = None
+    error_code: str = None
+
+
+@dataclass
 class PositionInfo:
     """Data class representing position information."""
     

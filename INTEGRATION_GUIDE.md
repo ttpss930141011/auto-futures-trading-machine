@@ -12,12 +12,14 @@ python app.py
 
 ## What's New
 
-### Enhanced Security
-Your system now uses a **DLL Gateway Architecture** that:
+### Enhanced Security & Reliability
+Your system now uses an **optimized DLL Gateway Architecture** that:
 - ✅ Eliminates security vulnerabilities from credential files
 - ✅ Prevents duplicate events and trading conflicts  
 - ✅ Provides centralized logging and monitoring
 - ✅ Maintains all existing functionality
+- ✅ Uses consistent API patterns for reliable order execution
+- ✅ Unified data structures reduce complexity and errors
 
 ### Improved Status Messages
 When you start the application, you'll now see:
@@ -195,9 +197,11 @@ python test_gateway_integration.py
 - Enhanced security is automatic
 
 ### File Changes
-- Main application: Enhanced `app.py` (no separate gateway file)
-- Order executor: Now uses `run_order_executor_gateway.py`
-- Configuration: Added `.env` support for customization
+- **Main application**: Enhanced `app.py` (no separate gateway file)
+- **Order executor**: Now uses `run_order_executor_gateway.py` exclusively
+  - ⚠️ `run_order_executor.py` has been removed (deprecated old architecture)
+- **Configuration**: Added `.env` support for customization
+- **API consistency**: Unified DTO usage across all Gateway components
 
 ## Performance Characteristics
 

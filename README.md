@@ -129,46 +129,56 @@ Updated Link on Miro: [Event Storming](https://miro.com/app/board/uXjVKbXfevY=/?
 The futures trading system adopts a distributed, event-driven architecture using ZeroMQ for communication between core processes. The main components run in separate processes: Gateway (Handles API interaction), Strategy Engine, and Order Executor.
 
 ```
-┌───────────────────────┐        ┌────────────────────────────┐        ┌───────────────────────────┐
-│     RunGatewayUseCase │        │     Strategy Process(es)   │        │   Order Executor Process  │
-│                       │        │                            │        │                           │
-│ ┌───────────────────┐ │ ZMQ    │ ┌──────────────────────┐   │  ZMQ   │ ┌───────────────────────┐ │
-│ │  PFCF API Client  │ │──────▶│ │  ZMQ Tick Subscriber │    │──────▶│ │  ZMQ Signal Puller    │ │
-│ └─────────┬─────────┘ │(Tick)  │ └──────────┬───────────┘   │(Signal)│ └──────────┬────────────┘ │
-│           │           │ (PUB)  │            │               │ (PUSH) │            │              │
-│           │ Raw Data  │        │            │ TickEvent     │        │            │ Signal       │
-│           ▼           │        │            ▼               │        │            ▼              │
-│ ┌───────────────────┐ │        │ ┌──────────────────────┐   │        │ ┌───────────────────────┐ │
-│ │   TickProducer    ├─┼────────┤ │ SupportResistance    ├───┼────────┤ │     OrderExecutor     │ │
-│ │ (Publishes Ticks) │ │        │ │ Strategy (Pushes Sig)│   │        │ │ (Executes Orders)     │ │
-│ └───────────────────┘ │        │ └──────────┬───────────┘   │        │ └──────────┬────────────┘ │
-│                       │        │            │               │        │            │              │
-│                       │        │            │ Condition     │        │            │ Order Cmd    │
-│                       │        │            │ Repository    │        │            ▼              │
-│                       │        │            │ Interaction   │        │ ┌───────────────────────┐ │
-│                       │        │            └───────────────┘        │ │ SendMarketOrderUseCase│ │
-│                       │        │                            │        │ └───────────────────────┘ │
-└───────────────────────┘        └────────────────────────────┘        └───────────────────────────┘
-        │                                                                         │
-        └─────────────────────────────────── External Systems ────────────────────┘
-                         (Exchange API, Condition Database, Session Repo)
-
+┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                    MAIN PROCESS (app.py)                                           │
+│ ┌─────────────────────────────────────────────────────────────────────────────────────────────┐ │
+│ │                            CLI Interface & DLL Gateway Server                              │ │
+│ │  ┌──────────────────────┐  ┌──────────────────────┐  ┌──────────────────────┐              │ │
+│ │  │ RunGatewayUseCase    │  │ DLL Gateway Server   │  │ PFCF API Client      │              │ │
+│ │  │ (Market Data PUB)    │  │ (Order REP Server)   │  │ (Single Instance)    │              │ │
+│ │  │ Port 5555            │  │ Port 5557            │  │ 🛡️ Centralized      │              │ │
+│ │  └──────────────────────┘  └──────────────────────┘  └──────────────────────┘              │ │
+│ └─────────────────────────────────────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────────────────────────────┘
+           │ ZMQ PUB                                │ ZMQ REQ/REP                    │ Exchange API
+           │ (Market Data)                          │ (Secure Orders)                 │ (Direct Access)
+           ▼                                        ▲                                 ▼
+┌────────────────────────────┐        ┌─────────────────────────────────────┐        ┌──────────────┐
+│    Strategy Process(es)    │        │      Order Executor Process        │        │ Exchange API │
+│                            │        │                                     │        │              │
+│ ┌────────────────────────┐ │  ZMQ   │ ┌─────────────────────────────────┐ │        │ ┌──────────┐ │
+│ │ ZMQ Tick Subscriber    │ │──────▶ │ │ ZMQ Signal Puller               │ │        │ │ PFCF API │ │
+│ │ (Port 5555)            │ │(Signal)│ │ (Port 5556)                     │ │        │ │          │ │
+│ └────────┬───────────────┘ │ (PUSH) │ └────────┬────────────────────────┘ │        │ └──────────┘ │
+│          │ TickEvent       │        │          │ TradingSignal            │        │              │
+│          ▼                 │        │          ▼                          │        │              │
+│ ┌────────────────────────┐ │        │ ┌─────────────────────────────────┐ │        │              │
+│ │ SupportResistance      ├─┼────────┤ │ OrderExecutorGateway            │ │        │              │
+│ │ Strategy               │ │        │ │ (DLL Gateway Client)            │ │        │              │
+│ └────────┬───────────────┘ │        │ └────────┬────────────────────────┘ │        │              │
+│          │ Condition       │        │          │ ZMQ REQ Client            │        │              │
+│          │ Repository      │        │          │ (Port 5557)               │        │              │
+│          │ Interaction     │        │          │ 🔒 No Direct DLL Access   │        │              │
+│          └─────────────────┘        │          └───────────────────────────┘        │              │
+└────────────────────────────┘        └─────────────────────────────────────┘        └──────────────┘
 ```
 *Note: Condition Repository and Session Repository interactions are simplified in the diagram.*
 
 ## 2. Core Components and Relationships (ZeroMQ Context)
 
-### 2.1 RunGatewayUseCase (Containing `TickProducer`)
+### 2.1 Main Process (Containing `RunGatewayUseCase` and `DLL Gateway Server`)
 
-**Role**: Interacts with the external exchange API (PFCF), produces standardized tick events, and publishes them via ZeroMQ.
+**Role**: Centralized process hosting both market data publishing and secure order execution gateway.
 **Components**:
   - `RunGatewayUseCase`: Initializes gateway components, ZMQ sockets (PUB for ticks), connects API callbacks.
   - `TickProducer`: Receives raw market data from PFCF API callbacks, converts data into `TickEvent` objects, serializes them using `msgpack`, and publishes them on a ZMQ PUB socket.
+  - `DLL Gateway Server`: Centralized server providing secure access to exchange DLL functionality via ZMQ REP socket.
 
 **Relationships**:
 - `RunGatewayUseCase` initializes `TickProducer` and the ZMQ PUB socket.
 - `TickProducer` receives data from the API client (via callbacks registered by `RunGatewayUseCase`).
 - `TickProducer` publishes serialized `TickEvent` messages via the `ZmqPublisher`.
+- `DLL Gateway Server` processes order execution requests from child processes via ZMQ REQ/REP pattern.
 
 **Data Flow**:
 1. PFCF API Callback → `TickProducer.handle_tick_data()` → Create `TickEvent`
@@ -214,24 +224,26 @@ def _send_trading_signal(self, action: OrderOperation, tick_event: TickEvent):
         # ... error logging ...
 ```
 
-### 2.3 Order Executor Process (Containing `OrderExecutor`)
+### 2.3 Order Executor Process (Containing `OrderExecutorGateway`)
 
-**Role**: Receives trading signals via ZeroMQ and executes orders through the appropriate use cases.
+**Role**: Receives trading signals via ZeroMQ and executes orders through the DLL Gateway Client (no direct DLL access).
 **Components**:
   - `ZmqPuller`: Binds a ZMQ PULL socket to receive signals from the Strategy process(es).
-  - `OrderExecutor`: Receives deserialized `TradingSignal` objects, interacts with `SessionRepository`, and uses `SendMarketOrderUseCase` to place orders.
+  - `OrderExecutorGateway`: Receives deserialized `TradingSignal` objects, interacts with `SessionRepository`, and uses `DLL Gateway Client` to place orders.
+  - `DLL Gateway Client`: Communicates with the main process's DLL Gateway Server via ZMQ REQ/REP pattern.
 
 **Relationships**:
 - Runs in a loop, polling the `ZmqPuller` for new signals.
 - Deserializes received signal messages.
-- Calls `OrderExecutor.process_received_signal()` which handles the deserialized signal and triggers the `SendMarketOrderUseCase`.
+- Calls `OrderExecutorGateway.process_received_signal()` which handles the deserialized signal and sends orders via DLL Gateway Client.
+- **Security**: No direct DLL access - all orders routed through centralized gateway.
 
 **Data Flow**:
 1. `ZmqPuller.receive()` → `deserialize()` → `TradingSignal`
-2. `TradingSignal` → `OrderExecutor.process_received_signal()` → Create DTO
-3. DTO → `SendMarketOrderUseCase.execute()` → Interact with Exchange API (via Session/Config)
+2. `TradingSignal` → `OrderExecutorGateway.process_received_signal()` → Create DTO
+3. DTO → `DLL Gateway Client.send_order()` → ZMQ REQ → `DLL Gateway Server` → Exchange API
 
-**Code Example (`OrderExecutor`)**:
+**Code Example (`OrderExecutorGateway`)**:
 ```python
 def process_received_signal(self) -> bool:
     serialized_signal = self.signal_puller.receive(non_blocking=True)
@@ -240,7 +252,8 @@ def process_received_signal(self) -> bool:
             signal: TradingSignal = deserialize(serialized_signal)
             # ... validation ...
             input_dto = SendMarketOrderInputDto(...)
-            self.send_order_use_case.execute(input_dto)
+            # Send order via DLL Gateway Client (no direct DLL access)
+            response = self.dll_gateway_service.send_order(input_dto)
             # ... logging ...
             return True
         except Exception as e:
@@ -295,7 +308,22 @@ def process_received_signal(self) -> bool:
    ```
 4. **Order Execution Trigger (Order Executor)**:
    ```
-   TradingSignal → OrderExecutor.process_received_signal() → SendMarketOrderUseCase.execute()
+   TradingSignal → OrderExecutorGateway.process_received_signal() → DLL Gateway Client → DLL Gateway Server → Exchange API
+   ```
+
+### 3.3 DLL Gateway Communication Flow
+
+1. **Order Request (Order Executor to Gateway)**:
+   ```
+   OrderExecutorGateway → Create SendMarketOrderInputDto → DLL Gateway Client → ZMQ REQ
+   ```
+2. **Gateway Processing (Main Process)**:
+   ```
+   ZMQ REP → DLL Gateway Server → PFCF API → Exchange Order Execution
+   ```
+3. **Order Response (Gateway to Order Executor)**:
+   ```
+   Exchange Response → DLL Gateway Server → ZMQ REP → DLL Gateway Client → OrderExecutorGateway
    ```
 
 ## 4. Key Design Decisions

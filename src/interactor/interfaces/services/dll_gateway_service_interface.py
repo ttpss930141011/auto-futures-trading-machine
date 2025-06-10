@@ -5,34 +5,11 @@ through a centralized gateway service, following the Dependency Inversion Princi
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, Optional, List, TYPE_CHECKING
 from dataclasses import dataclass
 
-
-@dataclass
-class OrderRequest:
-    """Data class representing an order request."""
-    
-    order_account: str
-    item_code: str
-    side: str
-    order_type: str
-    price: float
-    quantity: int
-    open_close: str
-    note: str
-    day_trade: str
-    time_in_force: str
-
-
-@dataclass
-class OrderResponse:
-    """Data class representing an order response."""
-    
-    success: bool
-    order_id: Optional[str] = None
-    error_message: Optional[str] = None
-    error_code: Optional[str] = None
+if TYPE_CHECKING:
+    from src.interactor.dtos.send_market_order_dtos import SendMarketOrderInputDto, SendMarketOrderOutputDto
 
 
 @dataclass
@@ -54,14 +31,14 @@ class DllGatewayServiceInterface(ABC):
     """
 
     @abstractmethod
-    def send_order(self, order_request: OrderRequest) -> OrderResponse:
+    def send_order(self, input_dto: "SendMarketOrderInputDto") -> "SendMarketOrderOutputDto":
         """Send a market order through the exchange DLL.
         
         Args:
-            order_request: The order request containing all necessary parameters.
+            input_dto: SendMarketOrderInputDto containing all necessary parameters.
             
         Returns:
-            OrderResponse: Result of the order submission.
+            SendMarketOrderOutputDto: Result of the order submission.
             
         Raises:
             DllGatewayError: If the gateway service is unavailable.

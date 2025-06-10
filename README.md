@@ -166,6 +166,13 @@ This project stands on the shoulders of giants:
 - High-frequency trading system designs that inspired our architecture
 - All contributors who've helped shape this journey
 
+## 8. Equity Trend Chart
+
+This is the daily change in equity
+<!-- GRAPH START -->
+![equity](static/imgs/equity.png)
+<!-- GRAPH END -->
+
 ---
 
 *"In trading, as in software, the best systems are those that are simple to understand, yet sophisticated in their execution."*

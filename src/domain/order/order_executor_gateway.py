@@ -16,8 +16,8 @@ from src.interactor.interfaces.repositories.session_repository import SessionRep
 from src.interactor.interfaces.logger.logger import LoggerInterface
 from src.interactor.interfaces.services.dll_gateway_service_interface import (
     DllGatewayServiceInterface,
-    OrderRequest,
 )
+from src.interactor.dtos.send_market_order_dtos import SendMarketOrderInputDto
 from src.interactor.errors.dll_gateway_errors import DllGatewayError
 
 
@@ -107,48 +107,48 @@ class OrderExecutorGateway:
                 f"Signal details - commodity: {signal.commodity_id}, operation: {signal.operation}"
             )
 
-            # Create order request for DLL Gateway
-            order_request = self._create_order_request(signal, order_account)
+            # Create order input DTO for DLL Gateway
+            input_dto = self._create_order_input_dto(signal, order_account)
 
             # Execute order through DLL Gateway
-            self._execute_order_via_gateway(order_request)
+            self._execute_order_via_gateway(input_dto)
 
         except Exception as e:
             self._logger.log_error(f"Error processing trading signal: {e}")
 
-    def _create_order_request(self, signal: TradingSignal, order_account: str) -> OrderRequest:
-        """Create an order request from trading signal.
+    def _create_order_input_dto(self, signal: TradingSignal, order_account: str) -> SendMarketOrderInputDto:
+        """Create an order input DTO from trading signal.
         
         Args:
             signal: The trading signal.
             order_account: The order account to use.
             
         Returns:
-            OrderRequest object ready for gateway execution.
+            SendMarketOrderInputDto object ready for gateway execution.
         """
-        return OrderRequest(
+        return SendMarketOrderInputDto(
             order_account=order_account,
             item_code=signal.commodity_id,
-            side=signal.operation.name,  # Convert enum to string
-            order_type=OrderTypeEnum.Market.name,
+            side=signal.operation,  # Use the enum directly
+            order_type=OrderTypeEnum.Market,
             price=0.0,  # Market orders don't require a price
             quantity=self._default_quantity,
-            open_close=OpenClose.AUTO.name,
+            open_close=OpenClose.AUTO,
             note="From AFTM Gateway",
-            day_trade=DayTrade.No.name,
-            time_in_force=TimeInForce.IOC.name,
+            day_trade=DayTrade.No,
+            time_in_force=TimeInForce.IOC,
         )
 
-    def _execute_order_via_gateway(self, order_request: OrderRequest) -> None:
+    def _execute_order_via_gateway(self, input_dto: SendMarketOrderInputDto) -> None:
         """Execute order through DLL Gateway Service.
         
         Args:
-            order_request: The order request to execute.
+            input_dto: The order input DTO to execute.
         """
         try:
             self._logger.log_info(
-                f"Sending order to DLL Gateway: {order_request.side} {order_request.quantity} "
-                f"{order_request.item_code}"
+                f"Sending order to DLL Gateway: {input_dto.side.name} {input_dto.quantity} "
+                f"{input_dto.item_code}"
             )
 
             # Check gateway connection before executing
@@ -157,12 +157,12 @@ class OrderExecutorGateway:
                 return
 
             # Execute order through gateway
-            response = self._dll_gateway_service.send_order(order_request)
+            response = self._dll_gateway_service.send_order(input_dto)
 
-            if response.success:
+            if response.is_send_order:
                 self._logger.log_info(
                     f"Order executed successfully via DLL Gateway. "
-                    f"Order ID: {response.order_id}"
+                    f"Order Serial: {response.order_serial}"
                 )
             else:
                 self._logger.log_error(

@@ -68,17 +68,6 @@ class UserLoginUseCase:
         # Create a new session in the session manager
         self.session_repository.create_session(account=user.account)
 
-        # TEMPORARY: Store auth details for order executor process
-        # WARNING: This is only for development/testing
-        # In production, use proper credential management or token-based auth
-        if hasattr(self.session_repository, "set_auth_details"):
-            self.logger.log_warning(
-                "DEVELOPMENT MODE: Temporarily storing auth details. " "DO NOT USE IN PRODUCTION!"
-            )
-            self.session_repository.set_auth_details(
-                password=input_dto.password, ip_address=input_dto.ip_address
-            )
-
         output_dto = UserLoginOutputDto(user)
         presenter_response = self.presenter.present(output_dto)
         self.logger.log_info("User login successfully")

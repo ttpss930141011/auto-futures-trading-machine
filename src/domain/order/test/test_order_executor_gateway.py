@@ -16,8 +16,10 @@ from src.interactor.interfaces.repositories.session_repository import SessionRep
 from src.interactor.interfaces.logger.logger import LoggerInterface
 from src.interactor.interfaces.services.dll_gateway_service_interface import (
     DllGatewayServiceInterface,
-    OrderRequest,
-    OrderResponse,
+)
+from src.interactor.dtos.send_market_order_dtos import (
+    SendMarketOrderInputDto,
+    SendMarketOrderOutputDto,
 )
 from src.interactor.errors.dll_gateway_errors import DllGatewayError
 
@@ -97,8 +99,12 @@ class TestOrderExecutorGateway:
         mock_signal_puller.receive.return_value = serialized_signal
         mock_session_repository.get_order_account.return_value = "TEST001"
         mock_dll_gateway_service.is_connected.return_value = True
-        mock_dll_gateway_service.send_order.return_value = OrderResponse(
-            success=True, order_id="ORDER123"
+        mock_dll_gateway_service.send_order.return_value = SendMarketOrderOutputDto(
+            is_send_order=True,
+            note="Test order",
+            order_serial="ORDER123",
+            error_code="",
+            error_message=""
         )
         
         # Mock deserialize function
@@ -192,35 +198,41 @@ class TestOrderExecutorGateway:
     def test_execute_order_via_gateway_success(self, order_executor, mock_dll_gateway_service,
                                               mock_logger):
         """Test successful order execution via gateway."""
+        from src.domain.value_objects import OrderOperation, OrderTypeEnum, OpenClose, DayTrade, TimeInForce
+        
         # Setup mocks
         mock_dll_gateway_service.is_connected.return_value = True
-        mock_dll_gateway_service.send_order.return_value = OrderResponse(
-            success=True, order_id="ORDER456"
+        mock_dll_gateway_service.send_order.return_value = SendMarketOrderOutputDto(
+            is_send_order=True,
+            note="Test order",
+            order_serial="ORDER456",
+            error_code="",
+            error_message=""
         )
         
-        # Create order request
-        order_request = OrderRequest(
+        # Create order input DTO
+        input_dto = SendMarketOrderInputDto(
             order_account="TEST001",
             item_code="TXFF4",
-            side="Buy",
-            order_type="Market",
+            side=OrderOperation.BUY,
+            order_type=OrderTypeEnum.Market,
             price=0.0,
             quantity=1,
-            open_close="AUTO",
+            open_close=OpenClose.AUTO,
             note="Test",
-            day_trade="No",
-            time_in_force="IOC"
+            day_trade=DayTrade.No,
+            time_in_force=TimeInForce.IOC
         )
         
-        order_executor._execute_order_via_gateway(order_request)
+        order_executor._execute_order_via_gateway(input_dto)
         
         # Verify gateway calls
         mock_dll_gateway_service.is_connected.assert_called_once()
-        mock_dll_gateway_service.send_order.assert_called_once_with(order_request)
+        mock_dll_gateway_service.send_order.assert_called_once_with(input_dto)
         
         # Verify success logging
         mock_logger.log_info.assert_any_call(
-            "Order executed successfully via DLL Gateway. Order ID: ORDER456"
+            "Order executed successfully via DLL Gateway. Order Serial: ORDER456"
         )
 
     def test_execute_order_via_gateway_not_connected(self, order_executor, mock_dll_gateway_service,

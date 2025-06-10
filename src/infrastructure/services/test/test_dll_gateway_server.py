@@ -31,6 +31,11 @@ class TestDllGatewayServer:
         mock_client.client = Mock()
         mock_client.client.DTradeLib = Mock()
         mock_client.client.DAccountLib = Mock()
+        
+        # Add trade attribute for OrderObject
+        mock_client.trade = Mock()
+        mock_client.trade.OrderObject = Mock()
+        
         return mock_client
 
     @pytest.fixture
@@ -39,23 +44,31 @@ class TestDllGatewayServer:
         return Mock(spec=LoggerInterface)
 
     @pytest.fixture
+    def mock_config(self):
+        """Create mock config."""
+        from src.app.cli_pfcf.config import Config
+        return Mock(spec=Config)
+
+    @pytest.fixture
     def server_address(self):
         """Provide test server address."""
         return "tcp://127.0.0.1:15557"  # Use different port to avoid conflicts
 
     @pytest.fixture
-    def gateway_server(self, mock_exchange_client, mock_logger, server_address):
+    def gateway_server(self, mock_exchange_client, mock_config, mock_logger, server_address):
         """Create DLL Gateway Server instance for testing."""
         return DllGatewayServer(
             exchange_client=mock_exchange_client,
+            config=mock_config,
             logger=mock_logger,
             bind_address=server_address,
             request_timeout_ms=1000,
         )
 
-    def test_server_initialization(self, gateway_server, mock_exchange_client, mock_logger):
+    def test_server_initialization(self, gateway_server, mock_exchange_client, mock_config, mock_logger):
         """Test server initialization with proper dependencies."""
         assert gateway_server._exchange_client == mock_exchange_client
+        assert gateway_server._config == mock_config
         assert gateway_server._logger == mock_logger
         assert gateway_server._context is None
         assert gateway_server._socket is None
@@ -105,10 +118,32 @@ class TestDllGatewayServer:
                 assert server._running is True
             assert gateway_server._running is False
 
-    def test_send_order_request_processing(self, gateway_server, mock_exchange_client):
+    def test_send_order_request_processing(self, gateway_server, mock_exchange_client, mock_config):
         """Test processing of send order requests."""
-        # Setup mock
-        mock_exchange_client.client.DTradeLib.NewOrder.return_value = "ORDER123"
+        # Setup mock order result
+        mock_order_result = Mock()
+        mock_order_result.ISSEND = True
+        mock_order_result.NOTE = "Test order"
+        mock_order_result.SEQ = "ORDER123"
+        mock_order_result.ERRORCODE = 0
+        mock_order_result.ERRORMSG = ""
+        
+        mock_exchange_client.client.DTradeLib.Order.return_value = mock_order_result
+        
+        # Setup mock config for to_pfcf_dict
+        mock_config_instance = Mock()
+        mock_config_instance.to_pfcf_dict.return_value = {
+            "ACTNO": "TEST001",
+            "PRODUCTID": "TXFF4", 
+            "BS": "Buy",
+            "ORDERTYPE": "Market",
+            "PRICE": 0.0,
+            "ORDERQTY": 1,
+            "TIMEINFORCE": "IOC",
+            "OPENCLOSE": "AUTO",
+            "DTRADE": "No",
+            "NOTE": "Test order"
+        }
         
         # Create request
         request_data = {
@@ -116,13 +151,13 @@ class TestDllGatewayServer:
             "parameters": {
                 "order_account": "TEST001",
                 "item_code": "TXFF4",
-                "side": "Buy",
+                "side": "buy",  # Use correct OrderOperation value
                 "order_type": "Market",
                 "price": 0.0,
                 "quantity": 1,
                 "open_close": "AUTO",
                 "note": "Test order",
-                "day_trade": "No",
+                "day_trade": "N",  # Use correct DayTrade value
                 "time_in_force": "IOC",
             }
         }
@@ -130,14 +165,15 @@ class TestDllGatewayServer:
         # Process request
         response = gateway_server._process_request(json.dumps(request_data).encode())
         
-        # Verify response
-        assert response["success"] is True
-        assert response["order_id"] == "ORDER123"
+        # Verify response format matches SendMarketOrderOutputDto
+        assert response["is_send_order"] is True
+        assert response["order_serial"] == "ORDER123"
+        assert response["note"] == "Test order"
+        assert response["error_code"] == "0"
+        assert response["error_message"] == ""
         
         # Verify DLL was called
-        mock_exchange_client.client.DTradeLib.NewOrder.assert_called_once_with(
-            "TEST001", "TXFF4", "Buy", "Market", 0.0, 1, "AUTO", "Test order", "No", "IOC"
-        )
+        mock_exchange_client.client.DTradeLib.Order.assert_called_once()
 
     def test_send_order_missing_parameters(self, gateway_server):
         """Test send order request with missing parameters."""
@@ -158,20 +194,20 @@ class TestDllGatewayServer:
     def test_send_order_exchange_error(self, gateway_server, mock_exchange_client):
         """Test send order when exchange API raises error."""
         # Setup mock to raise exception
-        mock_exchange_client.client.DTradeLib.NewOrder.side_effect = Exception("Exchange API error")
+        mock_exchange_client.client.DTradeLib.Order.side_effect = Exception("Exchange API error")
         
         request_data = {
             "operation": "send_order",
             "parameters": {
                 "order_account": "TEST001",
                 "item_code": "TXFF4",
-                "side": "Buy",
+                "side": "buy",  # Use correct OrderOperation value
                 "order_type": "Market",
                 "price": 0.0,
                 "quantity": 1,
                 "open_close": "AUTO",
                 "note": "Test order",
-                "day_trade": "No",
+                "day_trade": "N",  # Use correct DayTrade value
                 "time_in_force": "IOC",
             }
         }
@@ -249,53 +285,63 @@ class TestDllGatewayServer:
             assert response["success"] is False
             assert response["error_code"] == "PROCESSING_ERROR"
 
-    def test_execute_order_success(self, gateway_server, mock_exchange_client):
+    def test_execute_order_success(self, gateway_server, mock_exchange_client, mock_config):
         """Test successful order execution."""
-        from src.interactor.interfaces.services.dll_gateway_service_interface import OrderRequest
+        from src.interactor.dtos.send_market_order_dtos import SendMarketOrderInputDto
+        from src.domain.value_objects import OrderOperation, OrderTypeEnum, OpenClose, DayTrade, TimeInForce
         
-        mock_exchange_client.client.DTradeLib.NewOrder.return_value = "ORDER123"
+        # Setup mock order result
+        mock_order_result = Mock()
+        mock_order_result.ISSEND = True
+        mock_order_result.NOTE = "Test"
+        mock_order_result.SEQ = "ORDER123"
+        mock_order_result.ERRORCODE = 0
+        mock_order_result.ERRORMSG = ""
         
-        order_request = OrderRequest(
+        mock_exchange_client.client.DTradeLib.Order.return_value = mock_order_result
+        
+        input_dto = SendMarketOrderInputDto(
             order_account="TEST001",
             item_code="TXFF4",
-            side="Buy",
-            order_type="Market",
+            side=OrderOperation.BUY,
+            order_type=OrderTypeEnum.Market,
             price=0.0,
             quantity=1,
-            open_close="AUTO",
+            open_close=OpenClose.AUTO,
             note="Test",
-            day_trade="No",
-            time_in_force="IOC"
+            day_trade=DayTrade.No,
+            time_in_force=TimeInForce.IOC
         )
         
-        response = gateway_server._execute_order(order_request)
+        response = gateway_server._execute_order(input_dto)
         
-        assert response.success is True
-        assert response.order_id == "ORDER123"
+        assert response.is_send_order is True
+        assert response.order_serial == "ORDER123"
 
-    def test_execute_order_failure(self, gateway_server, mock_exchange_client):
+    def test_execute_order_failure(self, gateway_server, mock_exchange_client, mock_config):
         """Test order execution failure."""
-        from src.interactor.interfaces.services.dll_gateway_service_interface import OrderRequest
+        from src.interactor.dtos.send_market_order_dtos import SendMarketOrderInputDto
+        from src.domain.value_objects import OrderOperation, OrderTypeEnum, OpenClose, DayTrade, TimeInForce
         
-        mock_exchange_client.client.DTradeLib.NewOrder.return_value = None
+        mock_exchange_client.client.DTradeLib.Order.return_value = None
         
-        order_request = OrderRequest(
+        input_dto = SendMarketOrderInputDto(
             order_account="TEST001",
             item_code="TXFF4",
-            side="Buy",
-            order_type="Market",
+            side=OrderOperation.BUY,
+            order_type=OrderTypeEnum.Market,
             price=0.0,
             quantity=1,
-            open_close="AUTO",
+            open_close=OpenClose.AUTO,
             note="Test",
-            day_trade="No",
-            time_in_force="IOC"
+            day_trade=DayTrade.No,
+            time_in_force=TimeInForce.IOC
         )
         
-        response = gateway_server._execute_order(order_request)
+        response = gateway_server._execute_order(input_dto)
         
-        assert response.success is False
-        assert response.error_code == "EXECUTION_FAILED"
+        assert response.is_send_order is False
+        assert response.error_code == "NULL_RESULT"
 
 
 class TestDllGatewayServerIntegration:
@@ -311,6 +357,11 @@ class TestDllGatewayServerIntegration:
         mock_client.client = Mock()
         mock_client.client.DTradeLib = Mock()
         mock_client.client.DAccountLib = Mock()
+        
+        # Add trade attribute for OrderObject
+        mock_client.trade = Mock()
+        mock_client.trade.OrderObject = Mock()
+        
         return mock_client
 
     @pytest.fixture
@@ -319,11 +370,17 @@ class TestDllGatewayServerIntegration:
         return Mock(spec=LoggerInterface)
 
     @pytest.fixture
+    def mock_config(self):
+        """Create mock config."""
+        from src.app.cli_pfcf.config import Config
+        return Mock(spec=Config)
+
+    @pytest.fixture
     def integration_server_address(self):
         """Provide integration test server address."""
         return "tcp://127.0.0.1:15558"
 
-    def test_zmq_communication(self, mock_exchange_client, mock_logger, integration_server_address):
+    def test_zmq_communication(self, mock_exchange_client, mock_config, mock_logger, integration_server_address):
         """Test ZeroMQ communication with server using mocks."""
         with patch('zmq.Context') as mock_context:
             mock_socket = Mock()
@@ -331,6 +388,7 @@ class TestDllGatewayServerIntegration:
             
             server = DllGatewayServer(
                 exchange_client=mock_exchange_client,
+                config=mock_config,
                 logger=mock_logger,
                 bind_address=integration_server_address,
                 request_timeout_ms=1000,
@@ -346,7 +404,7 @@ class TestDllGatewayServerIntegration:
             assert response["success"] is True
             assert response["status"] == "healthy"
 
-    def test_server_lifecycle_with_multiple_requests(self, mock_exchange_client, mock_logger, integration_server_address):
+    def test_server_lifecycle_with_multiple_requests(self, mock_exchange_client, mock_config, mock_logger, integration_server_address):
         """Test server handling multiple requests over its lifecycle."""
         with patch('zmq.Context') as mock_context:
             mock_socket = Mock()
@@ -354,6 +412,7 @@ class TestDllGatewayServerIntegration:
             
             server = DllGatewayServer(
                 exchange_client=mock_exchange_client,
+                config=mock_config,
                 logger=mock_logger,
                 bind_address=integration_server_address,
                 request_timeout_ms=1000,

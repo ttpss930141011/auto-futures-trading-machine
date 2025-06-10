@@ -98,31 +98,31 @@ Follow our [Quick Start Guide](docs/getting-started/QUICK_START.md) for detailed
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                      Main Process (app.py)                      │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐    │
-│  │     CLI     │  │ DLL Gateway │  │  Market Data        │    │
-│  │  Interface  │  │   Server    │  │   Publisher         │    │
-│  │             │  │  Port 5557  │  │   Port 5555         │    │
-│  └─────────────┘  └─────────────┘  └─────────────────────┘    │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐      │
+│  │     CLI     │  │ DLL Gateway │  │  Market Data        │      │
+│  │  Interface  │  │   Server    │  │   Publisher         │      │
+│  │             │  │  Port 5557  │  │   Port 5555         │      │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘      │
 └─────────────────────────────────────────────────────────────────┘
          │                  ▲                    │
-         │                  │ ZMQ REQ/REP       │ ZMQ PUB
-         │                  │ (Orders)          │ (Market Data)
+         │                  │ ZMQ REQ/REP        │ ZMQ PUB
+         │                  │ (Orders)           │ (Market Data)
          │                  │                    ▼
-         │          ┌───────┴────────┐   ┌─────────────────┐
-         │          │ Order Executor │   │    Strategy     │
-         │          │    Process     │   │    Process      │
-         │          │                │   │                 │
-         │          │ ┌────────────┐ │   │ ┌─────────────┐│
-         │          │ │   Signal   │ │   │ │    Tick     ││
-         │          │ │  Receiver  │◄├───┤►│ Subscriber  ││
-         └──────────┤►│            │ │   │ └─────────────┘│
-                    │ └────────────┘ │   │                 │
-                    │                │   │  ┌────────────┐ │
-                    │ ┌────────────┐ │   │  │ Support/   │ │
-                    │ │  Gateway   │ │   │  │ Resistance │ │
-                    │ │   Client   │ │   │  │ Strategy   │ │
-                    │ └────────────┘ │   │  └────────────┘ │
-                    └────────────────┘   └─────────────────┘
+         │          ┌───────┴────────┐     ┌─────────────────┐
+         │          │ Order Executor │     │    Strategy     │
+         │          │    Process     │     │    Process      │
+         │          │                │     │                 │
+         │          │ ┌────────────┐ │     │ ┌─────────────┐ │
+         │          │ │   Signal   │ │     │ │    Tick     │ │
+         │          │ │  Receiver  │ ├◄───►┤ │ Subscriber  │ │
+         └───────►──┤│             │ │     │ └─────────────┘ │
+                    │ └────────────┘ │     │                 │
+                    │                │     │  ┌────────────┐ │
+                    │ ┌────────────┐ │     │  │ Support/   │ │
+                    │ │  Gateway   │ │     │  │ Resistance │ │
+                    │ │   Client   │ │     │  │ Strategy   │ │
+                    │ └────────────┘ │     │  └────────────┘ │
+                    └────────────────┘     └─────────────────┘
                                                ZMQ PUSH
                                             (Trading Signals)
 ```

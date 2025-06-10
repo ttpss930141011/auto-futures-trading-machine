@@ -52,17 +52,24 @@ pip install -r requirements.txt
 
 ## 🔐 Step 4: Configure Environment Variables
 
-1. Copy the example environment file:
+> **🔔 Prerequisite: Obtain PFCF Python DLL API**  
+> Apply to Taiwan Unified Futures (PFCF) for their proprietary Python DLL API at https://www.pfcf.com.tw/software/detail/2709 and place the DLL files into `src/infrastructure/pfcf_client/dll`.
+
+1. Create or copy the environment file:
    ```bash
-   cp .env.example .env
+   cp .env.example .env  # macOS/Linux
+   copy .env.example .env  # Windows
    ```
-2. Open `.env` in a text editor and set your credentials:
+2. Open `.env` in a text editor and set the essential environment variables:
    ```env
-   EXCHANGE_API_KEY=your_api_key_here
-   EXCHANGE_API_SECRET=your_api_secret_here
-   EXCHANGE_ACCOUNT_ID=your_account_id
-   TEST_MODE=true  # Optional: use paper trading
+   # PFCF API endpoints (required)
+   DEALER_TEST_URL=your_test_url_here
+   DEALER_PROD_URL=your_prod_url_here
+
+   # Optional: Trading mode (paper trading)
+   TEST_MODE=true
    ```
+Refer to the [Configuration Guide](../../CONFIG_GUIDE.md) for full environment variable options.
 
 ## 🚀 Step 5: Verify the Setup
 
@@ -80,4 +87,4 @@ You should see the CLI menu appear without errors.
 
 ---
 
-*Happy trading!* 
+*Happy trading!*

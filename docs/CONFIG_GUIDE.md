@@ -6,32 +6,35 @@
 
 All configuration settings live in the environment file `.env` at the project root. The application reads these values at startup.
 
+> **Note**: This project uses the proprietary PFCF Python DLL API. Apply to Taiwan Unified Futures (PFCF) for their Python DLL API at https://www.pfcf.com.tw/software/detail/2709 and place the DLL files into `src/infrastructure/pfcf_client/dll`.
+
 ## 📄 .env File Settings
 
 ```env
-# Exchange API credentials (required)
-EXCHANGE_API_KEY=your_api_key_here
-EXCHANGE_API_SECRET=your_api_secret_here
-EXCHANGE_ACCOUNT_ID=your_account_id
+# PFCF API endpoints (required)
+DEALER_TEST_URL=your_test_url_here
+DEALER_PROD_URL=your_prod_url_here
 
-# Trading mode (optional)
-# true  = paper trading (no real orders)
-# false = live trading
+# Trading mode (optional): paper trading when true
 TEST_MODE=true
 
-# ZeroMQ socket addresses (optional)
-# Uncomment to override defaults
-# ZMQ_TICK_PUB_ADDRESS=tcp://*:5555
-# ZMQ_SIGNAL_PULL_ADDRESS=tcp://*:5556
-# ZMQ_ORDER_REQ_ADDRESS=tcp://*:5557
+# ZeroMQ configuration (optional)
+ZMQ_HOST=127.0.0.1
+ZMQ_TICK_PORT=5555
+ZMQ_SIGNAL_PORT=5556
+
+# DLL Gateway configuration (optional)
+DLL_GATEWAY_HOST=127.0.0.1
+DLL_GATEWAY_PORT=5557
+DLL_GATEWAY_REQUEST_TIMEOUT_MS=5000
+DLL_GATEWAY_RETRY_COUNT=3
 
 # Logging level (optional)
-# Options: DEBUG, INFO, WARNING, ERROR
 LOG_LEVEL=INFO
 
 # Paths (optional)
-# LOG_DIR=logs
-# DATA_DIR=data
+LOG_DIR=logs
+DATA_DIR=data
 ```
 
 ## 🔧 Customizing Settings

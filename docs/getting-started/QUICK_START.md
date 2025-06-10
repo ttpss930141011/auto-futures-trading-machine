@@ -26,26 +26,31 @@ pip install -r requirements.txt
 
 ## 🔐 Step 2: Configure Credentials
 
+> **🌟 Prerequisite: Obtain PFCF Python DLL API**  
+> Apply to Taiwan Unified Futures (PFCF) for their proprietary Python DLL API at https://www.pfcf.com.tw/software/detail/2709 and place the DLL files into `src/infrastructure/pfcf_client/dll`.
+
 Create a `.env` file in the project root:
 
 ```bash
-# Copy the example file
-cp .env.example .env
+# Copy the example file (if provided)
+cp .env.example .env  # macOS/Linux
+copy .env.example .env  # Windows
 
-# Edit with your favorite editor
-nano .env  # or vim, code, notepad, etc.
+# Or manually create .env
 ```
 
-Add your exchange credentials:
-```env
-# Exchange API Configuration
-EXCHANGE_API_KEY=your_api_key_here
-EXCHANGE_API_SECRET=your_api_secret_here
-EXCHANGE_ACCOUNT_ID=your_account_id
+Edit `.env` with your favorite editor and add:
 
-# Optional: Test mode (uses paper trading)
+```env
+# PFCF API endpoints (required)
+DEALER_TEST_URL=your_test_url_here
+DEALER_PROD_URL=your_prod_url_here
+
+# Optional: Trading mode (paper trading when true)
 TEST_MODE=true
 ```
+
+Refer to [Configuration Guide](../CONFIG_GUIDE.md) for advanced environment variable options.
 
 ## 🏃 Step 3: Run the System
 

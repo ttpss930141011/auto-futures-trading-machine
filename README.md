@@ -23,6 +23,8 @@ See [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md) for complete usage instructions
 
 This section provides a concise overview of the system architecture, core runtime components, and communication flows.
 
+> 📊 **For a comprehensive visual architecture overview, see [docs/ARCHITECTURE_OVERVIEW.md](docs/ARCHITECTURE_OVERVIEW.md)**
+
 ### Architecture Layers
 - **Service layer**: PortCheckerService, GatewayInitializerService, ProcessManagerService
 - **UseCase layer**: RunGatewayUseCase, StartStrategyUseCase, StartOrderExecutorUseCase, ApplicationStartupStatusUseCase
@@ -73,8 +75,10 @@ python app.py
 ```
 
 ### Documentation
+- **[docs/ARCHITECTURE_OVERVIEW.md](docs/ARCHITECTURE_OVERVIEW.md)**: 🆕 Complete visual architecture overview
+- **[docs/ARCHITECTURE_COMPARISON.md](docs/ARCHITECTURE_COMPARISON.md)**: 🆕 Before/after architecture comparison
 - **[INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)**: Complete user guide with examples
-- **[README_GATEWAY.md](README_GATEWAY.md)**: Technical architecture documentation
+- **[README_GATEWAY.md](README_GATEWAY.md)**: Technical architecture documentation  
 - **[docs/decisions/004-dll-gateway-centralization.md](docs/decisions/004-dll-gateway-centralization.md)**: Architecture decision record
 
 ### Running the Application

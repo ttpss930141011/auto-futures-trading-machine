@@ -13,9 +13,12 @@ from dataclasses import asdict
 
 from src.infrastructure.pfcf_client.api import PFCFApi
 from src.interactor.interfaces.logger.logger import LoggerInterface
+from src.app.cli_pfcf.config import Config
+from src.interactor.dtos.send_market_order_dtos import (
+    SendMarketOrderInputDto,
+    SendMarketOrderOutputDto,
+)
 from src.interactor.interfaces.services.dll_gateway_service_interface import (
-    OrderRequest,
-    OrderResponse,
     PositionInfo,
 )
 from src.interactor.errors.dll_gateway_errors import (
@@ -36,6 +39,7 @@ class DllGatewayServer:
     def __init__(
         self,
         exchange_client: PFCFApi,
+        config: Config,
         logger: LoggerInterface,
         bind_address: str = "tcp://*:5557",
         request_timeout_ms: int = 5000,
@@ -44,11 +48,13 @@ class DllGatewayServer:
         
         Args:
             exchange_client: The exchange API client instance.
+            config: Configuration object for enum conversion.
             logger: Logger for recording events.
             bind_address: ZeroMQ bind address for the server.
             request_timeout_ms: Timeout for processing requests.
         """
         self._exchange_client = exchange_client
+        self._config = config
         self._logger = logger
         self._bind_address = bind_address
         self._request_timeout_ms = request_timeout_ms
@@ -215,26 +221,29 @@ class DllGatewayServer:
                     f"Missing required fields: {', '.join(missing_fields)}"
                 )
             
-            # Create order request object
-            order_request = OrderRequest(
+            # Create SendMarketOrderInputDto from the request parameters
+            # We need to convert string values back to enums
+            from src.domain.value_objects import OrderOperation, OrderTypeEnum, OpenClose, DayTrade, TimeInForce
+            
+            input_dto = SendMarketOrderInputDto(
                 order_account=order_params["order_account"],
                 item_code=order_params["item_code"],
-                side=order_params["side"],
-                order_type=order_params["order_type"],
+                side=OrderOperation(order_params["side"]) if isinstance(order_params["side"], str) else order_params["side"],
+                order_type=OrderTypeEnum(order_params["order_type"]) if isinstance(order_params["order_type"], str) else order_params["order_type"],
                 price=float(order_params["price"]),
                 quantity=int(order_params["quantity"]),
-                open_close=order_params["open_close"],
+                open_close=OpenClose(order_params["open_close"]) if isinstance(order_params["open_close"], str) else order_params["open_close"],
                 note=order_params["note"],
-                day_trade=order_params["day_trade"],
-                time_in_force=order_params["time_in_force"],
+                day_trade=DayTrade(order_params["day_trade"]) if isinstance(order_params["day_trade"], str) else order_params["day_trade"],
+                time_in_force=TimeInForce(order_params["time_in_force"]) if isinstance(order_params["time_in_force"], str) else order_params["time_in_force"],
             )
             
             # Execute order through exchange API
-            response = self._execute_order(order_request)
+            response = self._execute_order(input_dto)
             
             self._logger.log_info(
-                f"Order executed: {order_request.side} {order_request.quantity} "
-                f"{order_request.item_code} - Success: {response.success}"
+                f"Order executed: {input_dto.side.name} {input_dto.quantity} "
+                f"{input_dto.item_code} - Success: {response.is_send_order}"
             )
             
             return asdict(response)
@@ -254,43 +263,52 @@ class DllGatewayServer:
                 "error_code": "ORDER_EXECUTION_ERROR"
             }
 
-    def _execute_order(self, order_request: OrderRequest) -> OrderResponse:
+    def _execute_order(self, input_dto: SendMarketOrderInputDto) -> SendMarketOrderOutputDto:
         """Execute order using exchange DLL.
         
         Args:
-            order_request: The order request to execute.
+            input_dto: The order input DTO to execute.
             
         Returns:
-            OrderResponse with execution result.
+            SendMarketOrderOutputDto with execution result.
         """
         try:
-            # Use the exchange client to send the order
-            # This is where the actual DLL call happens
-            result = self._exchange_client.client.DTradeLib.NewOrder(
-                order_request.order_account,
-                order_request.item_code,
-                order_request.side,
-                order_request.order_type,
-                order_request.price,
-                order_request.quantity,
-                order_request.open_close,
-                order_request.note,
-                order_request.day_trade,
-                order_request.time_in_force,
-            )
+            # Convert to PFCF format using the existing method
+            pfcf_input = input_dto.to_pfcf_dict(self._config)
+
+            # Use the correct DLL API pattern matching send_market_order.py
+            order = self._exchange_client.trade.OrderObject()
+            order.ACTNO = pfcf_input.get("ACTNO")
+            order.PRODUCTID = pfcf_input.get("PRODUCTID")
+            order.BS = pfcf_input.get("BS")
+            order.ORDERTYPE = pfcf_input.get("ORDERTYPE")
+            order.PRICE = pfcf_input.get("PRICE")
+            order.ORDERQTY = pfcf_input.get("ORDERQTY")
+            order.TIMEINFORCE = pfcf_input.get("TIMEINFORCE")
+            order.OPENCLOSE = pfcf_input.get("OPENCLOSE")
+            order.DTRADE = pfcf_input.get("DTRADE")
+            order.NOTE = pfcf_input.get("NOTE")
+
+            # Execute order using the correct API (same as send_market_order.py)
+            order_result = self._exchange_client.client.DTradeLib.Order(order)
             
-            # Process the result based on exchange API response format
-            if result:  # Assuming non-None/non-zero means success
-                return OrderResponse(
-                    success=True,
-                    order_id=str(result) if result else None
+            if order_result is None:
+                return SendMarketOrderOutputDto(
+                    is_send_order=False,
+                    note="",
+                    order_serial="",
+                    error_code="NULL_RESULT",
+                    error_message="Order execution returned None"
                 )
-            else:
-                return OrderResponse(
-                    success=False,
-                    error_message="Order execution failed",
-                    error_code="EXECUTION_FAILED"
-                )
+
+            # Return the result in the same format as send_market_order.py
+            return SendMarketOrderOutputDto(
+                is_send_order=order_result.ISSEND,
+                note=order_result.NOTE,
+                order_serial=order_result.SEQ,
+                error_code=str(order_result.ERRORCODE),
+                error_message=order_result.ERRORMSG,
+            )
                 
         except Exception as e:
             self._logger.log_error(f"Exchange API error: {e}")

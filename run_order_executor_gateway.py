@@ -51,16 +51,19 @@ class OrderExecutorGatewayProcess:
 
         # Initialize session repository (read-only for session info)
         self._session_repository = SessionJsonFileRepository(
-            timeout_seconds=3600  # Default timeout
+            session_timeout=3600  # Default timeout
         )
 
         # Initialize basic config to get gateway settings
         from src.app.cli_pfcf.config import Config
+
         basic_config = Config(None)  # We don't need exchange_api for getting addresses
-        
+
         # Initialize DLL Gateway Client
         self._dll_gateway_client = DllGatewayClient(
-            server_address=config_dict.get("dll_gateway_address", basic_config.DLL_GATEWAY_CONNECT_ADDRESS),
+            server_address=config_dict.get(
+                "dll_gateway_address", basic_config.DLL_GATEWAY_CONNECT_ADDRESS
+            ),
             logger=self._logger,
             timeout_ms=basic_config.DLL_GATEWAY_REQUEST_TIMEOUT_MS,
             retry_count=basic_config.DLL_GATEWAY_RETRY_COUNT,
@@ -80,9 +83,7 @@ class OrderExecutorGatewayProcess:
                 self._logger.log_error(
                     "Session not initialized. Please ensure user is logged in through main application."
                 )
-                print(
-                    "ERROR: Session not initialized. Run the main application and login first."
-                )
+                print("ERROR: Session not initialized. Run the main application and login first.")
                 sys.exit(1)
 
             # Check DLL Gateway connectivity
@@ -149,7 +150,7 @@ class OrderExecutorGatewayProcess:
         try:
             # Test gateway connectivity with health check
             health_status = self._dll_gateway_client.get_health_status()
-            
+
             if health_status.get("status") == "healthy":
                 self._logger.log_info("DLL Gateway connectivity verified")
                 return True
@@ -171,7 +172,9 @@ class OrderExecutorGatewayProcess:
                 context=self._context,
                 poll_timeout_ms=self._poll_timeout_ms,
             )
-            self._logger.log_info(f"Pulling signals from {self._config_dict['signal_pull_address']}")
+            self._logger.log_info(
+                f"Pulling signals from {self._config_dict['signal_pull_address']}"
+            )
 
         except Exception as e:
             self._logger.log_error(f"Failed to initialize ZMQ components: {str(e)}")
@@ -265,7 +268,9 @@ class OrderExecutorGatewayProcess:
             sig: Signal number.
             frame: Current stack frame.
         """
-        self._logger.log_info(f"Received signal {sig}, shutting down order executor gateway process")
+        self._logger.log_info(
+            f"Received signal {sig}, shutting down order executor gateway process"
+        )
         self._running = False
 
 
@@ -275,8 +280,9 @@ def parse_args():
 
     # Get default values from config
     from src.app.cli_pfcf.config import Config
+
     basic_config = Config(None)  # We don't need exchange_api for getting addresses
-    
+
     default_signal_pull = basic_config.ZMQ_SIGNAL_PULL_ADDRESS
     default_dll_gateway = basic_config.DLL_GATEWAY_CONNECT_ADDRESS
 
@@ -286,7 +292,7 @@ def parse_args():
         default=default_signal_pull,
         help=f"ZMQ address to pull trading signals from (default: {default_signal_pull})",
     )
-    
+
     parser.add_argument(
         "--gateway-address",
         default=default_dll_gateway,

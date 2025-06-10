@@ -52,6 +52,7 @@ def _setup_dll_gateway(exchange_api: PFCFApi, logger: LoggerDefault, config: Con
         
         _dll_gateway_server = DllGatewayServer(
             exchange_client=exchange_api,
+            config=config,
             logger=logger,
             bind_address=config.DLL_GATEWAY_BIND_ADDRESS,
             request_timeout_ms=config.DLL_GATEWAY_REQUEST_TIMEOUT_MS,

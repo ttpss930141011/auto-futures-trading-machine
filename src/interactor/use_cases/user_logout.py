@@ -32,10 +32,6 @@ class UserLogoutUseCase:
 
         self.config.EXCHANGE_CLIENT.PFCLogout()
 
-        # Clear temporary auth details if they exist
-        if hasattr(self.session_manager, "clear_auth_details"):
-            self.session_manager.clear_auth_details()
-
         self.session_manager.destroy_session()
 
         output_dto = UserLogoutOutputDto(account=input_dto.account, is_success=True)

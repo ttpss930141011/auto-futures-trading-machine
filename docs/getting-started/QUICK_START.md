@@ -62,15 +62,16 @@ You'll see the main menu:
 ╚════════════════════════════════════════╝
 
 Please select an option:
-0. Exit
-1. User Login
-2. User Logout
-3. Register Item
-4. Create Condition
-5. Select Order Account
-6. Send Market Order
-7. Show Futures
-10. Start All Components
+- 0. Exit
+- 1. User Login
+- 2. User Logout
+- 3. Register Item
+- 4. Create Condition
+- 5. Select Order Account
+- 6. Send Market Order
+- 7. Show Futures
+- 8. Get Current Positions
+- 10. Start All Components
 
 Enter your choice:
 ```
@@ -122,7 +123,15 @@ Select account: 1
 ✅ Main Account selected
 ```
 
-### 5️⃣ Start Automated Trading
+### 5️⃣ Check Current Positions
+```
+Enter your choice: 8
+Account: 0290621
+Enter product id (leave blank for all):
+No position data or list of positions
+```
+
+### 6️⃣ Start Automated Trading
 ```
 Enter your choice: 10
 
@@ -135,33 +144,7 @@ System is now trading automatically!
 Press Ctrl+C to stop.
 ```
 
-## 📊 Step 5: Monitor Your System
-
-While the system is running, you can:
-
-### Check System Status
-Open a new terminal and run:
-```bash
-python monitor.py status
-```
-
-Output:
-```
-System Status:
-├── Gateway: ✅ Running (50,234 ticks processed)
-├── Strategy: ✅ Running (142 signals generated)
-└── Executor: ✅ Running (89 orders placed)
-
-Current Positions:
-TSLA: 10 contracts @ $245.30
-```
-
-### View Real-time Logs
-```bash
-tail -f logs/trading.log
-```
-
-## 🛑 Step 6: Stopping the System
+## 🛑 Step 5: Stopping the System
 
 ### Graceful Shutdown
 Press `Ctrl+C` in the main terminal:
@@ -233,10 +216,7 @@ Congratulations! Your trading system is running. Here's what to explore next:
 
 ## 🆘 Need Help?
 
-- 📖 Check the [Troubleshooting Guide](../TROUBLESHOOTING.md)
-- 💬 Join our [Discord Community](https://discord.gg/trading)
-- 🐛 Report issues on [GitHub](https://github.com/your-username/futures-trading-machine/issues)
-- 📧 Email support: support@tradingmachine.com
+- 🐛 Report issues on [GitHub](https://github.com/ttpss930141011/futures-trading-machine/issues)
 
 ---
 

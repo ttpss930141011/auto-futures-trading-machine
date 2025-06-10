@@ -41,9 +41,11 @@ This documentation suite serves as both a **technical reference** and a **learni
 ### 5. Implementation Guides 🛠️
 **For:** Developers extending or maintaining the system
 
-- **[Component Development](guides/COMPONENT_DEVELOPMENT.md)** - Building new components
-- **[Testing Strategies](guides/TESTING_STRATEGIES.md)** - Ensuring reliability
-- **[Performance Tuning](guides/PERFORMANCE_TUNING.md)** - Optimization techniques
+- [**Installation Guide**](getting-started/INSTALLATION.md) - Setup and installation steps
+- [**First Trade Tutorial**](getting-started/FIRST_TRADE.md) - Your first automated trade
+- [**Backtesting Guide**](guides/BACKTESTING.md) - Test strategies on historical data
+- [**Monitoring Guide**](guides/MONITORING.md) - Set up metrics and alerts
+- [**Configuration Guide**](../CONFIG_GUIDE.md) - Environment variables and config
 
 ### 6. Trading Concepts 📊
 **For:** Understanding the business logic

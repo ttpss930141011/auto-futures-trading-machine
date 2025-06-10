@@ -14,7 +14,7 @@ Before you begin, ensure you have:
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/futures-trading-machine.git
+git clone https://github.com/ttpss930141011/futures-trading-machine.git
 cd futures-trading-machine
 
 # Install dependencies using poetry (recommended)

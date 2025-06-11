@@ -55,9 +55,7 @@ class OrderExecutorGatewayProcess:
         )
 
         # Initialize basic config to get gateway settings
-        from src.app.cli_pfcf.config import Config
-
-        basic_config = Config(None)  # We don't need exchange_api for getting addresses
+        basic_config = Config()  # We don't need exchange_api for getting addresses
 
         # Initialize DLL Gateway Client
         self._dll_gateway_client = DllGatewayClient(
@@ -279,9 +277,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Run the order executor process with DLL Gateway")
 
     # Get default values from config
-    from src.app.cli_pfcf.config import Config
-
-    basic_config = Config(None)  # We don't need exchange_api for getting addresses
+    basic_config = Config()  # We don't need exchange_api for getting addresses
 
     default_signal_pull = basic_config.ZMQ_SIGNAL_PULL_ADDRESS
     default_dll_gateway = basic_config.DLL_GATEWAY_CONNECT_ADDRESS

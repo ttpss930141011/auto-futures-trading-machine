@@ -2,8 +2,6 @@
 """
 
 import os
-import sys
-from src.infrastructure.pfcf_client.api import PFCFApi
 
 try:
     from dotenv import load_dotenv
@@ -14,13 +12,17 @@ except ImportError:
 
 
 class Config(object):
-    """Configuration for the application"""
+    """Configuration for the application.
+    
+    This class follows the Single Responsibility Principle by only handling
+    configuration values and not managing API instances or business logic.
+    """
 
-    EXCHANGE_CLIENT = None
-    EXCHANGE_TRADE = None
-    EXCHANGE_DECIMAL = None
+    # Exchange URLs - loaded from environment variables
     EXCHANGE_TEST_URL = os.getenv("DEALER_TEST_URL", "")
     EXCHANGE_PROD_URL = os.getenv("DEALER_PROD_URL", "")
+    
+    # Application defaults
     DEFAULT_SESSION_TIMEOUT = 43200
     DEFAULT_TAKE_PROFIT_POINT = 90
     DEFAULT_STOP_LOSS_POINT = 30
@@ -66,34 +68,21 @@ class Config(object):
         """Get the DLL Gateway client connect address."""
         return f"tcp://{self.DLL_GATEWAY_HOST}:{self.DLL_GATEWAY_PORT}"
 
-    def __init__(self, exchange_api=PFCFApi):
-
-        self.EXCHANGE_CLIENT = (
-            getattr(exchange_api, "client", None) if exchange_api is not None else None
-        )
-        self.EXCHANGE_TRADE = (
-            getattr(exchange_api, "trade", None) if exchange_api is not None else None
-        )
-        self.EXCHANGE_DECIMAL = (
-            getattr(exchange_api, "decimal", None) if exchange_api is not None else None
-        )
-        self.EXCHANGE_TEST_URL = os.getenv("DEALER_TEST_URL", "")
-        self.EXCHANGE_PROD_URL = os.getenv("DEALER_PROD_URL", "")
-
-        # Only validate exchange API if it was provided
-        if exchange_api is not None:
-            if self.EXCHANGE_CLIENT is None:
-                print("FAIL TO LOAD DEALER_CLIENT.")
-                sys.exit(1)
-            if self.EXCHANGE_TRADE is None:
-                print("FAIL TO LOAD DEALER_TRADE.")
-                sys.exit(1)
-            if not self.EXCHANGE_TEST_URL:
-                print("Specify DEALER_TEST_URL as environment variable.")
-                sys.exit(1)
-            if not self.EXCHANGE_PROD_URL:
-                print("Specify DEALER_PROD_URL as environment variable.")
-                sys.exit(1)
+    def __init__(self) -> None:
+        """Initialize the configuration.
+        
+        Validates that required environment variables are set.
+        
+        Raises:
+            SystemExit: If required environment variables are missing.
+        """
+        # Validate required environment variables
+        if not self.EXCHANGE_TEST_URL:
+            print("Specify DEALER_TEST_URL as environment variable.")
+            exit(1)
+        if not self.EXCHANGE_PROD_URL:
+            print("Specify DEALER_PROD_URL as environment variable.")
+            exit(1)
 
     def __setitem__(self, key, item):
         self.__dict__[key] = item

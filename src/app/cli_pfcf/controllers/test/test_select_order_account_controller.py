@@ -63,9 +63,7 @@ def test_execute(fixture_select_order_account):
         mock_presenter.assert_called_once_with()
         mock_use_case.assert_called_once_with(
             mock_presenter.return_value,
-            service_container_mock,
-            service_container_mock.logger,
-            service_container_mock.session_repository
+            service_container_mock
         )
 
         mock_use_case_instance.execute.assert_called_once_with(input_dto)

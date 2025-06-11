@@ -14,4 +14,4 @@ class PositionPresenterInterface(ABC):
     @abstractmethod
     def present(self, output_dto: GetPositionOutputDto) -> Dict:
         """Convert the output DTO into a view-friendly primitive."""
-        ...
+        pass

@@ -15,6 +15,7 @@ pythonnet = "^3.0.5"
 pyzmq = "^26.4.0"
 msgpack = "^1.1.0"
 pytest = "^8.3.5"
+pylint = "^3.3.7"
 
 
 [tool.poetry.group.dev.dependencies]

@@ -6,14 +6,13 @@ using complete mocking to avoid ZMQ dependencies.
 
 import json
 import pytest
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import Mock, patch
 
 from src.infrastructure.services.dll_gateway_client import DllGatewayClient
 from src.interactor.interfaces.logger.logger import LoggerInterface
 from src.interactor.dtos.send_market_order_dtos import SendMarketOrderInputDto, SendMarketOrderOutputDto
 from src.domain.value_objects import OrderOperation, OrderTypeEnum, TimeInForce, OpenClose, DayTrade
 from src.interactor.errors.dll_gateway_errors import (
-    DllGatewayConnectionError,
     DllGatewayTimeoutError,
     DllGatewayError,
 )

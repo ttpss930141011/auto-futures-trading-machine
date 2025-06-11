@@ -1,4 +1,3 @@
-import pytest
 from src.interactor.use_cases.run_gateway_use_case import RunGatewayUseCase
 
 

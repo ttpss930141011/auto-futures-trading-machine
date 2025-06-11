@@ -6,15 +6,11 @@ including functionality, error handling, and integration scenarios.
 
 import json
 import pytest
-import threading
-import time
-from unittest.mock import Mock, MagicMock, patch
-from typing import Dict, Any
+from unittest.mock import Mock, patch
 
 from src.infrastructure.services.dll_gateway_server import DllGatewayServer
 from src.interactor.interfaces.logger.logger import LoggerInterface
 from src.infrastructure.pfcf_client.api import PFCFApi
-from src.interactor.errors.dll_gateway_errors import ExchangeApiError
 
 
 class TestDllGatewayServer:

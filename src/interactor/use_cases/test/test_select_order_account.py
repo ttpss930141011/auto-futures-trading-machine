@@ -3,7 +3,6 @@ from unittest.mock import MagicMock
 
 from src.interactor.dtos.select_order_account_dtos import SelectOrderAccountInputDto, SelectOrderAccountOutputDto
 from src.interactor.errors.error_classes import LoginFailedException
-from src.interactor.interfaces.logger.logger import LoggerInterface
 from src.interactor.interfaces.presenters.select_order_account_presenter import SelectOrderAccountPresenterInterface
 from src.interactor.use_cases.select_order_account import SelectOrderAccountUseCase
 

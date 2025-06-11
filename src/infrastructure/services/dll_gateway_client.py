@@ -7,7 +7,6 @@ through ZeroMQ REQ socket to access exchange functionality.
 import json
 import zmq
 from typing import Any, Dict, List
-from dataclasses import asdict
 
 from src.interactor.interfaces.logger.logger import LoggerInterface
 from src.interactor.interfaces.services.dll_gateway_service_interface import (

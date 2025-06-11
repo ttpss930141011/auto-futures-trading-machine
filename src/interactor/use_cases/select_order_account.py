@@ -8,9 +8,7 @@ from typing import Dict
 from src.infrastructure.services.service_container import ServiceContainer
 from src.interactor.dtos.select_order_account_dtos import SelectOrderAccountInputDto, SelectOrderAccountOutputDto
 from src.interactor.errors.error_classes import LoginFailedException, NotFountItemException
-from src.interactor.interfaces.logger.logger import LoggerInterface
 from src.interactor.interfaces.presenters.select_order_account_presenter import SelectOrderAccountPresenterInterface
-from src.interactor.interfaces.repositories.session_repository import SessionRepositoryInterface
 from src.interactor.validations.select_order_account_validator import SelectOrderAccountInputDtoValidator
 
 

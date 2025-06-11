@@ -12,7 +12,6 @@ from src.interactor.use_cases.show_futures import ShowFuturesUseCase
 from src.interactor.dtos.show_futures_dtos import (
     ShowFuturesInputDto,
     ShowFuturesOutputDto,
-    FutureDataDto,
 )
 from src.interactor.interfaces.presenters.show_futures_presenter import (
     ShowFuturesPresenterInterface,

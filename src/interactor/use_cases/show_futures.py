@@ -3,8 +3,6 @@ from src.interactor.dtos.show_futures_dtos import ShowFuturesInputDto, ShowFutur
 from src.interactor.interfaces.presenters.show_futures_presenter import (
     ShowFuturesPresenterInterface,
 )
-from src.interactor.interfaces.logger.logger import LoggerInterface
-from src.interactor.interfaces.repositories.session_repository import SessionRepositoryInterface
 
 
 class ShowFuturesUseCase:

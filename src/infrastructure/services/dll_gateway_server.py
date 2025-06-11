@@ -22,11 +22,9 @@ from src.interactor.interfaces.services.dll_gateway_service_interface import (
     PositionInfo,
 )
 from src.interactor.errors.dll_gateway_errors import (
-    DllGatewayError,
     ExchangeApiError,
     InvalidOrderError,
 )
-from src.domain.value_objects import OrderOperation, OrderTypeEnum
 
 
 class DllGatewayServer:

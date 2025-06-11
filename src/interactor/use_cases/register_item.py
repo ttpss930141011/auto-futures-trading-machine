@@ -8,9 +8,7 @@ from typing import Dict
 from src.infrastructure.services.service_container import ServiceContainer
 from src.interactor.dtos.register_item_dtos import RegisterItemInputDto, RegisterItemOutputDto
 from src.interactor.errors.error_classes import LoginFailedException, NotFountItemException
-from src.interactor.interfaces.logger.logger import LoggerInterface
 from src.interactor.interfaces.presenters.register_item_presenter import RegisterItemPresenterInterface
-from src.interactor.interfaces.repositories.session_repository import SessionRepositoryInterface
 from src.interactor.validations.register_item_validator import RegisterItemInputDtoValidator
 
 

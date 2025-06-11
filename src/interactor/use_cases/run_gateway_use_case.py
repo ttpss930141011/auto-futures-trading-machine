@@ -6,7 +6,7 @@ including initialization, event loop, and graceful shutdown.
 
 import time
 import signal
-from typing import Dict, Optional, Callable, Tuple
+from typing import Dict
 
 from src.interactor.interfaces.logger.logger import LoggerInterface
 from src.interactor.interfaces.services.port_checker_service_interface import PortCheckerServiceInterface

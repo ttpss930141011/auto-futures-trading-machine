@@ -8,6 +8,7 @@ import zmq
 from typing import Optional, Tuple
 
 from src.app.cli_pfcf.config import Config
+from src.infrastructure.pfcf_client.api import PFCFApi
 from src.interactor.interfaces.logger.logger import LoggerInterface
 from src.interactor.interfaces.services.gateway_initializer_service_interface import (
     GatewayInitializerServiceInterface,
@@ -19,15 +20,17 @@ from src.infrastructure.pfcf_client.tick_producer import TickProducer
 class GatewayInitializerService(GatewayInitializerServiceInterface):
     """Service for initializing and managing ZMQ gateway components."""
 
-    def __init__(self, config: Config, logger: LoggerInterface) -> None:
+    def __init__(self, config: Config, logger: LoggerInterface, exchange_api: PFCFApi) -> None:
         """Initialize the gateway initializer service.
 
         Args:
             config: Application configuration with ZMQ settings
             logger: Logger for recording events
+            exchange_api: PFCF API instance for exchange operations
         """
         self.config = config
         self.logger = logger
+        self.exchange_api = exchange_api
 
         # Create a shared ZMQ context
         self.zmq_context = zmq.Context.instance()
@@ -94,8 +97,8 @@ class GatewayInitializerService(GatewayInitializerServiceInterface):
                 )
                 return False
 
-            # Get the API client from config
-            exchange_client = self.config.EXCHANGE_CLIENT
+            # Get the API client from exchange API
+            exchange_client = self.exchange_api.client
             if not exchange_client or not hasattr(exchange_client, "DQuoteLib"):
                 self.logger.log_error("Exchange client or DQuoteLib not available")
                 return False

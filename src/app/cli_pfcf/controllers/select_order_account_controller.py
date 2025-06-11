@@ -34,15 +34,14 @@ class SelectOrderAccountController(CliMemoryControllerInterface):
         return SelectOrderAccountInputDto(index=index, order_account=order_account)
 
     def execute(self):
-        """ Execute the select order account controller
-        """
+        """Execute the select order account controller"""
         if not self.session_repository.is_user_logged_in():
             self.logger.log_info("User not login")
             return
 
         presenter = SelectOrderAccountPresenter()
         input_dto = self._get_user_input()
-        use_case = SelectOrderAccountUseCase(presenter, self.service_container, self.logger, self.session_repository)
+        use_case = SelectOrderAccountUseCase(presenter, self.service_container)
         result = use_case.execute(input_dto)
         view = SelectOrderAccountView()
         view.show(result)

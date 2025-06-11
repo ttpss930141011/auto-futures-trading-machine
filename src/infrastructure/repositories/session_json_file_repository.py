@@ -141,7 +141,7 @@ class SessionJsonFileRepository(SessionRepositoryInterface):
         # Convert .NET System.String[] (or other iterable) to Python list for JSON serialization
         try:
             account_list = [str(item) for item in account_set]
-        except Exception:
+        except (TypeError, AttributeError):
             account_list = account_set
         data["order_account_set"] = account_list
         self._write(data)

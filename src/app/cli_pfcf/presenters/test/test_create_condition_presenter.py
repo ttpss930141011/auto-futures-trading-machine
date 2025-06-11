@@ -1,6 +1,4 @@
 import uuid
-
-import pytest
 from src.app.cli_pfcf.presenters.create_condition_presenter import CreateConditionPresenter
 from src.interactor.dtos.create_condition_dtos import CreateConditionOutputDto
 from src.domain.entities.condition import Condition

@@ -19,19 +19,15 @@ class DllGatewayError(Exception):
 
 class DllGatewayConnectionError(DllGatewayError):
     """Exception raised when DLL Gateway is not accessible."""
-    pass
 
 
 class DllGatewayTimeoutError(DllGatewayError):
     """Exception raised when DLL Gateway operation times out."""
-    pass
 
 
 class InvalidOrderError(DllGatewayError):
     """Exception raised when order request is invalid."""
-    pass
 
 
 class ExchangeApiError(DllGatewayError):
     """Exception raised when exchange API returns an error."""
-    pass

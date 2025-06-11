@@ -90,7 +90,7 @@ class ZmqSubscriber:
                 if e.errno != zmq.ETERM:
                     self._logger.log_error(f"Error receiving message: {e}")
             return None
-        except Exception as e: # Catch other potential errors
+        except (OSError, RuntimeError) as e: # Catch other potential errors
             if self._logger:
                 self._logger.log_error(f"Unexpected error during ZMQ receive: {e}")
             return None
@@ -105,9 +105,9 @@ class ZmqSubscriber:
                 if self._logger:
                     self._logger.log_info("ZMQ Subscriber socket closed.")
             except zmq.ZMQError as e:
-                 if self._logger:
+                if self._logger:
                     self._logger.log_error(f"Error closing ZMQ Subscriber socket: {e}")
-            except Exception as e:
+            except (OSError, RuntimeError) as e:
                 if self._logger:
                     self._logger.log_warning(f"Error unregistering poller for ZMQ Subscriber: {e}")
             finally:

@@ -59,7 +59,7 @@ class CLIApplication:
 
         except KeyboardInterrupt:
             print("\nProgram terminated by user")
-        except Exception as e:
+        except (OSError, RuntimeError, ValueError) as e:
             print(f"\nERROR: {e}")
         finally:
             self._cleanup()
@@ -113,5 +113,5 @@ class CLIApplication:
         try:
             print("\nShutting down application...")
             self._system_manager.stop_trading_system()
-        except Exception as e:
+        except (OSError, RuntimeError) as e:
             print(f"Error during cleanup: {e}")

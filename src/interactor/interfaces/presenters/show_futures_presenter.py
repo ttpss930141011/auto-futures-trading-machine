@@ -10,10 +10,10 @@ class ShowFuturesPresenterInterface(ABC):
     def present_futures_data(self, futures_data: list[str]) -> ShowFuturesOutputDto:
         """ Present futures data
         """
-        pass
+        ...
 
     @abstractmethod
     def present_error(self, error_message: str) -> ShowFuturesOutputDto:
         """ Present error message
         """
-        pass
+        ...

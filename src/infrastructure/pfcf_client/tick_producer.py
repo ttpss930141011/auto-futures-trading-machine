@@ -84,7 +84,7 @@ class TickProducer:
             if self.logger and self._tick_count % 500 == 0:  # Log every 500 ticks
                 self.logger.log_info(f"Published {self._tick_count} ticks via ZMQ.")
 
-        except Exception as e:
+        except (RuntimeError, OSError, ValueError) as e:
             self._handle_error(e)
 
     def _handle_error(self, e):

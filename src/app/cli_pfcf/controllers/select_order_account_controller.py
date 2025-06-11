@@ -7,16 +7,24 @@ from src.interactor.use_cases.select_order_account import SelectOrderAccountUseC
 
 
 class SelectOrderAccountController(CliMemoryControllerInterface):
-    """ User login controller
+    """Controller for selecting order account.
+    
+    This controller allows users to select from available order accounts
+    and stores the selection in the session.
     """
 
-    def __init__(self, service_container: ServiceContainer):
+    def __init__(self, service_container: ServiceContainer) -> None:
+        """Initialize the select order account controller.
+        
+        Args:
+            service_container: Container with all application services.
+        """
+        self.service_container = service_container
         self.logger = service_container.logger
-        self.config = service_container.config
         self.session_repository = service_container.session_repository
 
     def _get_user_input(self) -> SelectOrderAccountInputDto:
-        account_set = self.config.EXCHANGE_CLIENT.UserOrderSet
+        account_set = self.service_container.exchange_client.UserOrderSet
         print("\nSelect the order account:")
         for account in account_set:
             print(f"{account_set.index(account) + 1}. {account}")
@@ -34,7 +42,7 @@ class SelectOrderAccountController(CliMemoryControllerInterface):
 
         presenter = SelectOrderAccountPresenter()
         input_dto = self._get_user_input()
-        use_case = SelectOrderAccountUseCase(presenter, self.config, self.logger, self.session_repository)
+        use_case = SelectOrderAccountUseCase(presenter, self.service_container, self.logger, self.session_repository)
         result = use_case.execute(input_dto)
         view = SelectOrderAccountView()
         view.show(result)

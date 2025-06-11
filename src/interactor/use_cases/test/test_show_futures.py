@@ -19,7 +19,6 @@ from src.interactor.interfaces.presenters.show_futures_presenter import (
 )
 from src.interactor.interfaces.logger.logger import LoggerInterface
 from src.interactor.interfaces.repositories.session_repository import SessionRepositoryInterface
-from src.app.cli_pfcf.config import Config  # Assuming Config is the concrete class used
 
 # Conditional imports for type checking
 if TYPE_CHECKING:
@@ -29,46 +28,44 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture
-def mock_presenter(mocker: "MockerFixture") -> MagicMock:
+def mock_presenter() -> MagicMock:
     """Fixture for a mocked ShowFuturesPresenterInterface."""
-    return mocker.MagicMock(spec=ShowFuturesPresenterInterface)
+    return MagicMock(spec=ShowFuturesPresenterInterface)
 
 
 @pytest.fixture
-def mock_logger(mocker: "MockerFixture") -> MagicMock:
+def mock_logger() -> MagicMock:
     """Fixture for a mocked LoggerInterface."""
-    return mocker.MagicMock(spec=LoggerInterface)
+    return MagicMock(spec=LoggerInterface)
 
 
 @pytest.fixture
-def mock_session_repo(mocker: "MockerFixture") -> MagicMock:
+def mock_session_repo() -> MagicMock:
     """Fixture for a mocked SessionRepositoryInterface."""
-    repo = mocker.MagicMock(spec=SessionRepositoryInterface)
+    repo = MagicMock(spec=SessionRepositoryInterface)
     repo.is_user_logged_in.return_value = True  # Default to logged in
     return repo
 
 
 @pytest.fixture
-def mock_config(mocker: "MockerFixture") -> MagicMock:
-    """Fixture for a mocked Config containing a mocked API client."""
-    mock_api_client = mocker.MagicMock(name="PFCFApiClient")
-    mock_api_client.PFCGetFutureData = mocker.MagicMock(name="PFCGetFutureData")
+def mock_service_container() -> MagicMock:
+    """Fixture for a mocked service container containing a mocked API client."""
+    mock_api_client = MagicMock(name="PFCFApiClient")
+    mock_api_client.PFCGetFutureData = MagicMock(name="PFCGetFutureData")
 
-    mock_cfg = mocker.MagicMock(spec=Config)
-    mock_cfg.EXCHANGE_CLIENT = mock_api_client
-    return mock_cfg
+    mock_container = MagicMock()
+    mock_container.exchange_client = mock_api_client
+    return mock_container
 
 
 @pytest.fixture
 def show_futures_use_case(
-    mock_presenter, mock_config, mock_logger, mock_session_repo
+    mock_presenter, mock_service_container, mock_logger, mock_session_repo
 ) -> ShowFuturesUseCase:
     """Fixture to create a ShowFuturesUseCase instance with mocked dependencies."""
     return ShowFuturesUseCase(
         presenter=mock_presenter,
-        config=mock_config,
-        logger=mock_logger,
-        session_repository=mock_session_repo,
+        service_container=mock_service_container,
     )
 
 
@@ -78,7 +75,7 @@ def show_futures_use_case(
 def test_show_futures_success_all(
     show_futures_use_case: ShowFuturesUseCase,
     mock_presenter,
-    mock_config,
+    mock_service_container,
     mock_logger,
     mock_session_repo,
 ):
@@ -93,7 +90,7 @@ def test_show_futures_success_all(
         success=True, message="Success", futures_data=mock_api_data
     )
 
-    mock_config.EXCHANGE_CLIENT.PFCGetFutureData.return_value = mock_api_data
+    mock_service_container.exchange_client.PFCGetFutureData.return_value = mock_api_data
     mock_presenter.present_futures_data.return_value = expected_output
 
     # Act
@@ -101,9 +98,9 @@ def test_show_futures_success_all(
 
     # Assert
     assert result == expected_output
-    mock_session_repo.is_user_logged_in.assert_called_once()
-    mock_logger.log_info.assert_called_once_with("Getting futures data for code: ALL")
-    mock_config.EXCHANGE_CLIENT.PFCGetFutureData.assert_called_once_with(
+    mock_service_container.session_repository.is_user_logged_in.assert_called_once()
+    mock_service_container.logger.log_info.assert_called_once_with("Getting futures data for code: ALL")
+    mock_service_container.exchange_client.PFCGetFutureData.assert_called_once_with(
         ""
     )  # Called with empty string for ALL
     mock_presenter.present_futures_data.assert_called_once_with(mock_api_data)
@@ -113,7 +110,7 @@ def test_show_futures_success_all(
 def test_show_futures_success_specific(
     show_futures_use_case: ShowFuturesUseCase,
     mock_presenter,
-    mock_config,
+    mock_service_container,
     mock_logger,
     mock_session_repo,
 ):
@@ -126,7 +123,7 @@ def test_show_futures_success_specific(
         success=True, message="Success", futures_data=mock_api_data
     )
 
-    mock_config.EXCHANGE_CLIENT.PFCGetFutureData.return_value = mock_api_data
+    mock_service_container.exchange_client.PFCGetFutureData.return_value = mock_api_data
     mock_presenter.present_futures_data.return_value = expected_output
 
     # Act
@@ -134,9 +131,9 @@ def test_show_futures_success_specific(
 
     # Assert
     assert result == expected_output
-    mock_session_repo.is_user_logged_in.assert_called_once()
-    mock_logger.log_info.assert_called_once_with(f"Getting futures data for code: {specific_code}")
-    mock_config.EXCHANGE_CLIENT.PFCGetFutureData.assert_called_once_with(specific_code)
+    mock_service_container.session_repository.is_user_logged_in.assert_called_once()
+    mock_service_container.logger.log_info.assert_called_once_with(f"Getting futures data for code: {specific_code}")
+    mock_service_container.exchange_client.PFCGetFutureData.assert_called_once_with(specific_code)
     mock_presenter.present_futures_data.assert_called_once_with(mock_api_data)
     mock_presenter.present_error.assert_not_called()
 
@@ -144,7 +141,7 @@ def test_show_futures_success_specific(
 def test_show_futures_not_logged_in(
     show_futures_use_case: ShowFuturesUseCase,
     mock_presenter,
-    mock_config,
+    mock_service_container,
     mock_logger,
     mock_session_repo,
 ):
@@ -154,7 +151,7 @@ def test_show_futures_not_logged_in(
     error_message = "User not logged in"
     expected_output = ShowFuturesOutputDto(success=False, message=error_message)
 
-    mock_session_repo.is_user_logged_in.return_value = False  # Simulate not logged in
+    mock_service_container.session_repository.is_user_logged_in.return_value = False  # Simulate not logged in
     mock_presenter.present_error.return_value = expected_output
 
     # Act
@@ -162,17 +159,17 @@ def test_show_futures_not_logged_in(
 
     # Assert
     assert result == expected_output
-    mock_session_repo.is_user_logged_in.assert_called_once()
+    mock_service_container.session_repository.is_user_logged_in.assert_called_once()
     mock_presenter.present_error.assert_called_once_with(error_message)
-    mock_logger.log_info.assert_not_called()
-    mock_config.EXCHANGE_CLIENT.PFCGetFutureData.assert_not_called()
+    mock_service_container.logger.log_info.assert_not_called()
+    mock_service_container.exchange_client.PFCGetFutureData.assert_not_called()
     mock_presenter.present_futures_data.assert_not_called()
 
 
 def test_show_futures_api_exception(
     show_futures_use_case: ShowFuturesUseCase,
     mock_presenter,
-    mock_config,
+    mock_service_container,
     mock_logger,
     mock_session_repo,
 ):
@@ -182,7 +179,7 @@ def test_show_futures_api_exception(
     api_error = Exception("Network timeout")
     expected_output = ShowFuturesOutputDto(success=False, message=str(api_error))
 
-    mock_config.EXCHANGE_CLIENT.PFCGetFutureData.side_effect = api_error
+    mock_service_container.exchange_client.PFCGetFutureData.side_effect = api_error
     mock_presenter.present_error.return_value = expected_output
 
     # Act
@@ -190,11 +187,11 @@ def test_show_futures_api_exception(
 
     # Assert
     assert result == expected_output
-    mock_session_repo.is_user_logged_in.assert_called_once()
-    mock_logger.log_info.assert_called_once_with(
+    mock_service_container.session_repository.is_user_logged_in.assert_called_once()
+    mock_service_container.logger.log_info.assert_called_once_with(
         "Getting futures data for code: ALL"
     )  # Logging happens before call
-    mock_config.EXCHANGE_CLIENT.PFCGetFutureData.assert_called_once_with("")
-    mock_logger.log_error.assert_called_once_with(f"Error in ShowFuturesUseCase: {str(api_error)}")
+    mock_service_container.exchange_client.PFCGetFutureData.assert_called_once_with("")
+    mock_service_container.logger.log_error.assert_called_once_with(f"Error in ShowFuturesUseCase: {str(api_error)}")
     mock_presenter.present_error.assert_called_once_with(str(api_error))
     mock_presenter.present_futures_data.assert_not_called()

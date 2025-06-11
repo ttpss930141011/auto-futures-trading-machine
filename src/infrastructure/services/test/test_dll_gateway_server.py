@@ -36,6 +36,10 @@ class TestDllGatewayServer:
         mock_client.trade = Mock()
         mock_client.trade.OrderObject = Mock()
         
+        # Add decimal attribute for EnumConverter
+        mock_client.decimal = Mock()
+        mock_client.decimal.Parse.return_value = 0.0
+        
         return mock_client
 
     @pytest.fixture
@@ -361,6 +365,10 @@ class TestDllGatewayServerIntegration:
         # Add trade attribute for OrderObject
         mock_client.trade = Mock()
         mock_client.trade.OrderObject = Mock()
+        
+        # Add decimal attribute for EnumConverter
+        mock_client.decimal = Mock()
+        mock_client.decimal.Parse.return_value = 0.0
         
         return mock_client
 

@@ -118,6 +118,7 @@ class ApplicationBootstrapper:
             config=self._config,
             session_repository=session_repository,
             condition_repository=condition_repository,
+            exchange_api=self._exchange_api,
         )
 
         return service_container
@@ -172,7 +173,7 @@ class ApplicationBootstrapper:
         self._logger = LoggerDefault()
 
         # Initialize configuration
-        self._config = Config(self._exchange_api)
+        self._config = Config()
 
         self._logger.log_info("Core components initialized successfully")
 
@@ -196,7 +197,7 @@ class ApplicationBootstrapper:
 
         # Create infrastructure services
         port_checker = PortCheckerService(self._config, self._logger)
-        gateway_initializer = GatewayInitializerService(self._config, self._logger)
+        gateway_initializer = GatewayInitializerService(self._config, self._logger, self._exchange_api)
         process_manager = ProcessManagerService(self._config, self._logger)
         status_checker = StatusChecker(service_container)
 

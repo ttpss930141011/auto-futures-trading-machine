@@ -167,10 +167,12 @@ class TestApplicationBootstrapper:
         # Setup mocks
         mock_logger = Mock()
         mock_config = Mock()
+        mock_exchange_api = Mock()
         mock_config.DEFAULT_SESSION_TIMEOUT = 3600
 
         bootstrapper._logger = mock_logger
         bootstrapper._config = mock_config
+        bootstrapper._exchange_api = mock_exchange_api
 
         mock_session_repo = Mock()
         mock_condition_repo = Mock()
@@ -192,6 +194,7 @@ class TestApplicationBootstrapper:
             config=mock_config,
             session_repository=mock_session_repo,
             condition_repository=mock_condition_repo,
+            exchange_api=mock_exchange_api,
         )
 
         assert result == mock_container
@@ -376,7 +379,7 @@ class TestApplicationBootstrapper:
 
         # Verify services were created
         mock_port_checker_class.assert_called_once_with(mock_config, mock_logger)
-        mock_gateway_init_class.assert_called_once_with(mock_config, mock_logger)
+        mock_gateway_init_class.assert_called_once_with(mock_config, mock_logger, mock_exchange_api)
         mock_process_manager_class.assert_called_once_with(mock_config, mock_logger)
         mock_status_checker_class.assert_called_once_with(mock_service_container)
 

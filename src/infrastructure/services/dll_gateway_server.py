@@ -273,8 +273,12 @@ class DllGatewayServer:
             SendMarketOrderOutputDto with execution result.
         """
         try:
-            # Convert to PFCF format using the existing method
-            pfcf_input = input_dto.to_pfcf_dict(self._config)
+            # Convert to PFCF format using the exchange API
+            # Create a temporary service container-like object for enum conversion
+            from types import SimpleNamespace
+            temp_service_container = SimpleNamespace()
+            temp_service_container.exchange_api = self._exchange_client
+            pfcf_input = input_dto.to_pfcf_dict(temp_service_container)
 
             # Use the correct DLL API pattern matching send_market_order.py
             order = self._exchange_client.trade.OrderObject()

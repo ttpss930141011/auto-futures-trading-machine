@@ -18,9 +18,9 @@ class Config(object):
     configuration values and not managing API instances or business logic.
     """
 
-    # Exchange URLs - loaded from environment variables
-    EXCHANGE_TEST_URL = os.getenv("DEALER_TEST_URL", "")
-    EXCHANGE_PROD_URL = os.getenv("DEALER_PROD_URL", "")
+    # Exchange URLs - will be loaded in __init__
+    EXCHANGE_TEST_URL = ""
+    EXCHANGE_PROD_URL = ""
     
     # Application defaults
     DEFAULT_SESSION_TIMEOUT = 43200
@@ -76,6 +76,10 @@ class Config(object):
         Raises:
             SystemExit: If required environment variables are missing.
         """
+        # Load environment variables
+        self.EXCHANGE_TEST_URL = os.getenv("DEALER_TEST_URL", "")
+        self.EXCHANGE_PROD_URL = os.getenv("DEALER_PROD_URL", "")
+        
         # Validate required environment variables
         if not self.EXCHANGE_TEST_URL:
             print("Specify DEALER_TEST_URL as environment variable.")

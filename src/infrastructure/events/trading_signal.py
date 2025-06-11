@@ -32,4 +32,4 @@ class TradingSignal(Event):
             f"TradingSignal(when={self.when.isoformat()}, "
             f"operation={self.operation.name}, "
             f"commodity_id='{self.commodity_id}')"
-        ) 
+        )

@@ -16,10 +16,6 @@ def test_register_item(monkeypatch, mocker, fixture_register_item):
     service_container_mock.session_repository.get_current_user.return_value = fixture_register_item["account"]
     service_container_mock.session_repository.is_user_logged_in.return_value = True
 
-    logger_mock = service_container_mock.logger
-    config_mock = service_container_mock.config
-    session_manager_mock = service_container_mock.session_repository
-
     # manually set the user inputs
     item_code = fixture_register_item["item_code"]
     fake_user_inputs = iter([item_code])
@@ -45,7 +41,7 @@ def test_register_item(monkeypatch, mocker, fixture_register_item):
     controller = RegisterItemController(service_container_mock)
     controller.execute()
 
-    session_manager_mock.get_current_user.assert_called_once_with()
+    service_container_mock.session_repository.get_current_user.assert_called_once_with()
     mock_presenter.assert_called_once_with()
     mock_use_case.assert_called_once_with(
         mock_presenter.return_value,

@@ -23,7 +23,7 @@ from src.interactor.errors.dll_gateway_errors import DllGatewayError
 
 class OrderExecutorGateway:
     """Executes orders using DLL Gateway Service.
-    
+
     This class follows Single Responsibility Principle by focusing solely on
     processing trading signals and delegating order execution to the gateway service.
     Follows Dependency Inversion Principle by depending on DllGatewayServiceInterface.
@@ -91,7 +91,7 @@ class OrderExecutorGateway:
 
     def _process_trading_signal(self, signal: TradingSignal) -> None:
         """Process a trading signal and execute the corresponding order.
-        
+
         Args:
             signal: The trading signal to process.
         """
@@ -118,11 +118,11 @@ class OrderExecutorGateway:
 
     def _create_order_input_dto(self, signal: TradingSignal, order_account: str) -> SendMarketOrderInputDto:
         """Create an order input DTO from trading signal.
-        
+
         Args:
             signal: The trading signal.
             order_account: The order account to use.
-            
+
         Returns:
             SendMarketOrderInputDto object ready for gateway execution.
         """
@@ -141,7 +141,7 @@ class OrderExecutorGateway:
 
     def _execute_order_via_gateway(self, input_dto: SendMarketOrderInputDto) -> None:
         """Execute order through DLL Gateway Service.
-        
+
         Args:
             input_dto: The order input DTO to execute.
         """
@@ -177,7 +177,7 @@ class OrderExecutorGateway:
 
     def get_health_status(self) -> dict:
         """Get health status including gateway connectivity.
-        
+
         Returns:
             Dictionary containing health status information.
         """
@@ -200,11 +200,11 @@ class OrderExecutorGateway:
         """Close the order executor and cleanup resources."""
         try:
             self._logger.log_info("Closing OrderExecutorGateway resources")
-            
+
             # Close DLL Gateway connection
             if hasattr(self._dll_gateway_service, 'close'):
                 self._dll_gateway_service.close()
-                
+
         except Exception as e:
             self._logger.log_error(f"Error during OrderExecutorGateway cleanup: {e}")
 

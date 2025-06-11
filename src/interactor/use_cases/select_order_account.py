@@ -16,7 +16,7 @@ from src.interactor.validations.select_order_account_validator import SelectOrde
 
 class SelectOrderAccountUseCase:
     """Use case for selecting order accounts.
-    
+
     This class handles the business logic for selecting order accounts,
     including validation, session management, and account verification.
     """
@@ -27,7 +27,7 @@ class SelectOrderAccountUseCase:
             service_container: ServiceContainer,
     ) -> None:
         """Initialize the SelectOrderAccountUseCase.
-        
+
         Args:
             presenter: The presenter interface for formatting output.
             service_container: Container providing access to all required services.
@@ -40,13 +40,13 @@ class SelectOrderAccountUseCase:
             input_dto: SelectOrderAccountInputDto
     ) -> Dict:
         """Execute the select order account use case.
-        
+
         Args:
             input_dto: The input data transfer object containing account selection details.
-            
+
         Returns:
             Dict: The formatted response from the presenter.
-            
+
         Raises:
             LoginFailedException: If the user is not logged in.
             NotFountItemException: If the requested order account is not found.

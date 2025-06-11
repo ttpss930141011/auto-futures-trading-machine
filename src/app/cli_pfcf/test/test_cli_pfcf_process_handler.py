@@ -5,7 +5,6 @@ from src.app.cli_pfcf.cli_pfcf_process_handler import CliMemoryProcessHandler
 from src.app.cli_pfcf.interfaces.cli_memory_controller_interface import CliMemoryControllerInterface
 
 
-from src.app.cli_pfcf.interfaces.cli_memory_controller_interface import CliMemoryControllerInterface
 
 class DummyController(CliMemoryControllerInterface):
     """Dummy controller for testing."""

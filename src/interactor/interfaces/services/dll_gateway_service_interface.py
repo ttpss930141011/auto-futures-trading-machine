@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 @dataclass
 class OrderRequest:
     """Data class representing an order request."""
-    
+
     order_account: str
     item_code: str
     side: str
@@ -31,7 +31,7 @@ class OrderRequest:
 @dataclass
 class OrderResponse:
     """Data class representing an order response."""
-    
+
     success: bool
     order_id: str = None
     error_message: str = None
@@ -41,7 +41,7 @@ class OrderResponse:
 @dataclass
 class PositionInfo:
     """Data class representing position information."""
-    
+
     account: str
     item_code: str
     quantity: int
@@ -51,7 +51,7 @@ class PositionInfo:
 
 class DllGatewayServiceInterface(ABC):
     """Interface for DLL Gateway Service.
-    
+
     Provides centralized access to exchange DLL functionality,
     ensuring single source of truth for exchange operations.
     """
@@ -59,13 +59,13 @@ class DllGatewayServiceInterface(ABC):
     @abstractmethod
     def send_order(self, input_dto: "SendMarketOrderInputDto") -> "SendMarketOrderOutputDto":
         """Send a market order through the exchange DLL.
-        
+
         Args:
             input_dto: SendMarketOrderInputDto containing all necessary parameters.
-            
+
         Returns:
             SendMarketOrderOutputDto: Result of the order submission.
-            
+
         Raises:
             DllGatewayError: If the gateway service is unavailable.
             InvalidOrderError: If the order request is invalid.
@@ -75,13 +75,13 @@ class DllGatewayServiceInterface(ABC):
     @abstractmethod
     def get_positions(self, account: str) -> List[PositionInfo]:
         """Get current positions for an account.
-        
+
         Args:
             account: The trading account identifier.
-            
+
         Returns:
             List of position information.
-            
+
         Raises:
             DllGatewayError: If the gateway service is unavailable.
         """
@@ -90,7 +90,7 @@ class DllGatewayServiceInterface(ABC):
     @abstractmethod
     def is_connected(self) -> bool:
         """Check if the DLL gateway is connected and ready.
-        
+
         Returns:
             True if connected and ready, False otherwise.
         """
@@ -99,7 +99,7 @@ class DllGatewayServiceInterface(ABC):
     @abstractmethod
     def get_health_status(self) -> Dict[str, Any]:
         """Get health status of the DLL gateway.
-        
+
         Returns:
             Dictionary containing health status information.
         """

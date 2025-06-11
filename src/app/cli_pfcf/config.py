@@ -13,7 +13,7 @@ except ImportError:
 
 class Config(object):
     """Configuration for the application.
-    
+
     This class follows the Single Responsibility Principle by only handling
     configuration values and not managing API instances or business logic.
     """
@@ -21,7 +21,7 @@ class Config(object):
     # Exchange URLs - will be loaded in __init__
     EXCHANGE_TEST_URL = ""
     EXCHANGE_PROD_URL = ""
-    
+
     # Application defaults
     DEFAULT_SESSION_TIMEOUT = 43200
     DEFAULT_TAKE_PROFIT_POINT = 90
@@ -31,7 +31,7 @@ class Config(object):
     ZMQ_HOST = os.getenv("ZMQ_HOST", "127.0.0.1")
     ZMQ_TICK_PORT = int(os.getenv("ZMQ_TICK_PORT", "5555"))
     ZMQ_SIGNAL_PORT = int(os.getenv("ZMQ_SIGNAL_PORT", "5556"))
-    
+
     # DLL Gateway configuration
     DLL_GATEWAY_HOST = os.getenv("DLL_GATEWAY_HOST", "127.0.0.1")
     DLL_GATEWAY_PORT = int(os.getenv("DLL_GATEWAY_PORT", "5557"))
@@ -70,16 +70,16 @@ class Config(object):
 
     def __init__(self) -> None:
         """Initialize the configuration.
-        
+
         Validates that required environment variables are set.
-        
+
         Raises:
             SystemExit: If required environment variables are missing.
         """
         # Load environment variables
         self.EXCHANGE_TEST_URL = os.getenv("DEALER_TEST_URL", "")
         self.EXCHANGE_PROD_URL = os.getenv("DEALER_PROD_URL", "")
-        
+
         # Validate required environment variables
         if not self.EXCHANGE_TEST_URL:
             print("Specify DEALER_TEST_URL as environment variable.")

@@ -16,7 +16,7 @@ from src.interactor.validations.register_item_validator import RegisterItemInput
 
 class RegisterItemUseCase:
     """Use case for registering trading items.
-    
+
     This class handles the business logic for registering trading items,
     including validation, session management, and exchange client interactions.
     """
@@ -27,7 +27,7 @@ class RegisterItemUseCase:
             service_container: ServiceContainer,
     ) -> None:
         """Initialize the RegisterItemUseCase.
-        
+
         Args:
             presenter: The presenter interface for formatting output.
             service_container: Container providing access to all required services.
@@ -40,13 +40,13 @@ class RegisterItemUseCase:
             input_dto: RegisterItemInputDto
     ) -> Dict:
         """Execute the register item use case.
-        
+
         Args:
             input_dto: The input data transfer object containing registration details.
-            
+
         Returns:
             Dict: The formatted response from the presenter.
-            
+
         Raises:
             LoginFailedException: If the user is not logged in.
             NotFountItemException: If the requested item is not found.

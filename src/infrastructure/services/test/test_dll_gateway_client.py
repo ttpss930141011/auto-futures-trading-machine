@@ -21,7 +21,7 @@ from src.interactor.errors.dll_gateway_errors import (
 
 class TestDllGatewayClient:
     """Test suite for DLL Gateway Client.
-    
+
     Tests client functionality with complete mocking of ZMQ dependencies.
     """
 
@@ -82,7 +82,7 @@ class TestDllGatewayClient:
             "order_serial": "ORDER123",
             "note": "Order sent successfully"
         })
-        
+
         # Create order request
         order_request = SendMarketOrderInputDto(
             order_account="TEST001",
@@ -96,15 +96,15 @@ class TestDllGatewayClient:
             day_trade=DayTrade.No,
             time_in_force=TimeInForce.IOC
         )
-        
+
         # Send order
         response = gateway_client.send_order(order_request)
-        
+
         # Verify response
         assert isinstance(response, SendMarketOrderOutputDto)
         assert response.is_send_order is True
         assert response.order_serial == "ORDER123"
-        
+
         # Verify socket was called
         mock_socket.send_string.assert_called_once()
         mock_socket.recv_string.assert_called_once()
@@ -120,7 +120,7 @@ class TestDllGatewayClient:
             "order_serial": "",
             "note": "Order failed"
         })
-        
+
         order_request = SendMarketOrderInputDto(
             order_account="TEST001",
             item_code="TXFF4",
@@ -133,11 +133,11 @@ class TestDllGatewayClient:
             day_trade=DayTrade.No,
             time_in_force=TimeInForce.IOC
         )
-        
+
         # This should raise an exception because server returned error
         with pytest.raises(DllGatewayError) as exc_info:
             gateway_client.send_order(order_request)
-        
+
         assert "Invalid order" in str(exc_info.value)
 
     def test_get_positions_success(self, gateway_client, mock_socket):
@@ -155,9 +155,9 @@ class TestDllGatewayClient:
                 }
             ]
         })
-        
+
         positions = gateway_client.get_positions("TEST001")
-        
+
         assert len(positions) == 1
         assert positions[0].account == "TEST001"
         assert positions[0].item_code == "TXFF4"
@@ -172,9 +172,9 @@ class TestDllGatewayClient:
             "exchange_connected": True,
             "timestamp": 1234567890
         })
-        
+
         health_status = gateway_client.get_health_status()
-        
+
         assert health_status["status"] == "healthy"
         assert health_status["exchange_connected"] is True
         assert health_status["timestamp"] == 1234567890
@@ -189,7 +189,7 @@ class TestDllGatewayClient:
             "status": "healthy",
             "exchange_connected": True
         })
-        
+
         result = gateway_client.is_connected()
         assert result is True
 
@@ -201,7 +201,7 @@ class TestDllGatewayClient:
             "status": "unhealthy",
             "exchange_connected": False
         })
-        
+
         result = gateway_client.is_connected()
         assert result is False
 
@@ -213,7 +213,7 @@ class TestDllGatewayClient:
                 pass
             mock_zmq.Again = MockAgain
             mock_socket.recv_string.side_effect = MockAgain()
-            
+
             order_request = SendMarketOrderInputDto(
                 order_account="TEST001",
                 item_code="TXFF4",
@@ -226,7 +226,7 @@ class TestDllGatewayClient:
                 day_trade=DayTrade.No,
                 time_in_force=TimeInForce.IOC
             )
-            
+
             with pytest.raises(DllGatewayTimeoutError):
                 gateway_client.send_order(order_request)
 
@@ -247,7 +247,7 @@ class TestDllGatewayClient:
         """Test handling of invalid JSON response from server."""
         # Return invalid JSON
         mock_socket.recv_string.return_value = "{ invalid json }"
-        
+
         order_request = SendMarketOrderInputDto(
             order_account="TEST001",
             item_code="TXFF4",
@@ -260,10 +260,10 @@ class TestDllGatewayClient:
             day_trade=DayTrade.No,
             time_in_force=TimeInForce.IOC
         )
-        
+
         with pytest.raises(DllGatewayError) as exc_info:
             gateway_client.send_order(order_request)
-        
+
         assert "Invalid JSON response" in str(exc_info.value)
 
 
@@ -273,7 +273,7 @@ class TestDllGatewayClientIntegration:
     def test_client_request_response_flow(self, mock_logger):
         """Test complete request-response flow with proper mocking."""
         server_address = "tcp://localhost:15560"
-        
+
         with patch('zmq.Context') as mock_context:
             mock_socket = Mock()
             mock_context.return_value.socket.return_value = mock_socket
@@ -283,7 +283,7 @@ class TestDllGatewayClientIntegration:
                 "order_serial": "ORDER456",
                 "note": "Integration test success"
             })
-            
+
             client = DllGatewayClient(
                 server_address=server_address,
                 logger=mock_logger,
@@ -291,7 +291,7 @@ class TestDllGatewayClientIntegration:
                 retry_count=1
             )
             client._socket = mock_socket
-            
+
             # Test order sending
             order_request = SendMarketOrderInputDto(
                 order_account="INTEGRATION_TEST",
@@ -305,12 +305,12 @@ class TestDllGatewayClientIntegration:
                 day_trade=DayTrade.No,
                 time_in_force=TimeInForce.IOC
             )
-            
+
             response = client.send_order(order_request)
-            
+
             assert response.is_send_order is True
             assert response.order_serial == "ORDER456"
-            
+
             # Verify logging
             mock_logger.log_info.assert_called()
 

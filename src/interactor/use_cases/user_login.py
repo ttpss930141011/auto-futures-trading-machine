@@ -16,7 +16,7 @@ from src.interactor.validations.user_login_validator import UserLoginInputDtoVal
 
 class UserLoginUseCase:
     """Handles user login operations.
-    
+
     This class follows the Single Responsibility Principle by focusing
     solely on user authentication and session management.
     """
@@ -30,7 +30,7 @@ class UserLoginUseCase:
         session_repository: SessionRepositoryInterface,
     ) -> None:
         """Initialize the user login use case.
-        
+
         Args:
             presenter: Presenter for formatting output.
             repository: Repository for user data operations.

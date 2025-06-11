@@ -19,7 +19,7 @@ def test_register_item(fixture_register_item):
     service_container_mock = MagicMock()
     logger_mock = MagicMock(spec=LoggerInterface)
     session_manager_mock = MagicMock(spec=SessionRepositoryInterface)
-    
+
     # Set up service container attributes
     service_container_mock.logger = logger_mock
     service_container_mock.session_repository = session_manager_mock
@@ -71,7 +71,7 @@ def test_register_item_if_user_is_none(fixture_register_item):
     service_container_mock = MagicMock()
     logger_mock = MagicMock(spec=LoggerInterface)
     session_manager_mock = MagicMock(spec=SessionRepositoryInterface)
-    
+
     # Set up service container attributes
     service_container_mock.logger = logger_mock
     service_container_mock.session_repository = session_manager_mock
@@ -105,7 +105,7 @@ def test_register_item_if_item_code_not_in_items_list(fixture_register_item):
     service_container_mock = MagicMock()
     logger_mock = MagicMock(spec=LoggerInterface)
     session_manager_mock = MagicMock(spec=SessionRepositoryInterface)
-    
+
     # Set up service container attributes
     service_container_mock.logger = logger_mock
     service_container_mock.session_repository = session_manager_mock

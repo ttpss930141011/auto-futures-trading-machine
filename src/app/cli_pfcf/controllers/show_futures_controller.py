@@ -28,10 +28,10 @@ class ShowFuturesController(CliMemoryControllerInterface):
         if self.session_repository.is_user_logged_in() is False:
             self.logger.log_info("User not logged in")
             return
-            
+
         presenter = ShowFuturesPresenter()
         input_dto = self._get_user_info()
         use_case = ShowFuturesUseCase(presenter, self.service_container)
         result = use_case.execute(input_dto)
         view = ShowFuturesView()
-        view.show(result) 
+        view.show(result)

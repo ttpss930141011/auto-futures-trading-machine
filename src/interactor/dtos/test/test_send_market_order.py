@@ -43,11 +43,11 @@ def test_send_market_order_input_dto_valid(fixture_send_market_order):
 
 def test_send_market_order_input_dto_to_pfcf_dict_valid(fixture_send_market_order):
     from unittest.mock import MagicMock, patch
-    
+
     # Create service container mock
     mock_service_container = MagicMock()
     mock_service_container.exchange_api = MagicMock()
-    
+
     with patch("src.interactor.dtos.send_market_order_dtos.EnumConverter") as mock_converter:
         mock_converter_instance = mock_converter.return_value
         mock_converter_instance.to_pfcf_enum.return_value = "Test Enum"

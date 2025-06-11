@@ -70,4 +70,4 @@ class ZmqPusher:
                  if self._logger:
                     self._logger.log_error(f"Error closing ZMQ Pusher socket: {e}")
             finally:
-                self._socket = None 
+                self._socket = None

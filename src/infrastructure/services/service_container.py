@@ -13,12 +13,12 @@ from src.interactor.interfaces.repositories.session_repository import SessionRep
 
 class ServiceContainer:
     """Container for all application services and dependencies.
-    
+
     This class follows the Dependency Inversion Principle by managing
     dependencies through constructor injection and providing a centralized
     location for service access.
     """
-    
+
     def __init__(
         self,
         logger: LoggerInterface,
@@ -28,7 +28,7 @@ class ServiceContainer:
         exchange_api: PFCFApi,
     ) -> None:
         """Initialize the service container.
-        
+
         Args:
             logger: Logger interface for application logging.
             config: Configuration instance for application settings.
@@ -41,17 +41,17 @@ class ServiceContainer:
         self.session_repository = session_repository
         self.condition_repository = condition_repository
         self.exchange_api = exchange_api
-    
+
     @property
     def exchange_client(self):
         """Get the exchange client from the API."""
         return self.exchange_api.client
-    
+
     @property
     def exchange_trade(self):
         """Get the exchange trade interface from the API."""
         return self.exchange_api.trade
-    
+
     @property
     def exchange_decimal(self):
         """Get the exchange decimal interface from the API."""

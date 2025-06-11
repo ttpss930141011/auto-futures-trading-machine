@@ -37,7 +37,7 @@ def test_execute(fixture_select_order_account):
     with patch('src.app.cli_pfcf.controllers.select_order_account_controller.SelectOrderAccountPresenter') as mock_presenter, \
          patch('src.app.cli_pfcf.controllers.select_order_account_controller.SelectOrderAccountUseCase') as mock_use_case, \
          patch('src.app.cli_pfcf.controllers.select_order_account_controller.SelectOrderAccountView') as mock_view:
-        
+
         mock_use_case_instance = mock_use_case.return_value
         mock_view_instance = mock_view.return_value
 

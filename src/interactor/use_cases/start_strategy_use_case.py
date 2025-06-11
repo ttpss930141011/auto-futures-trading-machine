@@ -32,17 +32,17 @@ class StartStrategyUseCase:
         """
         try:
             self.logger.log_info("Starting strategy component...")
-            
+
             # Use the process manager service to start the strategy
             success = self.process_manager_service.start_strategy()
-            
+
             if success:
                 self.logger.log_info("Strategy component started successfully")
             else:
                 self.logger.log_error("Failed to start strategy component")
-                
+
             return success
-            
+
         except Exception as e:
             self.logger.log_error(f"Failed to start strategy: {str(e)}")
             return False

@@ -14,7 +14,7 @@ class GetPositionController(CliMemoryControllerInterface):
 
     def __init__(self, service_container):
         """Initialize the get position controller.
-        
+
         Args:
             service_container: Provides shared services (logger, session_repository, exchange_api).
         """

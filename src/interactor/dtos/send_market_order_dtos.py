@@ -39,10 +39,10 @@ class SendMarketOrderInputDto:
 
     def to_pfcf_dict(self, service_container):
         """Convert data into dictionary and convert enum to pfcf enum.
-        
+
         Args:
             service_container: Service container containing exchange API.
-            
+
         Returns:
             Dictionary with PFCF-compatible field names and values.
         """

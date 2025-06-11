@@ -15,7 +15,7 @@ def test_user_logout_presenter(fixture_user):
     presenter = UserLogoutPresenter()
     assert presenter.present(output_dto) == {
         "action": "logout",
-        "message": f"User logout successfully",
+        "message": "User logout successfully",
         "account": fixture_user["account"],
         "is_success": True
     }

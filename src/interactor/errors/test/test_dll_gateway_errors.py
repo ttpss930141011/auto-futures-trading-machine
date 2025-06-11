@@ -20,7 +20,7 @@ class TestDllGatewayErrors:
         """Test basic DLL Gateway error creation."""
         error_message = "Gateway service unavailable"
         error = DllGatewayError(error_message)
-        
+
         assert str(error) == error_message
         assert error.error_code is None
 
@@ -29,7 +29,7 @@ class TestDllGatewayErrors:
         error_message = "Authentication failed"
         error_code = "AUTH_FAILED"
         error = DllGatewayError(error_message, error_code)
-        
+
         assert str(error) == error_message
         assert error.error_code == error_code
 
@@ -37,7 +37,7 @@ class TestDllGatewayErrors:
         """Test DLL Gateway connection error."""
         error_message = "Cannot connect to gateway server"
         error = DllGatewayConnectionError(error_message)
-        
+
         assert str(error) == error_message
         assert isinstance(error, DllGatewayError)
 
@@ -45,7 +45,7 @@ class TestDllGatewayErrors:
         """Test DLL Gateway timeout error."""
         error_message = "Request timeout after 5000ms"
         error = DllGatewayTimeoutError(error_message)
-        
+
         assert str(error) == error_message
         assert isinstance(error, DllGatewayError)
 
@@ -53,7 +53,7 @@ class TestDllGatewayErrors:
         """Test Invalid Order error."""
         error_message = "Missing required field: order_account"
         error = InvalidOrderError(error_message)
-        
+
         assert str(error) == error_message
         assert isinstance(error, DllGatewayError)
 
@@ -62,7 +62,7 @@ class TestDllGatewayErrors:
         error_message = "Exchange API returned error: Invalid symbol"
         error_code = "INVALID_SYMBOL"
         error = ExchangeApiError(error_message, error_code)
-        
+
         assert str(error) == error_message
         assert error.error_code == error_code
         assert isinstance(error, DllGatewayError)
@@ -75,7 +75,7 @@ class TestDllGatewayErrors:
             InvalidOrderError("test"),
             ExchangeApiError("test"),
         ]
-        
+
         for error in errors:
             assert isinstance(error, DllGatewayError)
             assert isinstance(error, Exception)
@@ -85,11 +85,11 @@ class TestDllGatewayErrors:
         # Test specific error catching
         with pytest.raises(DllGatewayConnectionError):
             raise DllGatewayConnectionError("Connection failed")
-        
+
         # Test catching base error
         with pytest.raises(DllGatewayError):
             raise DllGatewayTimeoutError("Timeout occurred")
-        
+
         # Test catching Exception
         with pytest.raises(Exception):
             raise InvalidOrderError("Invalid order")
@@ -101,6 +101,6 @@ class TestDllGatewayErrors:
             (DllGatewayConnectionError("msg", "CODE2"), "CODE2"),
             (ExchangeApiError("msg", "CODE3"), "CODE3"),
         ]
-        
+
         for error, expected_code in test_cases:
             assert error.error_code == expected_code

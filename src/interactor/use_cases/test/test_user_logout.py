@@ -12,7 +12,7 @@ def test_user_logout():
     presenter_mock = MagicMock(spec=UserLogoutPresenterInterface)
     logger_mock = MagicMock(spec=LoggerInterface)
     session_manager_mock = MagicMock(spec=SessionRepositoryInterface)
-    
+
     # Create service container mock
     service_container_mock = MagicMock()
     service_container_mock.exchange_client.PFCLogout = MagicMock()
@@ -25,7 +25,7 @@ def test_user_logout():
     )
 
     input_dto = UserLogoutInputDto(account="test_account")
-    
+
     with patch("src.interactor.use_cases.user_logout.UserLogoutInputDtoValidator") as validator_mock:
         result = use_case.execute(input_dto)
         validator_mock.assert_called_once_with(input_dto.to_dict())

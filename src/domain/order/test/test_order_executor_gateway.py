@@ -26,7 +26,7 @@ from src.interactor.errors.dll_gateway_errors import DllGatewayError
 
 class TestOrderExecutorGateway:
     """Test suite for OrderExecutorGateway.
-    
+
     Tests signal processing, order execution via gateway,
     error handling, and integration scenarios.
     """
@@ -52,7 +52,7 @@ class TestOrderExecutorGateway:
         return Mock(spec=LoggerInterface)
 
     @pytest.fixture
-    def order_executor(self, mock_signal_puller, mock_dll_gateway_service, 
+    def order_executor(self, mock_signal_puller, mock_dll_gateway_service,
                       mock_session_repository, mock_logger):
         """Create OrderExecutorGateway instance for testing."""
         return OrderExecutorGateway(
@@ -72,7 +72,7 @@ class TestOrderExecutorGateway:
             when=datetime.now()
         )
 
-    def test_initialization(self, order_executor, mock_signal_puller, 
+    def test_initialization(self, order_executor, mock_signal_puller,
                            mock_dll_gateway_service, mock_session_repository, mock_logger):
         """Test proper initialization of OrderExecutorGateway."""
         assert order_executor._signal_puller == mock_signal_puller
@@ -84,9 +84,9 @@ class TestOrderExecutorGateway:
     def test_process_received_signal_no_signal(self, order_executor, mock_signal_puller):
         """Test processing when no signal is received."""
         mock_signal_puller.receive.return_value = None
-        
+
         result = order_executor.process_received_signal()
-        
+
         assert result is False
         mock_signal_puller.receive.assert_called_once_with(non_blocking=True)
 
@@ -106,23 +106,23 @@ class TestOrderExecutorGateway:
             error_code="",
             error_message=""
         )
-        
+
         # Mock deserialize function
         with patch('src.domain.order.order_executor_gateway.deserialize') as mock_deserialize:
             mock_deserialize.return_value = sample_trading_signal
-            
+
             result = order_executor.process_received_signal()
-        
+
         # Verify result
         assert result is True
-        
+
         # Verify interactions
         mock_signal_puller.receive.assert_called_once_with(non_blocking=True)
         mock_deserialize.assert_called_once_with(serialized_signal)
         mock_session_repository.get_order_account.assert_called_once()
         mock_dll_gateway_service.is_connected.assert_called_once()
         mock_dll_gateway_service.send_order.assert_called_once()
-        
+
         # Verify logging
         mock_logger.log_info.assert_any_call(
             f"Received trading signal via ZMQ: {sample_trading_signal.operation.name} "
@@ -135,16 +135,16 @@ class TestOrderExecutorGateway:
         # Setup mocks
         serialized_signal = b"serialized_signal"
         mock_signal_puller.receive.return_value = serialized_signal
-        
+
         # Mock deserialize to return wrong type
         with patch('src.domain.order.order_executor_gateway.deserialize') as mock_deserialize:
             mock_deserialize.return_value = "not_a_trading_signal"
-            
+
             result = order_executor.process_received_signal()
-        
+
         # Verify result
         assert result is True  # Message consumed even if wrong type
-        
+
         # Verify warning logged
         mock_logger.log_warning.assert_called_once_with(
             "Received non-TradingSignal message: <class 'str'>"
@@ -156,16 +156,16 @@ class TestOrderExecutorGateway:
         # Setup mocks
         serialized_signal = b"invalid_signal"
         mock_signal_puller.receive.return_value = serialized_signal
-        
+
         # Mock deserialize to raise exception
         with patch('src.domain.order.order_executor_gateway.deserialize') as mock_deserialize:
             mock_deserialize.side_effect = Exception("Deserialization error")
-            
+
             result = order_executor.process_received_signal()
-        
+
         # Verify result
         assert result is True  # Message consumed even if error
-        
+
         # Verify error logged
         mock_logger.log_error.assert_called_once()
         error_message = mock_logger.log_error.call_args[0][0]
@@ -175,9 +175,9 @@ class TestOrderExecutorGateway:
                                                     mock_logger, sample_trading_signal):
         """Test processing signal when no order account is available."""
         mock_session_repository.get_order_account.return_value = None
-        
+
         order_executor._process_trading_signal(sample_trading_signal)
-        
+
         mock_logger.log_error.assert_called_once_with(
             "Cannot execute order: No order account selected"
         )
@@ -185,9 +185,9 @@ class TestOrderExecutorGateway:
     def test_create_order_request(self, order_executor, sample_trading_signal):
         """Test creation of order input DTO from trading signal."""
         order_account = "TEST001"
-        
+
         order_input_dto = order_executor._create_order_input_dto(sample_trading_signal, order_account)
-        
+
         assert isinstance(order_input_dto, SendMarketOrderInputDto)
         assert order_input_dto.order_account == order_account
         assert order_input_dto.item_code == sample_trading_signal.commodity_id
@@ -198,7 +198,7 @@ class TestOrderExecutorGateway:
     def test_execute_order_via_gateway_success(self, order_executor, mock_dll_gateway_service,
                                               mock_logger):
         """Test successful order execution via gateway."""
-        
+
         # Setup mocks
         mock_dll_gateway_service.is_connected.return_value = True
         mock_dll_gateway_service.send_order.return_value = SendMarketOrderOutputDto(
@@ -208,7 +208,7 @@ class TestOrderExecutorGateway:
             error_code="",
             error_message=""
         )
-        
+
         # Create order input DTO
         input_dto = SendMarketOrderInputDto(
             order_account="TEST001",
@@ -222,13 +222,13 @@ class TestOrderExecutorGateway:
             day_trade=DayTrade.No,
             time_in_force=TimeInForce.IOC
         )
-        
+
         order_executor._execute_order_via_gateway(input_dto)
-        
+
         # Verify gateway calls
         mock_dll_gateway_service.is_connected.assert_called_once()
         mock_dll_gateway_service.send_order.assert_called_once_with(input_dto)
-        
+
         # Verify success logging
         mock_logger.log_info.assert_any_call(
             "Order executed successfully via DLL Gateway. Order Serial: ORDER456"
@@ -238,7 +238,7 @@ class TestOrderExecutorGateway:
                                                     mock_logger):
         """Test order execution when gateway is not connected."""
         mock_dll_gateway_service.is_connected.return_value = False
-        
+
         order_input_dto = SendMarketOrderInputDto(
             order_account="TEST001",
             item_code="TXFF4",
@@ -251,12 +251,12 @@ class TestOrderExecutorGateway:
             day_trade=DayTrade.No,
             time_in_force=TimeInForce.IOC
         )
-        
+
         order_executor._execute_order_via_gateway(order_input_dto)
-        
+
         # Verify error logged
         mock_logger.log_error.assert_called_with("DLL Gateway is not connected")
-        
+
         # Verify send_order was not called
         mock_dll_gateway_service.send_order.assert_not_called()
 
@@ -272,7 +272,7 @@ class TestOrderExecutorGateway:
             error_code="INVALID_PARAMS",
             error_message="Invalid order parameters"
         )
-        
+
         order_input_dto = SendMarketOrderInputDto(
             order_account="TEST001",
             item_code="TXFF4",
@@ -285,9 +285,9 @@ class TestOrderExecutorGateway:
             day_trade=DayTrade.No,
             time_in_force=TimeInForce.IOC
         )
-        
+
         order_executor._execute_order_via_gateway(order_input_dto)
-        
+
         # Verify error logging
         mock_logger.log_error.assert_called_with(
             "Order execution failed via DLL Gateway. "
@@ -300,7 +300,7 @@ class TestOrderExecutorGateway:
         # Setup mocks
         mock_dll_gateway_service.is_connected.return_value = True
         mock_dll_gateway_service.send_order.side_effect = DllGatewayError("Gateway error")
-        
+
         order_input_dto = SendMarketOrderInputDto(
             order_account="TEST001",
             item_code="TXFF4",
@@ -313,9 +313,9 @@ class TestOrderExecutorGateway:
             day_trade=DayTrade.No,
             time_in_force=TimeInForce.IOC
         )
-        
+
         order_executor._execute_order_via_gateway(order_input_dto)
-        
+
         # Verify error logging
         mock_logger.log_error.assert_called_with(
             "DLL Gateway error during order execution: Gateway error"
@@ -329,9 +329,9 @@ class TestOrderExecutorGateway:
             "timestamp": 1234567890
         }
         mock_dll_gateway_service.get_health_status.return_value = gateway_health
-        
+
         health_status = order_executor.get_health_status()
-        
+
         assert health_status["order_executor_running"] is True
         assert health_status["gateway_status"] == gateway_health
         assert health_status["signal_puller_active"] is True
@@ -339,13 +339,13 @@ class TestOrderExecutorGateway:
     def test_get_health_status_error(self, order_executor, mock_dll_gateway_service, mock_logger):
         """Test health status retrieval when gateway raises exception."""
         mock_dll_gateway_service.get_health_status.side_effect = Exception("Gateway down")
-        
+
         health_status = order_executor.get_health_status()
-        
+
         assert health_status["order_executor_running"] is True
         assert health_status["gateway_status"]["status"] == "unhealthy"
         assert "Gateway down" in health_status["gateway_status"]["error"]
-        
+
         # Verify error logged
         mock_logger.log_error.assert_called_once()
 
@@ -353,12 +353,12 @@ class TestOrderExecutorGateway:
         """Test resource cleanup during close."""
         # Add close method to mock
         mock_dll_gateway_service.close = Mock()
-        
+
         order_executor.close()
-        
+
         # Verify cleanup logged
         mock_logger.log_info.assert_called_with("Closing OrderExecutorGateway resources")
-        
+
         # Verify gateway close called
         mock_dll_gateway_service.close.assert_called_once()
 
@@ -384,31 +384,31 @@ class TestOrderExecutorGateway:
             error_code="",
             error_message=""
         )
-        
+
         # Mock deserialize
         with patch('src.domain.order.order_executor_gateway.deserialize') as mock_deserialize:
             mock_deserialize.return_value = sample_trading_signal
-            
+
             # Execute the flow
             result = order_executor.process_received_signal()
-        
+
         # Verify complete flow
         assert result is True
-        
+
         # Verify all components were called
         mock_signal_puller.receive.assert_called_once()
         mock_session_repository.get_order_account.assert_called_once()
         mock_dll_gateway_service.is_connected.assert_called_once()
         mock_dll_gateway_service.send_order.assert_called_once()
-        
+
         # Verify order request was properly constructed
         sent_order = mock_dll_gateway_service.send_order.call_args[0][0]
         assert sent_order.order_account == "INTEGRATION_TEST"
         assert sent_order.item_code == sample_trading_signal.commodity_id
         assert sent_order.side == sample_trading_signal.operation
         assert sent_order.quantity == 2  # default_quantity
-        
+
         # Verify logging of success
-        success_calls = [call for call in mock_logger.log_info.call_args_list 
-                        if "Order executed successfully" in str(call)]
+        success_calls = [log_call for log_call in mock_logger.log_info.call_args_list
+                        if "Order executed successfully" in str(log_call)]
         assert len(success_calls) == 1

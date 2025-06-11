@@ -23,7 +23,7 @@ from src.interactor.validations.send_market_order_validator import SendMarketOrd
 
 class SendMarketOrderUseCase:
     """Handles sending market orders to the exchange.
-    
+
     This class follows the Single Responsibility Principle by focusing
     solely on market order execution.
     """
@@ -36,7 +36,7 @@ class SendMarketOrderUseCase:
         session_repository: SessionRepositoryInterface,
     ) -> None:
         """Initialize the send market order use case.
-        
+
         Args:
             presenter: Presenter for formatting output.
             service_container: Container with all application services.

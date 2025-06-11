@@ -60,7 +60,7 @@ class ZmqSubscriber:
         """Receive a message (topic, payload).
 
         Args:
-            non_blocking: If True, polls the socket once with timeout. 
+            non_blocking: If True, polls the socket once with timeout.
                           If False (default), waits indefinitely (use with caution or in dedicated threads).
 
         Returns:
@@ -112,4 +112,4 @@ class ZmqSubscriber:
                     self._logger.log_warning(f"Error unregistering poller for ZMQ Subscriber: {e}")
             finally:
                 self._socket = None
-                self._poller = None # type: ignore 
+                self._poller = None # type: ignore

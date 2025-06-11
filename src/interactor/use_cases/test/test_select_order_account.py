@@ -30,7 +30,7 @@ def test_select_order_account(fixture_select_order_account):
         index=fixture_select_order_account["index"],
         order_account=fixture_select_order_account["order_account"]
     )
-    
+
     # Mock the validator creation
     with pytest.MonkeyPatch.context() as m:
         m.setattr("src.interactor.use_cases.select_order_account.SelectOrderAccountInputDtoValidator", lambda x: mock_validator)

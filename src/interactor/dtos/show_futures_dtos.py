@@ -26,4 +26,4 @@ class ShowFuturesInputDto:
 class ShowFuturesOutputDto:
     success: bool
     message: str
-    futures_data: List[FutureDataDto] = None 
+    futures_data: List[FutureDataDto] = None

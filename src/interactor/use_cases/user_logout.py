@@ -13,7 +13,7 @@ from src.interactor.validations.user_logout_validator import UserLogoutInputDtoV
 
 class UserLogoutUseCase:
     """Handles user logout operations.
-    
+
     This class follows the Single Responsibility Principle by focusing
     solely on user logout and session cleanup.
     """
@@ -26,7 +26,7 @@ class UserLogoutUseCase:
         session_manager: SessionRepositoryInterface,
     ) -> None:
         """Initialize the user logout use case.
-        
+
         Args:
             presenter: Presenter for formatting output.
             service_container: Container with all application services.

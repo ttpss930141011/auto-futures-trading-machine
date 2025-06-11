@@ -77,7 +77,7 @@ def test_send_market_order(fixture_send_market_order):
     input_dto = SendMarketOrderInputDto(**fixture_send_market_order)
     input_dto.to_pfcf_dict = MagicMock()
     input_dto.to_pfcf_dict.return_value = fake_pfcf_dict
-    
+
     # Mock the validator creation
     with pytest.MonkeyPatch.context() as m:
         m.setattr("src.interactor.use_cases.send_market_order.SendMarketOrderInputDtoValidator", lambda x: mock_validator)
@@ -197,7 +197,7 @@ def test_send_market_order_if_order_result_is_none(fixture_send_market_order):
     input_dto = SendMarketOrderInputDto(**fixture_send_market_order)
     input_dto.to_pfcf_dict = MagicMock()
     input_dto.to_pfcf_dict.return_value = fake_pfcf_dict
-    
+
     # Mock the validator creation
     with pytest.MonkeyPatch.context() as m:
         m.setattr("src.interactor.use_cases.send_market_order.SendMarketOrderInputDtoValidator", lambda x: mock_validator)

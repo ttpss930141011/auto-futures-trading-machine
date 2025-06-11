@@ -9,7 +9,7 @@ from src.interactor.interfaces.repositories.session_repository import SessionRep
 
 class ShowFuturesUseCase:
     """Use case for showing futures data.
-    
+
     This class handles the business logic for retrieving and displaying
     futures data from the exchange, including validation and error handling.
     """
@@ -20,7 +20,7 @@ class ShowFuturesUseCase:
         service_container: ServiceContainer,
     ) -> None:
         """Initialize the ShowFuturesUseCase.
-        
+
         Args:
             presenter: The presenter interface for formatting output.
             service_container: Container providing access to all required services.
@@ -30,10 +30,10 @@ class ShowFuturesUseCase:
 
     def execute(self, input_dto: ShowFuturesInputDto) -> ShowFuturesOutputDto:
         """Execute the show futures use case.
-        
+
         Args:
             input_dto: The input data transfer object containing futures query details.
-            
+
         Returns:
             ShowFuturesOutputDto: The formatted response containing futures data or error.
         """

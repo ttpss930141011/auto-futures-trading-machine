@@ -93,7 +93,7 @@ class ZmqPublisher:
                 if self._socket:
                     try:
                         self._socket.close()
-                    except:
+                    except Exception:
                         pass
                     self._socket = None
 

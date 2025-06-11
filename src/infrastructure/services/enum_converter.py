@@ -10,14 +10,14 @@ from src.domain.value_objects import OrderOperation, TimeInForce, OpenClose, Day
 
 class EnumConverter:
     """Converts between application enums and PFCF API enums.
-    
+
     This class follows the Single Responsibility Principle by focusing
     solely on enum conversion operations.
     """
-    
+
     def __init__(self, exchange_api: PFCFApi) -> None:
         """Initialize the enum converter.
-        
+
         Args:
             exchange_api: PFCF API instance for accessing enum types.
         """
@@ -25,10 +25,10 @@ class EnumConverter:
 
     def to_pfcf_enum(self, enum):
         """Convert application enum to PFCF API enum.
-        
+
         Args:
             enum: Application enum to convert.
-            
+
         Returns:
             Corresponding PFCF API enum, or None if not found.
         """
@@ -69,10 +69,10 @@ class EnumConverter:
 
     def to_pfcf_decimal(self, value: float):
         """Convert float value to PFCF decimal.
-        
+
         Args:
             value: Float value to convert.
-            
+
         Returns:
             PFCF decimal representation.
         """

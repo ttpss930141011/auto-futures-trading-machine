@@ -8,14 +8,14 @@ from src.interactor.use_cases.select_order_account import SelectOrderAccountUseC
 
 class SelectOrderAccountController(CliMemoryControllerInterface):
     """Controller for selecting order account.
-    
+
     This controller allows users to select from available order accounts
     and stores the selection in the session.
     """
 
     def __init__(self, service_container: ServiceContainer) -> None:
         """Initialize the select order account controller.
-        
+
         Args:
             service_container: Container with all application services.
         """

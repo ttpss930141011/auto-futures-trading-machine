@@ -5,10 +5,10 @@ from typing import Optional
 
 class DllGatewayError(Exception):
     """Base exception for DLL Gateway errors."""
-    
+
     def __init__(self, message: str, error_code: Optional[str] = None):
         """Initialize DLL Gateway error.
-        
+
         Args:
             message: Human-readable error message.
             error_code: Optional error code for programmatic handling.

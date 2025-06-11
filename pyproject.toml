@@ -24,6 +24,7 @@ pytest-cover = "^3.0.0"
 pytest-coverage = "^0.0"
 pytest-mock = "^3.14.0"
 pytest-asyncio = "^0.23.6"
+ruff = "^0.11.13"
 
 [build-system]
 requires = ["poetry-core"]
@@ -36,12 +37,12 @@ line-length = 100
 # https://beta.ruff.rs/docs/settings/
 [tool.ruff]
 line-length = 100
+respect-gitignore = true
+
+[tool.ruff.lint]
 # https://beta.ruff.rs/docs/rules/
 select = ["E", "W", "F"]
 ignore = ["F401", "F403", "E402", "E501"]
-# Exclude a variety of commonly ignored directories.
-respect-gitignore = true
-ignore-init-module-imports = true
 
 [tool.mypy]
 ignore_missing_imports = true

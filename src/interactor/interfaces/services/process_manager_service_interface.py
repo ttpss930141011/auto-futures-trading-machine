@@ -11,7 +11,7 @@ import threading
 @runtime_checkable
 class ProcessManagerServiceInterface(Protocol):
     """Interface for the process manager service."""
-    
+
     def start_strategy(self) -> bool:
         """Start the Strategy process.
 
@@ -19,7 +19,7 @@ class ProcessManagerServiceInterface(Protocol):
             bool: True if started successfully, False otherwise
         """
         ...
-        
+
     def start_order_executor(self) -> bool:
         """Start the Order Executor process.
 
@@ -27,7 +27,7 @@ class ProcessManagerServiceInterface(Protocol):
             bool: True if started successfully, False otherwise
         """
         ...
-        
+
     def start_gateway_thread(self, gateway_runner: Callable) -> bool:
         """Start the Gateway in a separate thread.
 
@@ -38,11 +38,11 @@ class ProcessManagerServiceInterface(Protocol):
             bool: True if thread started successfully, False otherwise
         """
         ...
-        
+
     def cleanup_processes(self) -> None:
         """Clean up all processes when exiting."""
         ...
-        
+
     @property
     def strategy_process(self) -> Optional[subprocess.Popen]:
         """Get the strategy process.
@@ -51,7 +51,7 @@ class ProcessManagerServiceInterface(Protocol):
             The strategy process if it exists, None otherwise
         """
         ...
-        
+
     @property
     def order_executor_process(self) -> Optional[subprocess.Popen]:
         """Get the order executor process.
@@ -60,7 +60,7 @@ class ProcessManagerServiceInterface(Protocol):
             The order executor process if it exists, None otherwise
         """
         ...
-        
+
     @property
     def gateway_thread(self) -> Optional[threading.Thread]:
         """Get the gateway thread.
@@ -69,7 +69,7 @@ class ProcessManagerServiceInterface(Protocol):
             The gateway thread if it exists, None otherwise
         """
         ...
-        
+
     @property
     def gateway_running(self) -> bool:
         """Check if the gateway is running.

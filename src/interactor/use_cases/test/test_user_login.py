@@ -28,15 +28,15 @@ def test_user_login(fixture_user):
     repository_mock = MagicMock(spec=UserRepositoryInterface)
     logger_mock = MagicMock(spec=LoggerInterface)
     session_manager_mock = MagicMock(spec=SessionRepositoryInterface)
-    
+
     # Create service container mock
     service_container_mock = MagicMock()
     service_container_mock.exchange_client.PFCLogin = MagicMock()
-    
+
     repository_mock.get.return_value = None
     repository_mock.create.return_value = user
     presenter_mock.present.return_value = "Test output"
-    
+
     use_case = user_login.UserLoginUseCase(
         presenter_mock,
         repository_mock,
@@ -49,13 +49,13 @@ def test_user_login(fixture_user):
         password=fixture_user["password"],
         ip_address=fixture_user["ip_address"]
     )
-    
+
     with patch("src.interactor.use_cases.user_login.UserLoginInputDtoValidator") as input_dto_validator_mock:
         result = use_case.execute(input_dto)
         input_dto_validator_mock.assert_called_once_with(input_dto.to_dict())
         input_dto_validator_instance = input_dto_validator_mock.return_value
         input_dto_validator_instance.validate.assert_called_once_with()
-    
+
     service_container_mock.exchange_client.PFCLogin.assert_called_once_with(
         fixture_user["account"],
         fixture_user["password"],

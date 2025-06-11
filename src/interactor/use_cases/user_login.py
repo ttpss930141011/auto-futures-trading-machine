@@ -4,7 +4,7 @@
 from datetime import datetime
 from typing import Dict
 
-from src.app.cli_pfcf.config import Config
+from src.infrastructure.services.service_container import ServiceContainer
 from src.interactor.dtos.user_login_dtos import UserLoginInputDto, UserLoginOutputDto
 from src.interactor.errors.error_classes import LoginFailedException, ItemNotCreatedException
 from src.interactor.interfaces.logger.logger import LoggerInterface
@@ -15,19 +15,32 @@ from src.interactor.validations.user_login_validator import UserLoginInputDtoVal
 
 
 class UserLoginUseCase:
-    """This class is responsible for creating a new profession."""
+    """Handles user login operations.
+    
+    This class follows the Single Responsibility Principle by focusing
+    solely on user authentication and session management.
+    """
 
     def __init__(
         self,
         presenter: UserLoginPresenterInterface,
         repository: UserRepositoryInterface,
-        config: Config,
+        service_container: ServiceContainer,
         logger: LoggerInterface,
         session_repository: SessionRepositoryInterface,
-    ):
+    ) -> None:
+        """Initialize the user login use case.
+        
+        Args:
+            presenter: Presenter for formatting output.
+            repository: Repository for user data operations.
+            service_container: Container with all application services.
+            logger: Logger for application logging.
+            session_repository: Repository for session management.
+        """
         self.presenter = presenter
         self.repository = repository
-        self.config = config
+        self.service_container = service_container
         self.logger = logger
         self.session_repository = session_repository
 
@@ -43,7 +56,7 @@ class UserLoginUseCase:
 
         # Login to the dealer client
         try:
-            self.config.EXCHANGE_CLIENT.PFCLogin(
+            self.service_container.exchange_client.PFCLogin(
                 input_dto.account, input_dto.password, input_dto.ip_address
             )
         except LoginFailedException as e:
@@ -59,7 +72,7 @@ class UserLoginUseCase:
                 account=input_dto.account,
                 password=input_dto.password,
                 ip_address=input_dto.ip_address,
-                client=self.config.EXCHANGE_CLIENT,
+                client=self.service_container.exchange_client,
             )
             if not user:
                 self.logger.log_error(f"User {input_dto.account} not created")

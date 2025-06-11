@@ -3,7 +3,7 @@
 
 from typing import Dict
 
-from src.app.cli_pfcf.config import Config
+from src.infrastructure.services.service_container import ServiceContainer
 from src.interactor.dtos.user_logout_dtos import UserLogoutInputDto, UserLogoutOutputDto
 from src.interactor.interfaces.logger.logger import LoggerInterface
 from src.interactor.interfaces.presenters.user_logout_presenter import UserLogoutPresenterInterface
@@ -12,17 +12,29 @@ from src.interactor.validations.user_logout_validator import UserLogoutInputDtoV
 
 
 class UserLogoutUseCase:
-    """This class is responsible for user logout."""
+    """Handles user logout operations.
+    
+    This class follows the Single Responsibility Principle by focusing
+    solely on user logout and session cleanup.
+    """
 
     def __init__(
         self,
         presenter: UserLogoutPresenterInterface,
-        config: Config,
+        service_container: ServiceContainer,
         logger: LoggerInterface,
         session_manager: SessionRepositoryInterface,
-    ):
+    ) -> None:
+        """Initialize the user logout use case.
+        
+        Args:
+            presenter: Presenter for formatting output.
+            service_container: Container with all application services.
+            logger: Logger for application logging.
+            session_manager: Repository for session management.
+        """
         self.presenter = presenter
-        self.config = config
+        self.service_container = service_container
         self.logger = logger
         self.session_manager = session_manager
 
@@ -30,7 +42,7 @@ class UserLogoutUseCase:
         validator = UserLogoutInputDtoValidator(input_dto.to_dict())
         validator.validate()
 
-        self.config.EXCHANGE_CLIENT.PFCLogout()
+        self.service_container.exchange_client.PFCLogout()
 
         self.session_manager.destroy_session()
 

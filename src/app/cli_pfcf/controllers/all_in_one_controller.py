@@ -59,7 +59,7 @@ class AllInOneController(CliMemoryControllerInterface):
             else:
                 self._display_error_message(result.error_message)
 
-        except (RuntimeError, OSError, ValueError) as e:
+        except (RuntimeError, OSError, ValueError, Exception) as e:
             self._logger.log_error(f"All-in-one controller error: {str(e)}")
             print(f"\nERROR: Failed to start system components: {str(e)}")
 

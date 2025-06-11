@@ -457,8 +457,8 @@ def DQuote_OnTickDataTrade(
             MatchTotalQty,
         )
     )
-    client.DQuoteLib.UnRegItem(PRODUCTID)
-    client.DQuoteLib.OnTickDataTrade -= DQuote_OnTickDataTrade
+    # client.DQuoteLib.UnRegItem(PRODUCTID)
+    # client.DQuoteLib.OnTickDataTrade -= DQuote_OnTickDataTrade
     return MatchPriceData, MatchQtyData
 
 
@@ -511,7 +511,7 @@ def DQuote_OnTickDataBidOffer(
             SQ5,
         )
     )
-    client.DQuoteLib.OnTickDataBidOffer -= DQuote_OnTickDataBidOffer
+    # client.DQuoteLib.OnTickDataBidOffer -= DQuote_OnTickDataBidOffer
     return True
 
 
@@ -540,8 +540,8 @@ def DQuote_OnTickDataBeforeTrade(
             MatchTotalQty,
         )
     )
-    client.DQuoteLib.UnRegItem(PRODUCTID)
-    client.DQuoteLib.OnTickDataTrade -= DQuote_OnTickDataTrade
+    # client.DQuoteLib.UnRegItem(PRODUCTID)
+    # client.DQuoteLib.OnTickDataTrade -= DQuote_OnTickDataTrade
     return MatchPriceData, MatchQtyData
 
 
@@ -594,7 +594,7 @@ def DQuote_OnTickDataBeforeBidOffer(
             SQ5,
         )
     )
-    client.DQuoteLib.OnTickDataBidOffer -= DQuote_OnTickDataBidOffer
+    # client.DQuoteLib.OnTickDataBidOffer -= DQuote_OnTickDataBidOffer
     return True
 
 

@@ -90,7 +90,7 @@ class ApplicationBootstrapper:
                 service_container=service_container,
             )
 
-        except (RuntimeError, OSError, ValueError) as e:
+        except (RuntimeError, OSError, ValueError, Exception) as e:
             error_msg = f"Bootstrap failed: {str(e)}"
             if self._logger:
                 self._logger.log_error(error_msg)

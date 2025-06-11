@@ -15,7 +15,7 @@ from .application_exceptions import (
 
 __all__ = [
     "CommunicationException",
-    "ZMQConnectionException", 
+    "ZMQConnectionException",
     "ZMQMessageException",
     "SocketCleanupException",
     "ApplicationException",

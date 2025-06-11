@@ -6,13 +6,12 @@ from src.interactor.interfaces.repositories.session_repository import SessionRep
 class SessionInMemoryRepository(SessionRepositoryInterface):
     _instance = None
 
-    def __new__(cls, *args, session_timeout=3, **kwargs):
+    def __new__(cls, session_timeout=3):
         if not cls._instance:
-            cls._instance = super(SessionInMemoryRepository, cls).__new__(cls, *args, **kwargs)
+            cls._instance = super(SessionInMemoryRepository, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self, *args, session_timeout=3, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, session_timeout=3):
         self._session_data = {}
         self.session_timeout = session_timeout  # session timeout in seconds
 

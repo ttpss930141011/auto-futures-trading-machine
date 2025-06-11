@@ -49,9 +49,7 @@ def test_register_item(monkeypatch, mocker, fixture_register_item):
     mock_presenter.assert_called_once_with()
     mock_use_case.assert_called_once_with(
         mock_presenter.return_value,
-        config_mock,
-        logger_mock,
-        session_manager_mock,
+        service_container_mock,
     )
     input_dto = RegisterItemInputDto(account=fixture_register_item["account"], item_code=item_code)
     mock_use_case_instance.execute.assert_called_once_with(input_dto)

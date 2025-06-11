@@ -61,7 +61,7 @@ def test_user_login(monkeypatch, mocker, fixture_user):
     mock_use_case.assert_called_once_with(
         mock_presenter.return_value,
         mock_repository.return_value,
-        config_mock,
+        service_container_mock,
         logger_mock,
         session_repository_mock
     )

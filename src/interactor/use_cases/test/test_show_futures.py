@@ -59,7 +59,7 @@ def mock_service_container() -> MagicMock:
 
 @pytest.fixture
 def show_futures_use_case(
-    mock_presenter, mock_service_container, mock_logger, mock_session_repo
+    mock_presenter, mock_service_container, mock_logger, mock_session_repo  # pylint: disable=unused-argument
 ) -> ShowFuturesUseCase:
     """Fixture to create a ShowFuturesUseCase instance with mocked dependencies."""
     return ShowFuturesUseCase(
@@ -75,8 +75,8 @@ def test_show_futures_success_all(
     show_futures_use_case: ShowFuturesUseCase,
     mock_presenter,
     mock_service_container,
-    mock_logger,
-    mock_session_repo,
+    mock_logger,  # pylint: disable=unused-argument
+    mock_session_repo,  # pylint: disable=unused-argument
 ):
     """Test successfully fetching all futures data."""
     # Arrange
@@ -110,8 +110,8 @@ def test_show_futures_success_specific(
     show_futures_use_case: ShowFuturesUseCase,
     mock_presenter,
     mock_service_container,
-    mock_logger,
-    mock_session_repo,
+    mock_logger,  # pylint: disable=unused-argument
+    mock_session_repo,  # pylint: disable=unused-argument
 ):
     """Test successfully fetching specific future data."""
     # Arrange
@@ -141,8 +141,8 @@ def test_show_futures_not_logged_in(
     show_futures_use_case: ShowFuturesUseCase,
     mock_presenter,
     mock_service_container,
-    mock_logger,
-    mock_session_repo,
+    mock_logger,  # pylint: disable=unused-argument
+    mock_session_repo,  # pylint: disable=unused-argument
 ):
     """Test execution when the user is not logged in."""
     # Arrange
@@ -169,8 +169,8 @@ def test_show_futures_api_exception(
     show_futures_use_case: ShowFuturesUseCase,
     mock_presenter,
     mock_service_container,
-    mock_logger,
-    mock_session_repo,
+    mock_logger,  # pylint: disable=unused-argument
+    mock_session_repo,  # pylint: disable=unused-argument
 ):
     """Test handling of an exception during the API call."""
     # Arrange

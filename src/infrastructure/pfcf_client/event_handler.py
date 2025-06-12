@@ -138,7 +138,7 @@ def DAccountLib_PFCQueryMarginData(
     return
 
 
-def DAccountLib_PFCQueryMarginError(ERRORCODE, ERRORMESSAGE):
+def DAccountLib_PFCQueryMarginError(_ERRORCODE, ERRORMESSAGE):
     print("內期查詢保證金發生錯誤: %s" % ERRORMESSAGE)
     return
 
@@ -231,7 +231,7 @@ def DAccountLib_OnUnLiquidationMainData(
     RefTotalPrice,
     RefTotalPL,
     AvgMatchPrice,
-    productKind,
+    _productKind,
     Curren,
     RealPrice,
     multiplecomno,

@@ -118,7 +118,7 @@ class TestDllGatewayServer:
                 assert server._running is True
             assert gateway_server._running is False
 
-    def test_send_order_request_processing(self, gateway_server, mock_exchange_client, mock_config):
+    def test_send_order_request_processing(self, gateway_server, mock_exchange_client, mock_config):  # pylint: disable=unused-argument
         """Test processing of send order requests."""
         # Setup mock order result
         mock_order_result = Mock()
@@ -242,7 +242,7 @@ class TestDllGatewayServer:
         assert response["success"] is False
         assert response["error_code"] == "MISSING_ACCOUNT"
 
-    def test_health_check_request(self, gateway_server, mock_exchange_client):
+    def test_health_check_request(self, gateway_server, mock_exchange_client):  # pylint: disable=unused-argument
         """Test health check request processing."""
         request_data = {"operation": "health_check"}
 
@@ -271,7 +271,7 @@ class TestDllGatewayServer:
         assert response["success"] is False
         assert response["error_code"] == "INVALID_JSON"
 
-    def test_request_processing_exception(self, gateway_server, mock_logger):
+    def test_request_processing_exception(self, gateway_server, mock_logger):  # pylint: disable=unused-argument
         """Test handling of unexpected exceptions during request processing."""
         # This will cause an exception because we're passing invalid data
         with patch.object(gateway_server, '_handle_send_order', side_effect=Exception("Test error")):
@@ -285,7 +285,7 @@ class TestDllGatewayServer:
             assert response["success"] is False
             assert response["error_code"] == "PROCESSING_ERROR"
 
-    def test_execute_order_success(self, gateway_server, mock_exchange_client, mock_config):
+    def test_execute_order_success(self, gateway_server, mock_exchange_client, mock_config):  # pylint: disable=unused-argument
         """Test successful order execution."""
         from src.interactor.dtos.send_market_order_dtos import SendMarketOrderInputDto
         from src.domain.value_objects import OrderOperation, OrderTypeEnum, OpenClose, DayTrade, TimeInForce
@@ -318,7 +318,7 @@ class TestDllGatewayServer:
         assert response.is_send_order is True
         assert response.order_serial == "ORDER123"
 
-    def test_execute_order_failure(self, gateway_server, mock_exchange_client, mock_config):
+    def test_execute_order_failure(self, gateway_server, mock_exchange_client, mock_config):  # pylint: disable=unused-argument
         """Test order execution failure."""
         from src.interactor.dtos.send_market_order_dtos import SendMarketOrderInputDto
         from src.domain.value_objects import OrderOperation, OrderTypeEnum, OpenClose, DayTrade, TimeInForce

@@ -71,7 +71,7 @@ def test_user_login(monkeypatch, mocker, fixture_user):
     mock_getpass.assert_called_once_with("Enter the password: ")
 
 
-def test_user_login_with_user_already_logged_in(monkeypatch, mocker, fixture_user):
+def test_user_login_with_user_already_logged_in(monkeypatch, mocker, fixture_user):  # pylint: disable=unused-argument
     # initialize the RegisterItemController
     service_container_mock = mocker.patch('src.app.cli_pfcf.controllers.user_login_controller.ServiceContainer')
     service_container_mock.logger = mocker.patch.object(LoggerInterface, "log_info")

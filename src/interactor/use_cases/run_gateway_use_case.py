@@ -159,12 +159,12 @@ class RunGatewayUseCase:
         if self._original_sigterm_handler:
             signal.signal(signal.SIGTERM, self._original_sigterm_handler)
 
-    def _signal_handler(self, sig, frame) -> None:
+    def _signal_handler(self, sig, _frame) -> None:
         """Handle termination signals for graceful shutdown.
 
         Args:
             sig: Signal number
-            frame: Current stack frame
+            _frame: Current stack frame
         """
         self.logger.log_info(f"Received signal {sig}, initiating gateway shutdown")
         self.stop()

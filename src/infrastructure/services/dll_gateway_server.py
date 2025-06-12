@@ -350,11 +350,11 @@ class DllGatewayServer:
                 "error_code": "POSITION_QUERY_ERROR"
             }
 
-    def _get_account_positions(self, account: str) -> List[PositionInfo]:
+    def _get_account_positions(self, _account: str) -> List[PositionInfo]:
         """Get positions for an account using exchange DLL.
 
         Args:
-            account: The trading account identifier.
+            _account: The trading account identifier.
 
         Returns:
             List of position information.

@@ -71,13 +71,14 @@ python run_order_executor_gateway.py
 ## 🏛️ High-Level Architecture
 
 ### Multi-Process Design
-The system uses a **DLL Gateway Architecture** with three main processes:
+The system uses a **DLL Gateway Architecture** with three main processes managed by **SystemManager**:
 
 1. **Main Process** (`app.py`)
    - CLI interface for user interaction
-   - DLL Gateway Server (centralized exchange access)
-   - Market data publisher (ZMQ PUB on port 5555)
-   - Order gateway server (ZMQ REP on port 5557)
+   - **SystemManager**: Centralized lifecycle management for all components
+   - **DLL Gateway Server**: Order execution (ZMQ REP on port 5557)
+   - **Market Data Publisher**: Real-time tick data (ZMQ PUB on port 5555)
+   - **PFCF API Integration**: Connects exchange callbacks to market data flow
 
 2. **Strategy Process** (`run_strategy.py`)
    - Subscribes to market data (ZMQ SUB from port 5555)
@@ -111,6 +112,7 @@ src/
 ```
 
 ### Important Component Locations
+- **SystemManager**: `src/infrastructure/services/system_manager.py` - Centralized lifecycle management
 - **Controllers**: `src/app/cli_pfcf/controllers/` - Handle CLI user interactions
 - **Use Cases**: `src/interactor/use_cases/` - Business logic orchestration
 - **Entities**: `src/domain/entities/` - Core business objects
@@ -139,9 +141,11 @@ src/
 - Comprehensive mocking with pytest-mock
 
 ### Critical Test Areas
+- **SystemManager lifecycle management** - Component startup/shutdown coordination
 - Use case business logic validation
 - ZMQ messaging serialization/deserialization
 - DLL Gateway client/server communication
+- PFCF API callback integration and market data flow
 - Trading strategy condition evaluation
 - Repository data persistence
 

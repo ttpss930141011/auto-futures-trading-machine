@@ -78,36 +78,33 @@ sequenceDiagram
 ```mermaid
 graph TB
     subgraph "Main Process (app.py)"
-        direction TB
-        CLI[CLIApplication<br/>用戶界面]
-        DG[DllGatewayServer<br/>端口 5557<br/>ZMQ REP]
-        MD[MarketDataPublisher<br/>端口 5555<br/>ZMQ PUB]
-        TP[TickProducer<br/>數據轉換器]
-        PFCF[PFCF API<br/>DLL 客戶端]
+        CLI["CLIApplication<br/>📱 用戶界面<br/>Thread: Main"]
+        DGS["DllGatewayServer<br/>🔄 端口 5557 ZMQ REP<br/>Thread: Background"]
+        MDP["MarketDataPublisher<br/>📡 端口 5555 ZMQ PUB<br/>Thread: ZMQ"]
+        TP["TickProducer<br/>🔄 數據轉換器<br/>Thread: PFCF Callback"]
+        PFCF["PFCF API<br/>💼 DLL 客戶端<br/>Thread: Main"]
     end
     
-    subgraph "Strategy Process"
-        direction TB
-        SS[StrategySubscriber<br/>ZMQ SUB: 5555]
-        SR[SupportResistanceStrategy<br/>交易算法]
-        SP[SignalPublisher<br/>ZMQ PUSH: 5556]
+    subgraph "Strategy Process (run_strategy.py)"
+        SS["StrategySubscriber<br/>📡 ZMQ SUB: 5555<br/>Process: Separate"]
+        SRS["SupportResistanceStrategy<br/>🧠 交易算法<br/>Process: Separate"]
+        SP["SignalPublisher<br/>📤 ZMQ PUSH: 5556<br/>Process: Separate"]
     end
     
-    subgraph "Order Executor Process"
-        direction TB
-        SR2[SignalReceiver<br/>ZMQ PULL: 5556]
-        GC[GatewayClient<br/>ZMQ REQ: 5557]
+    subgraph "Order Executor Process (run_order_executor_gateway.py)"
+        SR["SignalReceiver<br/>📥 ZMQ PULL: 5556<br/>Process: Separate"]
+        GC["DllGatewayClient<br/>📞 ZMQ REQ: 5557<br/>Process: Separate"]
     end
     
     PFCF -->|OnTickDataTrade| TP
-    TP -->|serialize(TickEvent)| MD
-    MD -->|TICK_TOPIC| SS
-    SS -->|Tick數據| SR
-    SR -->|TradingSignal| SP
-    SP -->|serialize(Signal)| SR2
-    SR2 -->|OrderRequest| GC
-    GC -->|send_order| DG
-    DG -->|DLL調用| PFCF
+    TP -->|serialize TickEvent| MDP
+    MDP -->|TICK_TOPIC| SS
+    SS -->|Tick數據| SRS
+    SRS -->|TradingSignal| SP
+    SP -->|serialize Signal| SR
+    SR -->|OrderRequest| GC
+    GC -->|send_order| DGS
+    DGS -->|DLL調用| PFCF
 ```
 
 ### 關鍵組件功能詳解
@@ -165,16 +162,16 @@ def _process_request(self, raw_request):
 ```mermaid
 sequenceDiagram
     participant Exchange as 台灣期貨交易所
-    participant PFCF as PFCF API
-    participant TP as TickProducer
-    participant ZMQ1 as ZMQ Publisher<br/>(5555)
-    participant Strategy as Strategy Process
-    participant ZMQ2 as ZMQ Signal<br/>(5556)
-    participant Executor as Order Executor
-    participant ZMQ3 as ZMQ Gateway<br/>(5557)
-    participant DG as DllGatewayServer
+    participant PFCF as PFCF API<br/>(Main Process)
+    participant TP as TickProducer<br/>(Main Process)
+    participant ZMQ1 as ZMQ Publisher<br/>Port 5555<br/>(Main Process)
+    participant Strategy as Strategy Process<br/>(Separate Process)
+    participant ZMQ2 as ZMQ Signal<br/>Port 5556<br/>(Strategy Process)
+    participant OrderExec as Order Executor Process<br/>(Separate Process)
+    participant ZMQ3 as ZMQ Request<br/>Port 5557<br/>(Order Executor)
+    participant DGS as DllGatewayServer<br/>(Main Process)
     
-    Note over Exchange, DG: 市場數據流 (毫秒級)
+    Note over Exchange, DGS: 市場數據流 (毫秒級)
     Exchange->>PFCF: 即時價格數據
     PFCF->>TP: OnTickDataTrade callback
     TP->>TP: 創建 TickEvent
@@ -186,17 +183,17 @@ sequenceDiagram
     Strategy->>Strategy: 生成交易信號
     Strategy->>ZMQ2: PUSH TradingSignal
     
-    Note over Executor, DG: 訂單執行流 (< 10ms)
-    ZMQ2->>Executor: PULL TradingSignal
-    Executor->>Executor: 構建 OrderRequest
-    Executor->>ZMQ3: REQ send_order
-    ZMQ3->>DG: 轉發訂單請求
-    DG->>PFCF: DLL.Order() 調用
+    Note over OrderExec, DGS: 訂單執行流 (< 10ms)
+    ZMQ2->>OrderExec: PULL TradingSignal
+    OrderExec->>OrderExec: 構建 OrderRequest
+    OrderExec->>ZMQ3: REQ send_order
+    ZMQ3->>DGS: 轉發訂單請求
+    DGS->>PFCF: DLL.Order() 調用
     PFCF->>Exchange: 訂單提交
     Exchange-->>PFCF: 成交回報
-    PFCF-->>DG: OrderResult
-    DG-->>ZMQ3: 返回執行結果
-    ZMQ3-->>Executor: REP response
+    PFCF-->>DGS: OrderResult
+    DGS-->>ZMQ3: 返回執行結果
+    ZMQ3-->>OrderExec: REP response
 ```
 
 ## ⚡ 性能特性

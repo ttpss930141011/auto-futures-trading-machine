@@ -84,7 +84,9 @@ class TestSystemManager:
             mock_dependencies: Dictionary of mocked dependencies
         """
         # Setup mocks
-        mock_dependencies["port_checker"].check_port_availability.return_value = True
+        mock_dependencies["port_checker"].check_port_availability.return_value = {5555: True, 5556: True}
+        mock_dependencies["gateway_initializer"].initialize_components.return_value = True
+        mock_dependencies["gateway_initializer"].connect_api_callbacks.return_value = True
         mock_dependencies["gateway_server"].start.return_value = True
 
         with patch.object(system_manager, "_start_strategy", return_value=True), patch.object(
@@ -137,7 +139,9 @@ class TestSystemManager:
             mock_dependencies: Dictionary of mocked dependencies
         """
         # Setup mocks - gateway succeeds, strategy fails
-        mock_dependencies["port_checker"].check_port_availability.return_value = True
+        mock_dependencies["port_checker"].check_port_availability.return_value = {5555: True, 5556: True}
+        mock_dependencies["gateway_initializer"].initialize_components.return_value = True
+        mock_dependencies["gateway_initializer"].connect_api_callbacks.return_value = True
         mock_dependencies["gateway_server"].start.return_value = True
 
         with patch.object(system_manager, "_start_strategy", return_value=False), patch.object(
@@ -240,7 +244,9 @@ class TestSystemManager:
         system_manager._component_status["gateway"] = ComponentStatus.RUNNING
 
         # Setup mocks
-        mock_dependencies["port_checker"].check_port_availability.return_value = True
+        mock_dependencies["port_checker"].check_port_availability.return_value = {5555: True, 5556: True}
+        mock_dependencies["gateway_initializer"].initialize_components.return_value = True
+        mock_dependencies["gateway_initializer"].connect_api_callbacks.return_value = True
         mock_dependencies["gateway_server"].start.return_value = True
 
         result = system_manager.restart_component("gateway")
@@ -250,6 +256,7 @@ class TestSystemManager:
 
         # Verify stop and start were called
         mock_dependencies["gateway_server"].stop.assert_called_once()
+        mock_dependencies["gateway_initializer"].cleanup_zmq.assert_called_once()
         mock_dependencies["gateway_server"].start.assert_called_once()
 
     def test_restart_component_unknown(
@@ -292,12 +299,12 @@ class TestSystemManager:
             system_manager: SystemManager instance
             mock_dependencies: Dictionary of mocked dependencies
         """
-        mock_dependencies["port_checker"].check_port_availability.return_value = False
+        mock_dependencies["port_checker"].check_port_availability.return_value = {5555: False, 5556: True}
 
         result = system_manager._start_gateway()
 
         assert result is False
-        mock_dependencies["logger"].log_error.assert_called_with("Gateway port is not available")
+        mock_dependencies["logger"].log_error.assert_called_with("Required ports are not available")
 
     def test_start_gateway_server_failure(
         self, system_manager: SystemManager, mock_dependencies: dict
@@ -308,7 +315,9 @@ class TestSystemManager:
             system_manager: SystemManager instance
             mock_dependencies: Dictionary of mocked dependencies
         """
-        mock_dependencies["port_checker"].check_port_availability.return_value = True
+        mock_dependencies["port_checker"].check_port_availability.return_value = {5555: True, 5556: True}
+        mock_dependencies["gateway_initializer"].initialize_components.return_value = True
+        mock_dependencies["gateway_initializer"].connect_api_callbacks.return_value = True
         mock_dependencies["gateway_server"].start.return_value = False
 
         result = system_manager._start_gateway()
@@ -316,7 +325,7 @@ class TestSystemManager:
         assert result is False
         mock_dependencies["logger"].log_error.assert_called_with("Failed to start Gateway server")
 
-    @patch("src.interactor.use_cases.start_strategy_use_case.StartStrategyUseCase")
+    @patch("src.infrastructure.services.system_manager.StartStrategyUseCase")
     def test_start_strategy_success(
         self, mock_use_case_class: Mock, system_manager: SystemManager, mock_dependencies: dict
     ) -> None:
@@ -340,7 +349,7 @@ class TestSystemManager:
         )
         mock_use_case.execute.assert_called_once()
 
-    @patch("src.interactor.use_cases.start_order_executor_use_case.StartOrderExecutorUseCase")
+    @patch("src.infrastructure.services.system_manager.StartOrderExecutorUseCase")
     def test_start_order_executor_success(
         self, mock_use_case_class: Mock, system_manager: SystemManager, mock_dependencies: dict
     ) -> None:

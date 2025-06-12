@@ -4,6 +4,7 @@ This module provides the SystemManager class which handles the lifecycle
 of all infrastructure services in the trading system.
 """
 
+import time
 from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, Optional
@@ -16,6 +17,10 @@ from src.infrastructure.services.gateway.gateway_initializer_service import (
 from src.infrastructure.services.gateway.port_checker_service import PortCheckerService
 from src.infrastructure.services.process.process_manager_service import ProcessManagerService
 from src.infrastructure.services.status_checker import StatusChecker
+from src.interactor.use_cases.start_order_executor_use_case import (
+    StartOrderExecutorUseCase,
+)
+from src.interactor.use_cases.start_strategy_use_case import StartStrategyUseCase
 
 
 class ComponentStatus(Enum):
@@ -116,8 +121,6 @@ class SystemManager:
                 )
 
             # Wait for Gateway initialization
-            import time
-
             time.sleep(3)
 
             # Start Strategy
@@ -136,8 +139,6 @@ class SystemManager:
 
             # Record startup time if all components started
             if all(status == ComponentStatus.RUNNING for status in self._component_status.values()):
-                import time
-
                 self._startup_time = time.time()
 
             return SystemStartupResult(
@@ -180,6 +181,7 @@ class SystemManager:
             if self._component_status["gateway"] == ComponentStatus.RUNNING:
                 self._component_status["gateway"] = ComponentStatus.STOPPING
                 self._gateway_server.stop()
+                self._gateway_initializer.cleanup_zmq()
                 self._component_status["gateway"] = ComponentStatus.STOPPED
 
             self._startup_time = None
@@ -194,8 +196,6 @@ class SystemManager:
         Returns:
             SystemHealth object with current status
         """
-        import time
-
         uptime = 0.0
         if self._startup_time:
             uptime = time.time() - self._startup_time
@@ -230,6 +230,7 @@ class SystemManager:
             # Stop component
             if component == "gateway":
                 self._gateway_server.stop()
+                self._gateway_initializer.cleanup_zmq()
             elif component in ["strategy", "order_executor"]:
                 # Process manager handles these
                 pass
@@ -265,20 +266,38 @@ class SystemManager:
         """
         try:
             # Check port availability
-            if not self._port_checker.check_port_availability():
-                self._logger.log_error("Gateway port is not available")
+            port_status = self._port_checker.check_port_availability()
+            if not all(port_status.values()):
+                self._logger.log_error("Required ports are not available")
                 return False
 
-            # Start Gateway server
-            if self._gateway_server.start():
-                self._logger.log_info("Gateway started successfully")
-                return True
-            else:
-                self._logger.log_error("Failed to start Gateway server")
+            # Initialize market data components (ZMQ publisher and tick producer)
+            if not self._gateway_initializer.initialize_components():
+                self._logger.log_error("Failed to initialize gateway components")
                 return False
+
+            # Connect API callbacks to tick producer for real-time data
+            if not self._gateway_initializer.connect_api_callbacks():
+                self._logger.log_error("Failed to connect API callbacks")
+                self._gateway_initializer.cleanup_zmq()
+                return False
+
+            # Start order execution server
+            if not self._gateway_server.start():
+                self._logger.log_error("Failed to start Gateway server")
+                self._gateway_initializer.cleanup_zmq()
+                return False
+
+            self._logger.log_info("Gateway started successfully (market data + order execution)")
+            return True
 
         except Exception as e:
             self._logger.log_error(f"Error starting Gateway: {e}")
+            # Cleanup on error
+            try:
+                self._gateway_initializer.cleanup_zmq()
+            except Exception:
+                pass
             return False
 
     def _start_strategy(self) -> bool:
@@ -288,8 +307,6 @@ class SystemManager:
             True if successful, False otherwise
         """
         try:
-            from src.interactor.use_cases.start_strategy_use_case import StartStrategyUseCase
-
             use_case = StartStrategyUseCase(
                 logger=self._logger,
                 process_manager_service=self._process_manager,
@@ -308,10 +325,6 @@ class SystemManager:
             True if successful, False otherwise
         """
         try:
-            from src.interactor.use_cases.start_order_executor_use_case import (
-                StartOrderExecutorUseCase,
-            )
-
             use_case = StartOrderExecutorUseCase(
                 logger=self._logger,
                 process_manager_service=self._process_manager,

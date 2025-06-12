@@ -145,10 +145,10 @@ Follow our [Quick Start Guide](docs/getting-started/QUICK_START.md) for detailed
 ## 🎓 Learning Path
 
 Whether you're interested in:
-- **Trading Systems**: Start with [Support & Resistance Strategy](docs/trading/SUPPORT_RESISTANCE.md)
-- **Software Architecture**: Begin with [Clean Architecture Implementation](docs/architecture/CLEAN_ARCHITECTURE.md)
-- **Distributed Systems**: Explore [Why ZeroMQ?](docs/technical/WHY_ZEROMQ.md)
-- **Real-world Refactoring**: Read [The Refactoring Story](docs/architecture/REFACTORING_STORY.md)
+- **System Architecture**: Start with [ARCHITECTURE.md](ARCHITECTURE.md) for complete system overview
+- **Detailed Flows**: Explore [DETAILED_FLOW_DIAGRAMS.md](DETAILED_FLOW_DIAGRAMS.md) for process flows
+- **OOP Design**: Study [CLASS_DESIGN_GUIDE.md](CLASS_DESIGN_GUIDE.md) for design principles
+- **Distributed Systems**: Read [Why ZeroMQ?](docs/technical/WHY_ZEROMQ.md) for messaging patterns
 
 This documentation serves as both a **technical reference** and a **learning resource** for building production-grade trading systems.
 

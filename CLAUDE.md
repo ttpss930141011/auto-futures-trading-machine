@@ -113,6 +113,8 @@ src/
 
 ### Important Component Locations
 - **SystemManager**: `src/infrastructure/services/system_manager.py` - Centralized lifecycle management
+- **MarketDataGatewayService**: `src/infrastructure/services/gateway/market_data_gateway_service.py` - Market data publishing
+- **DllGatewayServer**: `src/infrastructure/services/dll_gateway_server.py` - Order execution server
 - **Controllers**: `src/app/cli_pfcf/controllers/` - Handle CLI user interactions
 - **Use Cases**: `src/interactor/use_cases/` - Business logic orchestration
 - **Entities**: `src/domain/entities/` - Core business objects
@@ -131,6 +133,11 @@ src/
 - `pyproject.toml`: Poetry dependencies and tool configurations
 - `pytest.ini`: Test configuration with pythonpath setup
 - `.cursor/rules/python.mdc`: Development standards and practices
+
+### 📚 Architecture Documentation
+- `ARCHITECTURE.md`: 系統總覽和架構圖表
+- `DETAILED_FLOW_DIAGRAMS.md`: 詳細的流程圖和數據流向
+- `CLASS_DESIGN_GUIDE.md`: 類別設計指南和 OOP 原則應用
 
 ## 🧪 Testing Strategy
 

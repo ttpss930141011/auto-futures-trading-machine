@@ -24,8 +24,6 @@ def test_user_missing_required(field):
 def test_user_repr_and_str():
     client = object()
     user = User(account='acctX', password='pwd', ip_address='ip', client=client)
-    # repr uses window_id (typo check)
-    with pytest.raises(AttributeError):
-        repr(user)
-    with pytest.raises(AttributeError):
-        str(user)
+    # Test repr and str methods work correctly
+    assert repr(user) == "<User acctX>"
+    assert str(user) == "<User acctX>"

@@ -4,7 +4,7 @@
 This use case handles the verification of prerequisites and preparation for application startup.
 """
 
-from typing import Dict, Any
+from typing import Dict
 
 
 from src.interactor.interfaces.services.status_checker import StatusCheckerInterface

@@ -1,4 +1,3 @@
-import pytest
 from src.interactor.use_cases.start_strategy_use_case import StartStrategyUseCase
 
 

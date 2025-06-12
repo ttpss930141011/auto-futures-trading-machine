@@ -13,6 +13,7 @@ class SendMarketOrderController(CliMemoryControllerInterface):
     """
 
     def __init__(self, service_container: ServiceContainer):
+        self.service_container = service_container
         self.logger = service_container.logger
         self.config = service_container.config
         self.session_repository = service_container.session_repository
@@ -56,7 +57,7 @@ class SendMarketOrderController(CliMemoryControllerInterface):
             return
         presenter = SendMarketOrderPresenter()
         input_dto = self._get_user_input()
-        use_case = SendMarketOrderUseCase(presenter, self.config, self.logger, self.session_repository)
+        use_case = SendMarketOrderUseCase(presenter, self.service_container, self.logger, self.session_repository)
         result = use_case.execute(input_dto)
         view = SendMarketOrderView()
         view.show(result)

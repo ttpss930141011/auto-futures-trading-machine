@@ -1,4 +1,3 @@
-import json
 import uuid
 from pathlib import Path
 
@@ -16,12 +15,12 @@ def repo_path(tmp_path):
 
 
 @pytest.fixture
-def repo(repo_path):
+def repo(repo_path):  # pylint: disable=redefined-outer-name
     # Initialize repository with temp file path
     return ConditionJsonFileRepository(str(repo_path))
 
 
-def test_create_and_get(repo, repo_path):
+def test_create_and_get(repo, repo_path):  # pylint: disable=redefined-outer-name
     # Initially empty
     assert repo.get_all() == {}
     # Create a condition
@@ -45,7 +44,7 @@ def test_create_and_get(repo, repo_path):
     assert cond.condition_id in all_data
 
 
-def test_search_update_delete(repo):
+def test_search_update_delete(repo):  # pylint: disable=redefined-outer-name
     # Create two conditions with distinct trigger prices
     c1 = repo.create(OrderOperation.SELL, 50, 1, 2, 5, 2, False)
     c2 = repo.create(OrderOperation.BUY, 75, 2, 3, 8, 4, False)
@@ -64,7 +63,7 @@ def test_search_update_delete(repo):
     assert repo.delete(uuid.uuid4()) is False
 
 
-def test_delete_all(repo):
+def test_delete_all(repo):  # pylint: disable=redefined-outer-name
     # Create multiple
     repo.create(OrderOperation.BUY, 10, 1, 1, 1, 1, False)
     repo.create(OrderOperation.SELL, 20, 1, 1, 1, 1, False)
@@ -75,10 +74,10 @@ def test_delete_all(repo):
     assert repo.get_all() == {}
 
 
-def test_load_invalid_json(repo_path):
+def test_load_invalid_json(repo_path):  # pylint: disable=redefined-outer-name
     # Write invalid JSON
     repo_path.write_text('invalid json')
     # Initialize repo should handle decode error gracefully
-    repo = ConditionJsonFileRepository(str(repo_path))
+    repo = ConditionJsonFileRepository(str(repo_path))  # pylint: disable=redefined-outer-name
     # No exception and empty data store
     assert repo.get_all() == {}

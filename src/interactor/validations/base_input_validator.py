@@ -1,9 +1,6 @@
-""" This module provides the base class BaseInputValidator for input validation
-"""
+"""This module provides the base class for input validation without external dependencies."""
 
 from typing import Dict
-
-"""This module provides the base class for input validation without external dependencies."""
 
 
 class BaseInputValidator:

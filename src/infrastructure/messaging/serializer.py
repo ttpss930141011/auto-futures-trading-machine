@@ -77,11 +77,11 @@ def _decode_enum(dct: Dict[str, Any]) -> Any:
         if enum_class and issubclass(enum_class, enum.Enum):
             try:
                 return enum_class[member_name]
-            except KeyError:
+            except KeyError as exc:
                 # Handle cases where enum member might not exist (e.g., version mismatch)
                 raise ValueError(
                     f"Unknown enum member '{member_name}' for class '{enum_class_name}'"
-                )
+                ) from exc
         else:
             raise TypeError(f"Cannot find or reconstruct enum class '{enum_class_name}'")
     return dct
@@ -128,7 +128,7 @@ def _object_hook(dct: Dict[str, Any]) -> Any:
                 return cls(**dct)
             except TypeError as e:
                 # Handle cases where __init__ signature doesn't match dictionary keys
-                raise TypeError(f"Failed to reconstruct {class_name}: {e}. Data: {dct}")
+                raise TypeError(f"Failed to reconstruct {class_name}: {e}. Data: {dct}") from e
         else:
             # Handle unknown classes if necessary, or raise an error
             raise TypeError(f"Cannot reconstruct unknown class '{class_name}'")

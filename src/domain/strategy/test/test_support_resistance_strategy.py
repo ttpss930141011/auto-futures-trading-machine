@@ -453,7 +453,7 @@ def test_signal_send_exception(
     set_condition_state(condition, is_trigger=True)
     mock_condition_repo.conditions_storage = {"C1": condition}
     tick_event = create_tick_event(18055)  # Price above calculated order_price (18000+50)
-    expected_signal = TradingSignal(
+    TradingSignal(
         tick_event.when, OrderOperation.BUY, tick_event.tick.commodity_id
     )
     serialized_signal = b"serialized_buy_signal"

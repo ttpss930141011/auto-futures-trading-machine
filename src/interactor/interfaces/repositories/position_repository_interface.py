@@ -14,4 +14,4 @@ class PositionRepositoryInterface(ABC):
     @abstractmethod
     def get_positions(self, order_account: str, product_id: str) -> List[PositionDto]:
         """Fetch positions for the given account and product."""
-        ...
+        pass

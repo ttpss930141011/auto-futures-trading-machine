@@ -68,7 +68,7 @@ def test_show_futures_success_all(
     session_repository_mock.get_current_user.assert_called_once_with()
     mock_presenter.assert_called_once_with()
     mock_use_case.assert_called_once_with(
-        mock_presenter.return_value, config_mock, logger_mock, session_repository_mock
+        mock_presenter.return_value, service_container_mock
     )
     input_dto = ShowFuturesInputDto(account=account, futures_code=futures_code_input)
     mock_use_case_instance.execute.assert_called_once_with(input_dto)
@@ -126,7 +126,7 @@ def test_show_futures_success_specific(
     session_repository_mock.get_current_user.assert_called_once_with()
     mock_presenter.assert_called_once_with()
     mock_use_case.assert_called_once_with(
-        mock_presenter.return_value, config_mock, logger_mock, session_repository_mock
+        mock_presenter.return_value, service_container_mock
     )
     input_dto = ShowFuturesInputDto(account=account, futures_code=futures_code_input)
     mock_use_case_instance.execute.assert_called_once_with(input_dto)

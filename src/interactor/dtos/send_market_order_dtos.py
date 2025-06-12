@@ -37,10 +37,16 @@ class SendMarketOrderInputDto:
             "time_in_force": self.time_in_force.value
         }
 
-    def to_pfcf_dict(self, config):
-        """ Convert data into dictionary and convert enum to pfcf enum
+    def to_pfcf_dict(self, service_container):
+        """Convert data into dictionary and convert enum to pfcf enum.
+
+        Args:
+            service_container: Service container containing exchange API.
+
+        Returns:
+            Dictionary with PFCF-compatible field names and values.
         """
-        converter = EnumConverter(config)
+        converter = EnumConverter(service_container.exchange_api)
         return {
             "ACTNO": self.order_account,
             "PRODUCTID": self.item_code,

@@ -11,7 +11,7 @@ from src.infrastructure.services.service_container import ServiceContainer
 
 class StatusChecker(StatusCheckerInterface):
     """Implementation of status checker to verify preconditions."""
-    
+
     def __init__(self, service_container: ServiceContainer):
         """Initialize the status checker service.
 
@@ -22,7 +22,7 @@ class StatusChecker(StatusCheckerInterface):
         self.logger = service_container.logger
         self.session_repository = service_container.session_repository
         self.condition_repository = service_container.condition_repository
-    
+
     def is_user_logged_in(self) -> bool:
         """Check if user is logged in.
 
@@ -30,7 +30,7 @@ class StatusChecker(StatusCheckerInterface):
             bool: True if user is logged in, False otherwise
         """
         return self.session_repository.is_user_logged_in()
-    
+
     def is_item_registered(self) -> bool:
         """Check if item is registered.
 
@@ -38,7 +38,7 @@ class StatusChecker(StatusCheckerInterface):
             bool: True if item is registered, False otherwise
         """
         return self.session_repository.get_item_code() is not None
-    
+
     def is_order_account_selected(self) -> bool:
         """Check if order account is selected.
 
@@ -46,7 +46,7 @@ class StatusChecker(StatusCheckerInterface):
             bool: True if order account is selected, False otherwise
         """
         return self.session_repository.get_order_account() is not None
-    
+
     def has_conditions(self) -> bool:
         """Check if there are any conditions defined.
 
@@ -54,7 +54,7 @@ class StatusChecker(StatusCheckerInterface):
             bool: True if there are conditions defined, False otherwise
         """
         return len(self.condition_repository.get_all()) > 0
-    
+
     def get_status_summary(self) -> Dict[str, bool]:
         """Get a summary of all status checks.
 

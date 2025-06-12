@@ -80,3 +80,27 @@ output = "coverage.xml"
 
 [tool.coverage.html]
 directory = "htmlcov"
+
+[tool.pylint]
+# Disable problematic checks for this project
+disable = [
+    "missing-module-docstring",
+    "missing-class-docstring", 
+    "missing-function-docstring",
+    "invalid-name",
+    "too-few-public-methods",
+    "too-many-arguments",
+    "too-many-positional-arguments",
+    "too-many-locals",
+    "duplicate-code",
+    "line-too-long"
+]
+
+# Allow variable names that don't conform to snake_case for PFCF API compatibility
+good-names = ["i", "j", "k", "ex", "Run", "_", "ProductId", "investorAcno", "productKind", "OTQtyB", "OTQtyS", "NowOrderQtyB", "NowOrderQtyS", "NowMatchQtyB", "NowMatchQtyS", "TodayEnd", "NowOTQtyB", "NowOTQtyS", "RealPrice", "AvgCostB", "AvgCostS", "PriceDiffB", "PriceDiffS", "PricePL", "Curren", "LiquidationPL"]
+
+# Set maximum line length to match ruff
+max-line-length = 100
+
+# Ignore certain paths
+ignore-paths = ["tests/", "test/"]

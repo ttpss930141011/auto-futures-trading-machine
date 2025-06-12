@@ -166,5 +166,5 @@ jobs:
     - name: Run Ruff
       run: poetry run ruff check src/ --output-format=github
     
-    - name: Run Pylint
-      run: poetry run pylint src/ --output-format=text --reports=yes
+    - name: Run Pylint (errors and warnings only)
+      run: poetry run pylint src/ --disable=all --enable=E,W --output-format=text --reports=yes

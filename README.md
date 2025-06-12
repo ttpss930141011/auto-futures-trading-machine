@@ -5,8 +5,8 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/ttpss930141011/auto-futures-trading-machine/refactor-exchange-api-service-container/.github/badges/coverage.json" alt="Coverage">
-  <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/ttpss930141011/auto-futures-trading-machine/refactor-exchange-api-service-container/.github/badges/pylint.json" alt="Pylint">
+  <img src="https://ttpss930141011.github.io/auto-futures-trading-machine/coverage.svg" alt="Coverage">
+  <img src="https://ttpss930141011.github.io/auto-futures-trading-machine/pylint.svg" alt="Pylint">
   <img src="https://github.com/ttpss930141011/auto-futures-trading-machine/workflows/CI/badge.svg" alt="CI Status">
   <img src="https://img.shields.io/badge/python-3.12%2B-blue.svg" alt="Python Version">
   <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License">

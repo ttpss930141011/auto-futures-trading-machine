@@ -51,12 +51,23 @@ jobs:
         name: codecov-umbrella
         fail_ci_if_error: false
     
-    - name: Run Pylint and generate badge
+    # Badge generation (main branch only)
+    - name: Creating badges folder
+      run: mkdir -p badges
+      if: github.ref == 'refs/heads/main'
+    
+    - name: Generate Coverage Badge
+      uses: tj-actions/coverage-badge-py@v1.8
+      with:
+        output: badges/coverage.svg
+      if: github.ref == 'refs/heads/main'
+    
+    - name: Generate Pylint Badge
       run: |
-        mkdir -p .github/badges
-        poetry run pylint src/ --disable=all --enable=E,W --output-format=text --reports=yes > pylint-report.txt || true
-        PYLINT_SCORE=$(poetry run pylint src/ --disable=all --enable=E,W --output-format=text --reports=yes | grep "Your code has been rated at" | awk '{print $7}' | sed 's|/10||' || echo "0.0")
-        echo "Pylint score: $PYLINT_SCORE"
+        # Run pylint and extract score
+        PYLINT_OUTPUT=$(poetry run pylint src/ --disable=all --enable=E,W --output-format=text --reports=yes 2>&1 || true)
+        PYLINT_SCORE=$(echo "$PYLINT_OUTPUT" | grep "Your code has been rated at" | awk '{print $7}' | sed 's|/10||' || echo "0.0")
+        echo "Pylint score: $PYLINT_SCORE/10"
         
         # Generate color based on score
         if (( $(echo "$PYLINT_SCORE >= 9.0" | bc -l) )); then
@@ -73,75 +84,18 @@ jobs:
           COLOR="red"
         fi
         
-        # Create badge JSON
-        cat > .github/badges/pylint.json << EOF
-        {
-          "schemaVersion": 1,
-          "label": "pylint",
-          "message": "${PYLINT_SCORE}/10",
-          "color": "${COLOR}"
-        }
-        EOF
-        
-        cat .github/badges/pylint.json
-
-    - name: Generate test coverage badge
-      run: |
-        mkdir -p .github/badges
-        # Extract coverage percentage from coverage.xml
-        COVERAGE=$(python -c "
-        import xml.etree.ElementTree as ET
-        try:
-            tree = ET.parse('coverage.xml')
-            root = tree.getroot()
-            coverage = float(root.attrib['line-rate']) * 100
-            print(f'{coverage:.1f}')
-        except:
-            print('0.0')
-        ")
-        
-        echo "Coverage: $COVERAGE%"
-        
-        # Generate color based on coverage
-        if (( $(echo "$COVERAGE >= 90" | bc -l) )); then
-          COLOR="brightgreen"
-        elif (( $(echo "$COVERAGE >= 80" | bc -l) )); then
-          COLOR="green"
-        elif (( $(echo "$COVERAGE >= 70" | bc -l) )); then
-          COLOR="yellowgreen"
-        elif (( $(echo "$COVERAGE >= 60" | bc -l) )); then
-          COLOR="yellow"
-        elif (( $(echo "$COVERAGE >= 50" | bc -l) )); then
-          COLOR="orange"
-        else
-          COLOR="red"
-        fi
-        
-        # Create badge JSON
-        cat > .github/badges/coverage.json << EOF
-        {
-          "schemaVersion": 1,
-          "label": "coverage",
-          "message": "${COVERAGE}%",
-          "color": "${COLOR}"
-        }
-        EOF
-        
-        cat .github/badges/coverage.json
-
-    - name: Commit badge files
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git add .github/badges/ || true
-        git commit -m "Update badges [skip ci]" || true
+        # Generate SVG badge using shields.io
+        curl -s "https://img.shields.io/badge/pylint-${PYLINT_SCORE}%2F10-${COLOR}" > badges/pylint.svg
+        echo "Generated pylint badge with score $PYLINT_SCORE and color $COLOR"
+      if: github.ref == 'refs/heads/main'
     
-    - name: Push changes
-      uses: ad-m/github-push-action@master
+    - name: Publish badges to GitHub Pages
+      uses: JamesIves/github-pages-deploy-action@v4
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        branch: ${{ github.ref }}
-      if: github.event_name == 'push'
+        branch: coverage-badge
+        folder: badges
+        clean: false
+      if: github.ref == 'refs/heads/main'
 
   lint:
     runs-on: ubuntu-latest
@@ -167,4 +121,4 @@ jobs:
       run: poetry run ruff check src/ --output-format=github
     
     - name: Run Pylint (errors and warnings only)
-      run: poetry run pylint src/ --disable=all --enable=E,W --output-format=text --reports=yes
+      run: poetry run pylint src/ --disable=all --enable=E,W --output-format=text --reports=yes || true

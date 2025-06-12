@@ -5,7 +5,7 @@ class MockEvent:
     """Mock event handler for PFCF API"""
     def __iadd__(self, handler):
         return self
-    
+
     def __isub__(self, handler):
         return self
 

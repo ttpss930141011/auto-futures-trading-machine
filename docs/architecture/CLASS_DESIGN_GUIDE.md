@@ -137,6 +137,29 @@ class UseCase:
 - **I**nterface Segregation: 客戶端只依賴需要的介面
 - **D**ependency Inversion: 依賴抽象而非具體實現
 
+## ⚠️ 架構限制與擴展性
+
+### 券商 API 耦合度
+
+本系統目前與**統一期貨 (PFCF) DLL 高度耦合**，主要耦合點包括：
+
+| 層級 | 耦合度 | 影響 |
+|------|-------|------|
+| Infrastructure | 🔴 極高 | PFCF API 直接調用 |
+| Interactor | 🟡 中等 | DTO 包含 PFCF 特定字段 |
+| Domain | 🟢 低 | 實體層相對獨立 |
+
+### 移植到其他券商
+
+如果需要支援其他券商 (如元大期貨、群益期貨)，建議：
+
+1. **創建 ExchangeApiInterface 抽象層**
+2. **重構 DTO 使用券商中立格式**  
+3. **實現券商特定的適配器模式**
+
+> 📖 **詳細移植指南**: [DLL 移植指南](DLL_PORTING_GUIDE.md) - 完整的移植步驟和架構重構建議
+
 ---
 
-**架構優勢**: 模組化、可測試、可擴展、可維護的 Clean Architecture 實現
+**架構優勢**: 模組化、可測試、可擴展、可維護的 Clean Architecture 實現  
+**架構限制**: 高度依賴統一期貨 API，移植到其他券商需要重大重構

@@ -1,97 +1,167 @@
-# 🎯 First Trade Tutorial
+# 🎯 第一筆自動交易教學 - 統一期貨小台指
 
-> *Walk through your first automated futures trade step by step*
+> *逐步完成您的第一筆台灣期貨自動交易*
 
-## 1. Login
+## ⚠️ 重要前提
 
-1. Launch the application:
+- 您必須是**統一期貨客戶**且已申請 API 權限
+- 此教學以**小台指 (MXFF5)** 為範例
+- 建議先在**測試環境**練習
+
+---
+
+## 1. 統一期貨帳號登錄
+
+1. 啟動應用程式：
    ```bash
    python app.py
    ```
-2. At the menu, choose `1` for **User Login**:
+
+2. 選擇 `1` 進行登錄：
    ```text
-   Enter your choice: 1
-   Username: your_username
-   Password: ********
-   ✅ Login successful!
+   > 1
+   Enter the account: 80020290621        # 您的統一期貨帳號
+   Enter the password: [輸入密碼]         # 您的統一期貨密碼
+   Is this login for production?[y/n](blank for n): y  # y=正式環境, n=測試環境
+   
+   訊息平台連線成功
+   內期報價連線
+   內期帳務連線
+   Login status: 登入成功!
    ```
 
-## 2. Register an Item to Trade
+## 2. 查看可交易的期貨商品
 
-1. Choose `3` for **Register Item**:
+1. 選擇 `7` 查看期貨商品：
    ```text
-   Enter your choice: 3
+   > 7
+   Enter futures code (leave empty for all): MXF  # 小台指代碼
    
-   Available Futures:
-   1. AAPL  2. TSLA  3. BTC
-   
-   Select item (1-3): 2
-   ✅ Registered TSLA for trading
+   Found 6 futures items
+   ==== Futures Data ====
+       商品代號         商品名稱         標的物        交割月份       市場代碼       部位價格
+   --------------------------------------------------------------------------------
+      MXFF5          小臺指                   202506      MXF       22253
+      MXFG5          小臺指                   202507      MXF       21953
+      # ... 其他月份合約
    ```
 
-## 3. Create a Trading Condition
+## 3. 註冊要交易的商品
 
-1. Choose `4` for **Create Condition**:
+1. 選擇 `3` 註冊商品：
    ```text
-   Enter your choice: 4
-   
-   Support Level: 250.00
-   Resistance Level: 260.00
-   Quantity: 1
-   Take Profit Point: 5
-   Stop Loss Point: 3
-   Follow Market Price? [y/n]: y
-   ✅ Condition created successfully!
+   > 3
+   Enter item code: MXFF5              # 選擇最近月份的小台指
+   {'action': 'register_item', 'message': 'User registered successfully'}
    ```
 
-## 4. Select an Order Account
+## 4. 創建支撐阻力交易條件
 
-1. Choose `5` for **Select Order Account**:
+1. 選擇 `4` 創建交易條件：
    ```text
-   Enter your choice: 5
+   > 4
+   Enter the action (b/s): b                    # b=買進, s=賣出
+   Enter the target price: 22000               # 目標價格 (突破點)
+   Enter the turning point: 30                 # 轉折點 (點數)
+   Enter the quantity: 1                       # 交易口數
+   Enter the take profit point (blank for default): 120  # 停利點 (點數)
+   Enter the stop loss point (blank for default): 30    # 停損點 (點數)
+   Enter if the condition is following (y/n): y          # 是否跟隨市價
    
-   Available Accounts:
-   1. Main (50,000 USD)
-   2. Test (10,000 USD)
-   
-   Select account: 1
-   ✅ Main Account selected
+   ✅ 交易條件創建成功！
    ```
 
-## 5. Start Automated Trading
+## 5. 選擇交易帳戶
 
-1. Choose `10` for **Start All Components**:
+1. 選擇 `5` 設定交易帳戶：
    ```text
-   Enter your choice: 10
+   > 5
+   Select the order account:
+   1. 0290621                          # 您的期貨交易帳戶
    
-   🚀 Starting Auto-Trading System...
-   ✅ Gateway: Running
-   ✅ Strategy: Running
-   ✅ Order Executor: Running
+   Enter the account number: 1
+   {'action': 'select_order_account', 'message': 'Order account selected: 0290621'}
    ```
-2. The system now runs in the background, watching ticks and placing orders automatically.
 
-## 6. Monitor Your Trade
+## 6. 檢查系統前置條件
 
-While trading, check your positions:
+1. 選擇 `10` 檢查是否可以啟動：
+   ```text
+   > 10
+   === System Prerequisites ===
+   User logged in: ✓                   # 已登錄
+   Item registered: ✓                  # 已註冊商品
+   Order account selected: ✓           # 已選擇帳戶
+   Trading conditions defined: ✓       # 已定義交易條件
+   ===========================
+   ```
+
+## 7. 啟動自動交易系統
+
+1. 再次選擇 `10` 啟動系統：
+   ```text
+   > 10
+   === Starting All Trading System Components ===
+   
+   === System Startup Results ===
+   Overall Status: ✓ Success
+   Gateway: ✓ Running                  # DLL Gateway 運行中
+   Strategy: ✓ Running                 # 策略進程運行中  
+   Order Executor: ✓ Running           # 訂單執行進程運行中
+   =============================
+   
+   Strategy process started. Waiting for market data...
+   Order executor gateway process started. Waiting for trading signals...
+   ```
+
+🎉 **恭喜！您的自動交易系統已啟動**
+
+系統現在會：
+- 監聽小台指 (MXFF5) 的即時報價
+- 當價格突破 22000 點時，自動買進 1 口
+- 停利目標：22120 點 (獲利 120 點)
+- 停損目標：21970 點 (虧損 30 點)
+
+## 8. 監控交易狀態
+
+檢查倉位：
 ```text
-Enter your choice: 8
-Account: your_account_id
-Enter product code (leave blank for all):
-// Displays open positions or "No position data"
+> 8
+Account: 0290621
+Enter product id (leave blank for all): [留空查看所有部位]
 ```
 
-## 7. Stop Trading
+## 9. 停止交易系統
 
-Press `Ctrl+C` in the terminal running `app.py`:
+### 正常登出
 ```text
-^C
-🛑 Shutting down system...
-✅ All processes stopped
-✅ Logs saved to logs/session_<timestamp>.log
-Goodbye!
+> 2  # 統一期貨系統登出
+內期報價斷線
+內期帳務斷線
+Login status: 登出成功!
+
+> 0  # 退出程式
+Exiting the program
 ```
 
 ---
 
-*Congratulations on your first automated trade!* 
+## 💡 交易參數說明
+
+| 參數 | 範例值 | 說明 |
+|------|-------|------|
+| Target Price | 22000 | 當小台指突破此價格時觸發買進 |
+| Turning Point | 30 | 價格必須先跌破此點數再突破才觸發 |
+| Quantity | 1 | 交易 1 口小台指 |
+| Take Profit | 120 | 獲利 120 點時自動平倉 |
+| Stop Loss | 30 | 虧損 30 點時自動停損 |
+| Following | y | 跟隨市價下單 (非限價單) |
+
+## ⚠️ 風險提醒
+
+- **期貨交易具有高風險**，可能導致全部資金損失
+- **建議新手從小口數開始**，熟悉系統後再增加
+- **務必設定停損**，控制最大損失
+- **監控系統運行狀況**，發現異常立即停止
+
+*祝您交易順利！記住：永遠不要投資超過您能承受損失的資金。*

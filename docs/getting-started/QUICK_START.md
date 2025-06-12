@@ -1,14 +1,21 @@
-# 🚀 Quick Start Guide
+# 🚀 Quick Start Guide - 台灣期貨自動交易
 
-> *Get your automated trading system running in 5 minutes!*
+> *Taiwan Futures Automated Trading System - 統一期貨專用*
+
+## ⚠️ 重要說明
+
+**這不是通用交易系統**：本系統專為台灣統一期貨 (PFCF) 設計，高度依賴統一期貨的 Python DLL API。如果您不是統一期貨的客戶，此系統將無法使用。
+
+> 💡 **需要移植到其他券商？** 請參閱 [DLL 移植指南](../architecture/DLL_PORTING_GUIDE.md) 了解如何將系統移植到元大期貨、群益期貨等其他券商。
 
 ## 📋 Prerequisites
 
-Before you begin, ensure you have:
-- ✅ Python 3.8 or higher
-- ✅ Exchange API credentials (we'll show you how)
-- ✅ Basic command line knowledge
-- ✅ 5 minutes of your time
+開始前，您必須具備：
+- ✅ **統一期貨開戶** - 必須是統一期貨客戶
+- ✅ **PFCF Python DLL API** - 向統一期貨申請 API 權限
+- ✅ Python 3.12 或更高版本
+- ✅ Windows 作業系統 (DLL 需求)
+- ✅ 基本命令列操作知識
 
 ## 🎯 Step 1: Clone and Install
 
@@ -24,143 +31,184 @@ poetry install
 pip install -r requirements.txt
 ```
 
-## 🔐 Step 2: Configure Credentials
+## 🔐 Step 2: 統一期貨 API 設置
 
-> **🌟 Prerequisite: Obtain PFCF Python DLL API**  
-> Apply to Taiwan Unified Futures (PFCF) for their proprietary Python DLL API at https://www.pfcf.com.tw/software/detail/2709 and place the DLL files into `src/infrastructure/pfcf_client/dll`.
+### 申請 PFCF Python DLL API
+1. 聯繫統一期貨客服申請 Python DLL API 權限
+2. 下載統一期貨提供的 DLL 檔案
+3. 將 DLL 檔案放置到 `src/infrastructure/pfcf_client/dll/`
 
-Create a `.env` file in the project root:
+### 配置環境變數
+創建 `.env` 檔案：
 
 ```bash
-# Copy the example file (if provided)
-cp .env.example .env  # macOS/Linux
-copy .env.example .env  # Windows
+# Windows
+copy .env.example .env
 
-# Or manually create .env
+# 或手動創建 .env
 ```
 
-Edit `.env` with your favorite editor and add:
+編輯 `.env` 並加入統一期貨提供的資訊：
 
 ```env
-# PFCF API endpoints (required)
-DEALER_TEST_URL=your_test_url_here
-DEALER_PROD_URL=your_prod_url_here
+# 統一期貨 API 端點 (必須向統一期貨取得)
+DEALER_TEST_URL=統一期貨提供的測試環境URL
+DEALER_PROD_URL=統一期貨提供的正式環境URL
 
-# Optional: Trading mode (paper trading when true)
-TEST_MODE=true
+# 其他設定
+TEST_MODE=true  # 測試模式
 ```
 
-Refer to [Configuration Guide](../CONFIG_GUIDE.md) for advanced environment variable options.
+⚠️ **重要**：API 端點和憑證必須向統一期貨申請，無法自行取得。
 
-## 🏃 Step 3: Run the System
+## 🏃 Step 3: 啟動系統
 
 ```bash
-# Start the trading system
+# 啟動交易系統
 python app.py
 ```
 
-You'll see the main menu:
+您會看到系統啟動訊息和主選單：
 ```
-╔════════════════════════════════════════╗
-║    Auto Futures Trading Machine        ║
-║    Version 1.0.0                       ║
-╚════════════════════════════════════════╝
+Initializing Auto Futures Trading Machine with DLL Gateway...
+✓ DLL Gateway Server: Running on tcp://127.0.0.1:5557
+✓ Exchange API: Centralized access through gateway
+✓ Multi-process support: Enhanced security and stability
 
-Please select an option:
-- 0. Exit
-- 1. User Login
-- 2. User Logout
-- 3. Register Item
-- 4. Create Condition
-- 5. Select Order Account
-- 6. Send Market Order
-- 7. Show Futures
-- 8. Get Current Positions
-- 10. Start All Components
+IMPORTANT: AllInOneController (option 10) now uses Gateway architecture
+All processes will communicate through the centralized DLL Gateway.
 
-Enter your choice:
-```
-
-## 🎮 Step 4: Basic Workflow
-
-### 1️⃣ Login First
-```
-Enter your choice: 1
-Username: your_username
-Password: ********
-✅ Login successful!
+Please choose an option:
+0: ExitController
+1: UserLoginController
+2: UserLogoutController
+3: RegisterItemController
+4: CreateConditionController
+5: SelectOrderAccountController
+6: SendMarketOrderController
+7: ShowFuturesController
+8: GetPositionController
+10: AllInOneController
 ```
 
-### 2️⃣ Register a Trading Item
+## 🎮 Step 4: 完整操作流程 (根據實際使用)
+
+### 1️⃣ 使用統一期貨帳號登錄
 ```
-Enter your choice: 3
+> 1
+Enter the account: 80020290621
+Enter the password: [輸入密碼]
+Is this login for production?[y/n](blank for n): y
 
-Available Futures:
-1. AAPL - Apple Inc.
-2. TSLA - Tesla Inc.
-3. BTC - Bitcoin Futures
-
-Select item (1-3): 2
-✅ Registered TSLA for trading
-```
-
-### 3️⃣ Create Trading Conditions
-```
-Enter your choice: 4
-
-Creating Support/Resistance Condition:
-Support Level: 240.50
-Resistance Level: 255.75
-Position Size: 10
-
-✅ Condition created successfully!
+訊息平台連線成功
+內期報價連線
+內期帳務連線
+Login status: 登入成功!
+{'action': 'user_login', 'message': 'User logged in successfully', 
+ 'account': '80020290621', 'ip_address': '122.147.227.66'}
 ```
 
-### 4️⃣ Select Trading Account
+### 2️⃣ 查看可交易期貨商品
 ```
-Enter your choice: 5
+> 7
+Enter futures code (leave empty for all): MXF
 
-Available Accounts:
-1. Main Account (Balance: $50,000)
-2. Test Account (Balance: $10,000)
+Found 6 futures items
 
-Select account: 1
-✅ Main Account selected
-```
-
-### 5️⃣ Check Current Positions
-```
-Enter your choice: 8
-Account: 0290621
-Enter product id (leave blank for all):
-No position data or list of positions
-```
-
-### 6️⃣ Start Automated Trading
-```
-Enter your choice: 10
-
-🚀 Starting Auto-Trading System...
-✅ Gateway: Running (Port 5555)
-✅ Strategy: Running (Port 5556)
-✅ Order Executor: Running (Port 5557)
-
-System is now trading automatically!
-Press Ctrl+C to stop.
+==== Futures Data ====
+    商品代號         商品名稱         標的物        交割月份       市場代碼       部位價格          到期日
+--------------------------------------------------------------------------------
+   MXFF5          小臺指                   202506      MXF       22253
+   MXFG5          小臺指                   202507      MXF       21953
+   MXFH5          小臺指                   202508      MXF       21805
+   MXFI5          小臺指                   202509      MXF       21720
+   MXFL5          小臺指                   202512      MXF       21631
+   MXFC6          小臺指                   202603      MXF       21560
+--------------------------------------------------------------------------------
+Total items: 6
 ```
 
-## 🛑 Step 5: Stopping the System
+### 3️⃣ 註冊要交易的商品 (以小台指為例)
+```
+> 3
+Enter item code: MXFF5
+{'action': 'register_item', 'message': 'User registered successfully'}
+```
 
-### Graceful Shutdown
-Press `Ctrl+C` in the main terminal:
+### 4️⃣ 創建交易條件 (支撐阻力策略)
+```
+> 4
+Enter the action (b/s): b
+Enter the target price: 22000
+Enter the turning point: 30
+Enter the quantity: 1
+Enter the take profit point (blank for default): 120
+Enter the stop loss point (blank for default): 30
+Enter if the condition is following (y/n): y
+
+{'action': 'create_condition', 'message': 'Condition 9a615336-39ee-44a3-aa30-d123ea9fde27 is created successfully',
+ 'condition': {...}}
+```
+
+### 5️⃣ 選擇交易帳戶
+```
+> 5
+Select the order account:
+1. 0290621
+
+Enter the account number: 1
+{'action': 'select_order_account', 'message': 'Order account selected: 0290621'}
+```
+
+### 6️⃣ 檢查系統前置條件
+```
+> 10
+=== System Prerequisites ===
+User logged in: ✓
+Item registered: ✓
+Order account selected: ✓
+Trading conditions defined: ✓
+===========================
+```
+
+### 7️⃣ 啟動自動交易系統
+```
+> 10
+=== Starting All Trading System Components ===
+
+=== System Startup Results ===
+Overall Status: ✓ Success
+Gateway: ✓ Running
+Strategy: ✓ Running
+Order Executor: ✓ Running
+=============================
+
+Strategy process started. Waiting for market data...
+Order executor gateway process started. Waiting for trading signals...
+```
+
+## 🛑 Step 5: 停止系統
+
+### 登出並停止系統
+```
+> 2  # 登出
+內期報價斷線
+內期帳務斷線
+Login status: 登出成功!
+{'action': 'logout', 'message': 'User logout successfully', 
+ 'account': '80020290621', 'is_success': True}
+
+> 0  # 退出程式
+Exiting the program
+
+Shutting down application...
+```
+
+### 或使用 Ctrl+C 強制停止
+在主終端機按 `Ctrl+C`：
 ```
 ^C
-🛑 Stopping trading system...
-✅ All positions closed
-✅ Processes terminated cleanly
-✅ Logs saved to: logs/session_20240315_143022.log
-
-Goodbye!
+Shutting down application...
 ```
 
 ## 🔧 Common Issues & Solutions

@@ -36,7 +36,7 @@ class TestSystemManager:
             "logger": mocker.Mock(),
             "gateway_server": mocker.Mock(),
             "port_checker": mocker.Mock(),
-            "gateway_initializer": mocker.Mock(),
+            "market_data_gateway": mocker.Mock(),
             "process_manager": mocker.Mock(),
             "status_checker": mocker.Mock(),
         }
@@ -64,7 +64,7 @@ class TestSystemManager:
         assert manager._logger == mock_dependencies["logger"]
         assert manager._gateway_server == mock_dependencies["gateway_server"]
         assert manager._port_checker == mock_dependencies["port_checker"]
-        assert manager._gateway_initializer == mock_dependencies["gateway_initializer"]
+        assert manager._market_data_gateway == mock_dependencies["market_data_gateway"]
         assert manager._process_manager == mock_dependencies["process_manager"]
         assert manager._status_checker == mock_dependencies["status_checker"]
 
@@ -85,8 +85,8 @@ class TestSystemManager:
         """
         # Setup mocks
         mock_dependencies["port_checker"].check_port_availability.return_value = {5555: True, 5556: True}
-        mock_dependencies["gateway_initializer"].initialize_components.return_value = True
-        mock_dependencies["gateway_initializer"].connect_api_callbacks.return_value = True
+        mock_dependencies["market_data_gateway"].initialize_market_data_publisher.return_value = True
+        mock_dependencies["market_data_gateway"].connect_exchange_callbacks.return_value = True
         mock_dependencies["gateway_server"].start.return_value = True
 
         with patch.object(system_manager, "_start_strategy", return_value=True), patch.object(
@@ -140,8 +140,8 @@ class TestSystemManager:
         """
         # Setup mocks - gateway succeeds, strategy fails
         mock_dependencies["port_checker"].check_port_availability.return_value = {5555: True, 5556: True}
-        mock_dependencies["gateway_initializer"].initialize_components.return_value = True
-        mock_dependencies["gateway_initializer"].connect_api_callbacks.return_value = True
+        mock_dependencies["market_data_gateway"].initialize_market_data_publisher.return_value = True
+        mock_dependencies["market_data_gateway"].connect_exchange_callbacks.return_value = True
         mock_dependencies["gateway_server"].start.return_value = True
 
         with patch.object(system_manager, "_start_strategy", return_value=False), patch.object(
@@ -245,8 +245,8 @@ class TestSystemManager:
 
         # Setup mocks
         mock_dependencies["port_checker"].check_port_availability.return_value = {5555: True, 5556: True}
-        mock_dependencies["gateway_initializer"].initialize_components.return_value = True
-        mock_dependencies["gateway_initializer"].connect_api_callbacks.return_value = True
+        mock_dependencies["market_data_gateway"].initialize_market_data_publisher.return_value = True
+        mock_dependencies["market_data_gateway"].connect_exchange_callbacks.return_value = True
         mock_dependencies["gateway_server"].start.return_value = True
 
         result = system_manager.restart_component("gateway")
@@ -256,7 +256,7 @@ class TestSystemManager:
 
         # Verify stop and start were called
         mock_dependencies["gateway_server"].stop.assert_called_once()
-        mock_dependencies["gateway_initializer"].cleanup_zmq.assert_called_once()
+        mock_dependencies["market_data_gateway"].cleanup_zmq.assert_called_once()
         mock_dependencies["gateway_server"].start.assert_called_once()
 
     def test_restart_component_unknown(
@@ -316,8 +316,8 @@ class TestSystemManager:
             mock_dependencies: Dictionary of mocked dependencies
         """
         mock_dependencies["port_checker"].check_port_availability.return_value = {5555: True, 5556: True}
-        mock_dependencies["gateway_initializer"].initialize_components.return_value = True
-        mock_dependencies["gateway_initializer"].connect_api_callbacks.return_value = True
+        mock_dependencies["market_data_gateway"].initialize_market_data_publisher.return_value = True
+        mock_dependencies["market_data_gateway"].connect_exchange_callbacks.return_value = True
         mock_dependencies["gateway_server"].start.return_value = False
 
         result = system_manager._start_gateway()

@@ -24,8 +24,8 @@ class DummyGatewayInit:
         self.init_ok = init_ok
         self.connect_ok = connect_ok
         self.cleaned = False
-    def initialize_components(self): return self.init_ok
-    def connect_api_callbacks(self): return self.connect_ok
+    def initialize_market_data_publisher(self): return self.init_ok
+    def connect_exchange_callbacks(self): return self.connect_ok
     def cleanup_zmq(self): self.cleaned = True
     def get_connection_addresses(self): return ('pub_addr', 'push_addr')
 
@@ -34,7 +34,7 @@ def test_not_logged_in(capsys):
     logger = DummyLogger()
     uc = RunGatewayUseCase(logger,
                             port_checker_service=DummyPortChecker({}),
-                            gateway_initializer_service=DummyGatewayInit(),
+                            market_data_gateway_service=DummyGatewayInit(),
                             session_repository=DummySession(False))
     result = uc.execute()
     assert result is False
@@ -48,7 +48,7 @@ def test_port_unavailable(capsys):
     ports = {1000: True, 2000: False}
     uc = RunGatewayUseCase(logger,
                             port_checker_service=DummyPortChecker(ports),
-                            gateway_initializer_service=DummyGatewayInit(),
+                            market_data_gateway_service=DummyGatewayInit(),
                             session_repository=DummySession(True))
     result = uc.execute(is_threaded_mode=True)
     assert result is False
@@ -61,11 +61,11 @@ def test_init_components_failure():
     logger = DummyLogger()
     uc = RunGatewayUseCase(logger,
                             port_checker_service=DummyPortChecker({1: True}),
-                            gateway_initializer_service=DummyGatewayInit(init_ok=False),
+                            market_data_gateway_service=DummyGatewayInit(init_ok=False),
                             session_repository=DummySession(True))
     result = uc.execute(is_threaded_mode=True)
     assert result is False
-    assert any('Failed to initialize gateway components' in msg for msg in logger.errors)
+    assert any('Failed to initialize market data publisher' in msg for msg in logger.errors)
 
 
 def test_connect_api_failure():
@@ -73,7 +73,7 @@ def test_connect_api_failure():
     gw = DummyGatewayInit(init_ok=True, connect_ok=False)
     uc = RunGatewayUseCase(logger,
                             port_checker_service=DummyPortChecker({1: True}),
-                            gateway_initializer_service=gw,
+                            market_data_gateway_service=gw,
                             session_repository=DummySession(True))
     result = uc.execute(is_threaded_mode=True)
     assert result is False
@@ -86,7 +86,7 @@ def test_success_threaded(capsys):
     gw = DummyGatewayInit(init_ok=True, connect_ok=True)
     uc = RunGatewayUseCase(logger,
                             port_checker_service=DummyPortChecker({1: True}),
-                            gateway_initializer_service=gw,
+                            market_data_gateway_service=gw,
                             session_repository=DummySession(True))
     # Threaded mode: override loop to avoid infinite wait
     uc._run_event_loop = lambda *_: None
@@ -103,7 +103,7 @@ def test_cleanup_called_when_loop_exits_normally():
     uc = RunGatewayUseCase(
         logger,
         port_checker_service=DummyPortChecker({1: True}),
-        gateway_initializer_service=gw,
+        market_data_gateway_service=gw,
         session_repository=DummySession(True),
     )
     def fake_loop(*_):
@@ -118,7 +118,7 @@ def test_stop_sets_running_false():
     logger = DummyLogger()
     uc = RunGatewayUseCase(logger,
                             port_checker_service=DummyPortChecker({}),
-                            gateway_initializer_service=DummyGatewayInit(),
+                            market_data_gateway_service=DummyGatewayInit(),
                             session_repository=DummySession(True))
     uc.running = True
     uc.stop()

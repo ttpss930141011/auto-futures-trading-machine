@@ -1,6 +1,6 @@
-"""Gateway Initializer Service Interface.
+"""Market Data Gateway Service Interface.
 
-This module defines the interface for the gateway initializer service.
+This module defines the interface for the market data gateway service.
 """
 
 from typing import Protocol, Optional, Tuple, runtime_checkable
@@ -10,11 +10,11 @@ from src.infrastructure.pfcf_client.tick_producer import TickProducer
 
 
 @runtime_checkable
-class GatewayInitializerServiceInterface(Protocol):
-    """Interface for the gateway initializer service."""
+class MarketDataGatewayServiceInterface(Protocol):
+    """Interface for the market data gateway service."""
 
-    def initialize_components(self) -> bool:
-        """Initialize ZMQ components for the gateway.
+    def initialize_market_data_publisher(self) -> bool:
+        """Initialize ZMQ components for market data publishing.
 
         Returns:
             bool: True if initialization was successful, False otherwise
@@ -29,8 +29,8 @@ class GatewayInitializerServiceInterface(Protocol):
         """
         ...
 
-    def connect_api_callbacks(self) -> bool:
-        """Connect exchange API callbacks to the tick producer.
+    def connect_exchange_callbacks(self) -> bool:
+        """Connect PFCF exchange API callbacks to the tick producer.
 
         Returns:
             bool: True if callbacks were successfully connected, False otherwise
@@ -38,7 +38,7 @@ class GatewayInitializerServiceInterface(Protocol):
         ...
 
     def cleanup_zmq(self) -> None:
-        """Close ZMQ sockets and terminate context gracefully."""
+        """Close market data ZMQ sockets and terminate context gracefully."""
         ...
 
     def get_connection_addresses(self) -> Tuple[str, str]:
@@ -51,7 +51,7 @@ class GatewayInitializerServiceInterface(Protocol):
 
     @property
     def is_initialized(self) -> bool:
-        """Check if the gateway components are initialized.
+        """Check if the market data components are initialized.
 
         Returns:
             bool: True if initialized, False otherwise

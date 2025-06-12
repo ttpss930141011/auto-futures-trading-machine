@@ -10,7 +10,7 @@ from typing import Dict
 
 from src.interactor.interfaces.logger.logger import LoggerInterface
 from src.interactor.interfaces.services.port_checker_service_interface import PortCheckerServiceInterface
-from src.interactor.interfaces.services.gateway_initializer_service_interface import GatewayInitializerServiceInterface
+from src.interactor.interfaces.services.market_data_gateway_service_interface import MarketDataGatewayServiceInterface
 from src.interactor.interfaces.repositories.session_repository import SessionRepositoryInterface
 
 
@@ -21,7 +21,7 @@ class RunGatewayUseCase:
         self,
         logger: LoggerInterface,
         port_checker_service: PortCheckerServiceInterface,
-        gateway_initializer_service: GatewayInitializerServiceInterface,
+        market_data_gateway_service: MarketDataGatewayServiceInterface,
         session_repository: SessionRepositoryInterface
     ) -> None:
         """Initialize the use case.
@@ -29,12 +29,12 @@ class RunGatewayUseCase:
         Args:
             logger: Logger for recording events
             port_checker_service: Service for checking port availability
-            gateway_initializer_service: Service for initializing gateway components
+            market_data_gateway_service: Service for market data gateway operations
             session_repository: Repository for session management
         """
         self.logger = logger
         self.port_checker_service = port_checker_service
-        self.gateway_initializer_service = gateway_initializer_service
+        self.market_data_gateway_service = market_data_gateway_service
         self.session_repository = session_repository
 
         # Gateway running state flag
@@ -67,15 +67,15 @@ class RunGatewayUseCase:
                 self._display_port_error(port_status)
                 return False
 
-            # Initialize gateway components
-            if not self.gateway_initializer_service.initialize_components():
-                self.logger.log_error("Failed to initialize gateway components")
+            # Initialize market data components
+            if not self.market_data_gateway_service.initialize_market_data_publisher():
+                self.logger.log_error("Failed to initialize market data publisher")
                 return False
 
-            # Connect API callbacks to tick producer
-            if not self.gateway_initializer_service.connect_api_callbacks():
-                self.logger.log_error("Failed to connect API callbacks")
-                self.gateway_initializer_service.cleanup_zmq()
+            # Connect exchange callbacks to tick producer
+            if not self.market_data_gateway_service.connect_exchange_callbacks():
+                self.logger.log_error("Failed to connect exchange callbacks")
+                self.market_data_gateway_service.cleanup_zmq()
                 return False
 
             # Display information about the running gateway
@@ -101,7 +101,7 @@ class RunGatewayUseCase:
             # stopped and self.running is False. This ensures ZeroMQ
             # sockets are closed when the gateway exits normally or
             # due to an exception.
-            self.gateway_initializer_service.cleanup_zmq()
+            self.market_data_gateway_service.cleanup_zmq()
             self.running = False
 
     def stop(self) -> None:
@@ -186,8 +186,8 @@ class RunGatewayUseCase:
 
     def _display_gateway_info(self) -> None:
         """Display information about the running gateway."""
-        # Get connection addresses from the gateway initializer service
-        tick_sub_address, signal_push_address = self.gateway_initializer_service.get_connection_addresses()
+        # Get connection addresses from the market data gateway service
+        tick_sub_address, signal_push_address = self.market_data_gateway_service.get_connection_addresses()
 
         print("\n=== ZeroMQ Market Data Gateway Initialized ===")
         print(f"Publishing ticks on: {tick_sub_address}")

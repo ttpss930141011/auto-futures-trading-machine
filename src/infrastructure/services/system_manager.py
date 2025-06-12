@@ -11,8 +11,8 @@ from typing import Dict, Optional
 
 from src.infrastructure.loggers.logger_default import LoggerDefault
 from src.infrastructure.services.dll_gateway_server import DllGatewayServer
-from src.infrastructure.services.gateway.gateway_initializer_service import (
-    GatewayInitializerService,
+from src.infrastructure.services.gateway.market_data_gateway_service import (
+    MarketDataGatewayService,
 )
 from src.infrastructure.services.gateway.port_checker_service import PortCheckerService
 from src.infrastructure.services.process.process_manager_service import ProcessManagerService
@@ -66,7 +66,7 @@ class SystemManager:
         logger: LoggerDefault,
         gateway_server: DllGatewayServer,
         port_checker: PortCheckerService,
-        gateway_initializer: GatewayInitializerService,
+        market_data_gateway: MarketDataGatewayService,
         process_manager: ProcessManagerService,
         status_checker: StatusChecker,
     ) -> None:
@@ -76,14 +76,14 @@ class SystemManager:
             logger: Logger for recording events
             gateway_server: DLL Gateway server instance
             port_checker: Service for checking port availability
-            gateway_initializer: Service for initializing gateway
+            market_data_gateway: Service for market data gateway operations
             process_manager: Service for managing processes
             status_checker: Service for checking system status
         """
         self._logger = logger
         self._gateway_server = gateway_server
         self._port_checker = port_checker
-        self._gateway_initializer = gateway_initializer
+        self._market_data_gateway = market_data_gateway
         self._process_manager = process_manager
         self._status_checker = status_checker
 
@@ -181,7 +181,7 @@ class SystemManager:
             if self._component_status["gateway"] == ComponentStatus.RUNNING:
                 self._component_status["gateway"] = ComponentStatus.STOPPING
                 self._gateway_server.stop()
-                self._gateway_initializer.cleanup_zmq()
+                self._market_data_gateway.cleanup_zmq()
                 self._component_status["gateway"] = ComponentStatus.STOPPED
 
             self._startup_time = None
@@ -230,7 +230,7 @@ class SystemManager:
             # Stop component
             if component == "gateway":
                 self._gateway_server.stop()
-                self._gateway_initializer.cleanup_zmq()
+                self._market_data_gateway.cleanup_zmq()
             elif component in ["strategy", "order_executor"]:
                 # Process manager handles these
                 pass
@@ -272,20 +272,20 @@ class SystemManager:
                 return False
 
             # Initialize market data components (ZMQ publisher and tick producer)
-            if not self._gateway_initializer.initialize_components():
-                self._logger.log_error("Failed to initialize gateway components")
+            if not self._market_data_gateway.initialize_market_data_publisher():
+                self._logger.log_error("Failed to initialize market data publisher")
                 return False
 
             # Connect API callbacks to tick producer for real-time data
-            if not self._gateway_initializer.connect_api_callbacks():
-                self._logger.log_error("Failed to connect API callbacks")
-                self._gateway_initializer.cleanup_zmq()
+            if not self._market_data_gateway.connect_exchange_callbacks():
+                self._logger.log_error("Failed to connect exchange callbacks")
+                self._market_data_gateway.cleanup_zmq()
                 return False
 
             # Start order execution server
             if not self._gateway_server.start():
                 self._logger.log_error("Failed to start Gateway server")
-                self._gateway_initializer.cleanup_zmq()
+                self._market_data_gateway.cleanup_zmq()
                 return False
 
             self._logger.log_info("Gateway started successfully (market data + order execution)")
@@ -295,7 +295,7 @@ class SystemManager:
             self._logger.log_error(f"Error starting Gateway: {e}")
             # Cleanup on error
             try:
-                self._gateway_initializer.cleanup_zmq()
+                self._market_data_gateway.cleanup_zmq()
             except Exception:
                 pass
             return False

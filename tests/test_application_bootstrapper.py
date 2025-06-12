@@ -316,12 +316,12 @@ class TestApplicationBootstrapper:
     @patch("src.app.bootstrap.application_bootstrapper.SystemManager")
     @patch("src.app.bootstrap.application_bootstrapper.StatusChecker")
     @patch("src.app.bootstrap.application_bootstrapper.ProcessManagerService")
-    @patch("src.app.bootstrap.application_bootstrapper.GatewayInitializerService")
+    @patch("src.app.bootstrap.application_bootstrapper.MarketDataGatewayService")
     @patch("src.app.bootstrap.application_bootstrapper.PortCheckerService")
     def test_create_system_manager(
         self,
         mock_port_checker_class: Mock,
-        mock_gateway_init_class: Mock,
+        mock_market_data_gateway_class: Mock,
         mock_process_manager_class: Mock,
         mock_status_checker_class: Mock,
         mock_system_manager_class: Mock,
@@ -332,7 +332,7 @@ class TestApplicationBootstrapper:
 
         Args:
             mock_port_checker_class: Mocked PortCheckerService class
-            mock_gateway_init_class: Mocked GatewayInitializerService class
+            mock_market_data_gateway_class: Mocked MarketDataGatewayService class
             mock_process_manager_class: Mocked ProcessManagerService class
             mock_status_checker_class: Mocked StatusChecker class
             mock_system_manager_class: Mocked SystemManager class
@@ -354,14 +354,14 @@ class TestApplicationBootstrapper:
         # Create mock instances
         mock_gateway_server = Mock()
         mock_port_checker = Mock()
-        mock_gateway_init = Mock()
+        mock_market_data_gateway = Mock()
         mock_process_manager = Mock()
         mock_status_checker = Mock()
         mock_system_manager = Mock()
 
         mock_gateway_server_class.return_value = mock_gateway_server
         mock_port_checker_class.return_value = mock_port_checker
-        mock_gateway_init_class.return_value = mock_gateway_init
+        mock_market_data_gateway_class.return_value = mock_market_data_gateway
         mock_process_manager_class.return_value = mock_process_manager
         mock_status_checker_class.return_value = mock_status_checker
         mock_system_manager_class.return_value = mock_system_manager
@@ -379,7 +379,7 @@ class TestApplicationBootstrapper:
 
         # Verify services were created
         mock_port_checker_class.assert_called_once_with(mock_config, mock_logger)
-        mock_gateway_init_class.assert_called_once_with(mock_config, mock_logger, mock_exchange_api)
+        mock_market_data_gateway_class.assert_called_once_with(mock_config, mock_logger, mock_exchange_api)
         mock_process_manager_class.assert_called_once_with(mock_config, mock_logger)
         mock_status_checker_class.assert_called_once_with(mock_service_container)
 
@@ -388,7 +388,7 @@ class TestApplicationBootstrapper:
             logger=mock_logger,
             gateway_server=mock_gateway_server,
             port_checker=mock_port_checker,
-            gateway_initializer=mock_gateway_init,
+            market_data_gateway=mock_market_data_gateway,
             process_manager=mock_process_manager,
             status_checker=mock_status_checker,
         )

@@ -1,27 +1,28 @@
-"""Service for initializing ZMQ Gateway components.
+"""Market Data Gateway Service for ZMQ message publishing.
 
-This service provides functionality to initialize ZeroMQ components for the gateway,
-including publishers, pullers, and other messaging infrastructure.
+This service manages market data infrastructure including ZeroMQ publishers,
+tick producers, and PFCF API callback integration for real-time data flow.
 """
 
-import zmq
 from typing import Optional, Tuple
+
+import zmq
 
 from src.app.cli_pfcf.config import Config
 from src.infrastructure.pfcf_client.api import PFCFApi
 from src.interactor.interfaces.logger.logger import LoggerInterface
-from src.interactor.interfaces.services.gateway_initializer_service_interface import (
-    GatewayInitializerServiceInterface,
+from src.interactor.interfaces.services.market_data_gateway_service_interface import (
+    MarketDataGatewayServiceInterface,
 )
 from src.infrastructure.messaging import ZmqPublisher
 from src.infrastructure.pfcf_client.tick_producer import TickProducer
 
 
-class GatewayInitializerService(GatewayInitializerServiceInterface):
-    """Service for initializing and managing ZMQ gateway components."""
+class MarketDataGatewayService(MarketDataGatewayServiceInterface):
+    """Service for managing market data infrastructure and ZMQ components."""
 
     def __init__(self, config: Config, logger: LoggerInterface, exchange_api: PFCFApi) -> None:
-        """Initialize the gateway initializer service.
+        """Initialize the market data gateway service.
 
         Args:
             config: Application configuration with ZMQ settings
@@ -42,8 +43,8 @@ class GatewayInitializerService(GatewayInitializerServiceInterface):
         # Flag to control the initialization state
         self._is_initialized = False
 
-    def initialize_components(self) -> bool:
-        """Initialize ZMQ components for the gateway.
+    def initialize_market_data_publisher(self) -> bool:
+        """Initialize ZMQ components for market data publishing.
 
         Returns:
             bool: True if initialization was successful, False otherwise
@@ -66,11 +67,11 @@ class GatewayInitializerService(GatewayInitializerServiceInterface):
 
             # Mark as initialized if everything completed successfully
             self._is_initialized = True
-            self.logger.log_info("Gateway components initialized successfully")
+            self.logger.log_info("Market data publisher initialized successfully")
             return True
 
         except Exception as e:
-            self.logger.log_error(f"Failed to initialize gateway components: {str(e)}")
+            self.logger.log_error(f"Failed to initialize market data publisher: {str(e)}")
             self.cleanup_zmq()
             return False
 
@@ -84,8 +85,8 @@ class GatewayInitializerService(GatewayInitializerServiceInterface):
         """
         return self._tick_publisher, self._tick_producer
 
-    def connect_api_callbacks(self) -> bool:
-        """Connect exchange API callbacks to the tick producer.
+    def connect_exchange_callbacks(self) -> bool:
+        """Connect PFCF exchange API callbacks to the tick producer.
 
         Returns:
             bool: True if callbacks were successfully connected, False otherwise
@@ -119,16 +120,16 @@ class GatewayInitializerService(GatewayInitializerServiceInterface):
             #     self._tick_producer.on_tick_trade_volume_info
             # )
 
-            self.logger.log_info("API callbacks connected to tick producer")
+            self.logger.log_info("Exchange API callbacks connected to tick producer")
             return True
 
         except Exception as e:
-            self.logger.log_error(f"Failed to connect API callbacks: {str(e)}")
+            self.logger.log_error(f"Failed to connect exchange callbacks: {str(e)}")
             return False
 
     def cleanup_zmq(self) -> None:
-        """Close ZMQ sockets and terminate context gracefully."""
-        self.logger.log_info("Cleaning up Gateway ZMQ resources...")
+        """Close market data ZMQ sockets and terminate context gracefully."""
+        self.logger.log_info("Cleaning up market data ZMQ resources...")
 
         # Close sockets managed by this service
         if hasattr(self, "_tick_publisher") and self._tick_publisher:
@@ -165,7 +166,7 @@ class GatewayInitializerService(GatewayInitializerServiceInterface):
 
     @property
     def is_initialized(self) -> bool:
-        """Check if the gateway components are initialized.
+        """Check if the market data components are initialized.
 
         Returns:
             bool: True if initialized, False otherwise

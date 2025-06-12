@@ -16,8 +16,8 @@ from src.infrastructure.repositories.condition_json_file_repository import (
 )
 from src.infrastructure.repositories.session_json_file_repository import SessionJsonFileRepository
 from src.infrastructure.services.dll_gateway_server import DllGatewayServer
-from src.infrastructure.services.gateway.gateway_initializer_service import (
-    GatewayInitializerService,
+from src.infrastructure.services.gateway.market_data_gateway_service import (
+    MarketDataGatewayService,
 )
 from src.infrastructure.services.gateway.port_checker_service import PortCheckerService
 from src.infrastructure.services.process.process_manager_service import ProcessManagerService
@@ -197,7 +197,7 @@ class ApplicationBootstrapper:
 
         # Create infrastructure services
         port_checker = PortCheckerService(self._config, self._logger)
-        gateway_initializer = GatewayInitializerService(self._config, self._logger, self._exchange_api)
+        market_data_gateway = MarketDataGatewayService(self._config, self._logger, self._exchange_api)
         process_manager = ProcessManagerService(self._config, self._logger)
         status_checker = StatusChecker(service_container)
 
@@ -206,7 +206,7 @@ class ApplicationBootstrapper:
             logger=self._logger,
             gateway_server=gateway_server,
             port_checker=port_checker,
-            gateway_initializer=gateway_initializer,
+            market_data_gateway=market_data_gateway,
             process_manager=process_manager,
             status_checker=status_checker,
         )

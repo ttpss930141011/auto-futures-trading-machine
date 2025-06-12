@@ -2,9 +2,14 @@
 
 ## 📋 檔案清單
 
-### RunGatewayUseCase 相關文件
-- `run_gateway_use_case.py` - 原始 Use Case 實現
-- `test_run_gateway_use_case.py` - 對應的測試文件
+### RunGatewayUseCase 相關文件 (已刪除)
+- `run_gateway_use_case.py` - 原始 Use Case 實現 ❌ **已永久刪除**
+- `test_run_gateway_use_case.py` - 對應的測試文件 ❌ **已永久刪除**
+
+### ProcessManagerService 清理
+- `start_gateway_thread()` 方法 ❌ **已從 Interface 和實現類中移除**
+- `gateway_thread` 屬性 ❌ **已移除**
+- `gateway_running` 屬性 ❌ **已移除**
 
 ## ❌ 廢棄原因
 

@@ -146,9 +146,9 @@ Follow our [Quick Start Guide](docs/getting-started/QUICK_START.md) for detailed
 
 Whether you're interested in:
 - **System Architecture**: Start with [ARCHITECTURE.md](ARCHITECTURE.md) for complete system overview
-- **Detailed Flows**: Explore [DETAILED_FLOW_DIAGRAMS.md](DETAILED_FLOW_DIAGRAMS.md) for process flows
-- **OOP Design**: Study [CLASS_DESIGN_GUIDE.md](CLASS_DESIGN_GUIDE.md) for design principles
-- **AllInOne Controller**: Understand [ALLINONE_CONTROLLER_GUIDE.md](ALLINONE_CONTROLLER_GUIDE.md) for startup process
+- **Detailed Flows**: Explore [docs/architecture/DETAILED_FLOW_DIAGRAMS.md](docs/architecture/DETAILED_FLOW_DIAGRAMS.md) for process flows
+- **OOP Design**: Study [docs/architecture/CLASS_DESIGN_GUIDE.md](docs/architecture/CLASS_DESIGN_GUIDE.md) for design principles
+- **AllInOne Controller**: Understand [docs/guides/ALLINONE_CONTROLLER_GUIDE.md](docs/guides/ALLINONE_CONTROLLER_GUIDE.md) for startup process
 - **Distributed Systems**: Read [Why ZeroMQ?](docs/technical/WHY_ZEROMQ.md) for messaging patterns
 
 This documentation serves as both a **technical reference** and a **learning resource** for building production-grade trading systems.

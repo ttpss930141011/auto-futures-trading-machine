@@ -8,9 +8,8 @@ for various trading system components.
 import sys
 import time
 import subprocess
-import threading
 from pathlib import Path
-from typing import Optional, Callable
+from typing import Optional
 
 from src.app.cli_pfcf.config import Config
 from src.interactor.interfaces.logger.logger import LoggerInterface
@@ -49,8 +48,6 @@ class ProcessManagerService(ProcessManagerServiceInterface):
         # Store process handles
         self._strategy_process: Optional[subprocess.Popen] = None
         self._order_executor_process: Optional[subprocess.Popen] = None
-        self._gateway_thread: Optional[threading.Thread] = None
-        self._gateway_running = False
 
     def start_strategy(self) -> bool:
         """Start the Strategy process.
@@ -138,49 +135,6 @@ class ProcessManagerService(ProcessManagerServiceInterface):
             self.logger.log_error(f"Failed to start Order Executor Gateway process: {str(e)}")
             return False
 
-    def start_gateway_thread(self, gateway_runner: Callable) -> bool:
-        """Start the Gateway in a separate thread.
-
-        Args:
-            gateway_runner: A callable that will run the gateway when executed
-
-        Returns:
-            bool: True if thread started successfully, False otherwise
-        """
-        try:
-            self.logger.log_info("Starting Gateway in a background thread...")
-
-            # Define thread target function to run gateway
-            def run_gateway():
-                try:
-                    self._gateway_running = True
-                    gateway_runner()
-                except Exception as e:
-                    self.logger.log_error(f"Gateway thread error: {str(e)}")
-                finally:
-                    self._gateway_running = False
-
-            # Create and start the thread
-            self._gateway_thread = threading.Thread(
-                target=run_gateway,
-                daemon=True,  # Use daemon thread to ensure it exits when main program exits
-            )
-
-            self._gateway_thread.start()
-
-            # A brief pause to allow initialization to start
-            time.sleep(2)
-
-            if self._gateway_thread.is_alive():
-                self.logger.log_info("Gateway thread started successfully")
-                return True
-            else:
-                self.logger.log_error("Gateway thread failed to start")
-                return False
-
-        except Exception as e:
-            self.logger.log_error(f"Failed to start Gateway thread: {str(e)}")
-            return False
 
     def cleanup_processes(self) -> None:
         """Clean up all processes when exiting."""
@@ -210,9 +164,6 @@ class ProcessManagerService(ProcessManagerServiceInterface):
                 self.logger.log_info("Force killing Order Executor process...")
                 self._order_executor_process.kill()
 
-        # Gateway is handled by the thread daemon attribute
-        if self._gateway_thread and self._gateway_thread.is_alive():
-            self.logger.log_info("Gateway thread will terminate when main application exits")
 
         # Clean up PID files
         self._cleanup_pid_files()
@@ -258,20 +209,3 @@ class ProcessManagerService(ProcessManagerServiceInterface):
         """
         return self._order_executor_process
 
-    @property
-    def gateway_thread(self) -> Optional[threading.Thread]:
-        """Get the gateway thread.
-
-        Returns:
-            The gateway thread if it exists, None otherwise
-        """
-        return self._gateway_thread
-
-    @property
-    def gateway_running(self) -> bool:
-        """Check if the gateway is running.
-
-        Returns:
-            True if the gateway is running, False otherwise
-        """
-        return self._gateway_running

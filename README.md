@@ -12,105 +12,91 @@
   <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License">
 </p>
 
-> **A Journey Through Event-Driven Trading System Architecture**  
-> From monolithic beginnings to a distributed, production-ready futures trading platform
+> **Taiwan Futures Automated Trading System - 統一期貨專用**  
+> A distributed, event-driven futures trading platform built with Python and ZeroMQ
 
 ## 📖 Table of Contents
 
 ### 🎯 Getting Started
-- [**Quick Start Guide**](docs/getting-started/QUICK_START.md) - Get up and running in 5 minutes
+- [**Quick Start Guide**](docs/getting-started/QUICK_START.md) - Get up and running with Taiwan Unified Futures (PFCF)
 - [**Installation Guide**](docs/getting-started/INSTALLATION.md) - Detailed setup instructions
-- [**First Trade Tutorial**](docs/getting-started/FIRST_TRADE.md) - Your first automated trade
+- [**First Trade Tutorial**](docs/getting-started/FIRST_TRADE.md) - Your first automated trade with support/resistance strategy
 
 ### 🏗️ Architecture & Design
-- [**Architecture Overview**](docs/architecture/ARCHITECTURE_OVERVIEW.md) - Visual system overview
-- [**The Refactoring Story**](docs/architecture/REFACTORING_STORY.md) - How we transformed from chaos to clarity
-- [**Event-Driven Design**](docs/architecture/EVENT_DRIVEN_DESIGN.md) - Why events power our system
-- [**Clean Architecture Implementation**](docs/architecture/CLEAN_ARCHITECTURE.md) - SOLID principles in action
+- [**Class Design Guide**](docs/architecture/CLASS_DESIGN_GUIDE.md) - SOLID principles and Clean Architecture implementation
+- [**Detailed Flow Diagrams**](docs/architecture/DETAILED_FLOW_DIAGRAMS.md) - Process flows and system interactions
+- [**DLL Porting Guide**](docs/architecture/DLL_PORTING_GUIDE.md) - How to migrate from PFCF to other brokers
 
 ### 🔧 Technical Deep Dives
-- [**Why ZeroMQ?**](docs/technical/WHY_ZEROMQ.md) - Message patterns and performance
-- [**DLL Gateway Architecture**](docs/technical/DLL_GATEWAY_ARCHITECTURE.md) - Solving the security challenge
-- [**High-Frequency Trading Concepts**](docs/technical/HFT_CONCEPTS.md) - What we borrowed from HFT
+- [**Why ZeroMQ?**](docs/technical/WHY_ZEROMQ.md) - Message patterns and performance analysis
 - [**Process Communication**](docs/technical/PROCESS_COMMUNICATION.md) - IPC patterns explained
+- [**High-Frequency Trading Concepts**](docs/technical/HFT_CONCEPTS.md) - What we borrowed from HFT
 
-### 📚 Developer Stories
-- [**Migration Journey**](docs/stories/MIGRATION_JOURNEY.md) - From monolith to microservices
+### 📚 Implementation Guides
+- [**AllInOne Controller Guide**](docs/guides/ALLINONE_CONTROLLER_GUIDE.md) - Complete startup process and data flow
+- [**Strategy Expansion Guide**](docs/guides/STRATEGY_EXPANSION_GUIDE.md) - How to add new trading strategies
+- [**Backtesting Guide**](docs/guides/BACKTESTING.md) - Testing your strategies
+- [**Monitoring Guide**](docs/guides/MONITORING.md) - System monitoring and alerts
+
+### 🔍 Developer Stories
 - [**Design Decisions**](docs/stories/DESIGN_DECISIONS.md) - Why we made the choices we did
 - [**Lessons Learned**](docs/stories/LESSONS_LEARNED.md) - What worked and what didn't
 
-### 🛠️ Implementation Guides
-- [**Component Development**](docs/guides/COMPONENT_DEVELOPMENT.md) - Building new components
-- [**Testing Strategies**](docs/guides/TESTING_STRATEGIES.md) - How we ensure reliability
-- [**Performance Tuning**](docs/guides/PERFORMANCE_TUNING.md) - Optimizing for speed
-
-### 📊 Trading Concepts
-- [**Support & Resistance Strategy**](docs/trading/SUPPORT_RESISTANCE.md) - Our core algorithm
-- [**Risk Management**](docs/trading/RISK_MANAGEMENT.md) - Protecting capital
-- [**Market Data Processing**](docs/trading/MARKET_DATA.md) - From ticks to decisions
-
-### 🗺️ Project Evolution
-- [**Roadmap**](docs/ROADMAP.md) - Past, present, and future
+### 📋 Configuration & Reference
+- [**Configuration Guide**](docs/CONFIG_GUIDE.md) - System configuration options
+- [**Roadmap**](docs/ROADMAP.md) - Project evolution and future plans
 - [**Architecture Decision Records**](docs/decisions/) - Key architectural choices
-- [**Change Log**](CHANGELOG.md) - Version history
-
-### 📋 References
-- [**API Documentation**](docs/api/README.md) - Component APIs
-- [**Configuration Guide**](docs/CONFIG_GUIDE.md) - System configuration
-- [**Troubleshooting**](docs/TROUBLESHOOTING.md) - Common issues and solutions
-- [**Contributing**](CONTRIBUTING.md) - How to contribute
 
 ---
 
-## 🎬 The Story Begins...
+## 🎬 About This System
 
-Picture this: You're a developer tasked with building an automated futures trading system. You start simple - a single Python script that connects to an exchange, watches prices, and places orders. It works! But as requirements grow, so does the complexity...
+**This is not a generic trading system.** This platform is specifically designed for **Taiwan Unified Futures (PFCF)** and is tightly coupled to their proprietary Python DLL API.
 
-**This is our story** - a journey from a monolithic application plagued by tight coupling and security concerns to a distributed, event-driven architecture that borrows concepts from high-frequency trading systems while remaining accessible to Python developers.
-
-## 🏆 What Makes This Special?
+### 🏆 What Makes This Special?
 
 ### 🔐 **Security First**
-We eliminated plaintext credential storage and centralized all exchange API access through a secure gateway - a pattern inspired by institutional trading systems.
+We eliminated plaintext credential storage and centralized all exchange API access through a secure DLL Gateway - a pattern inspired by institutional trading systems.
 
 ### ⚡ **Event-Driven Architecture**
 Every market tick, every trading signal, every order - they're all events flowing through our system via ZeroMQ, enabling true parallelism and bypassing Python's GIL.
 
 ### 🧩 **Clean Architecture**
-SOLID principles aren't just theory here. Our recent refactoring (see [The Refactoring Story](docs/architecture/REFACTORING_STORY.md)) demonstrates how proper separation of concerns transforms maintainability.
+SOLID principles aren't just theory here. Our system demonstrates how proper separation of concerns transforms maintainability with clear boundaries between domain, application, and infrastructure layers.
 
 ### 📊 **Production Ready**
-From comprehensive test coverage to graceful error handling, this isn't just a prototype - it's a system designed for real trading.
+From comprehensive test coverage to graceful error handling, this isn't just a prototype - it's a system designed for real trading with Taiwan futures markets.
 
 ## 🚀 Quick Start
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-repo/futures-trading-machine.git
+git clone https://github.com/ttpss930141011/auto-futures-trading-machine.git
+cd auto-futures-trading-machine
 
 # Install dependencies
 poetry install
 
-# Configure your exchange credentials
+# Configure your PFCF credentials
 cp .env.example .env
-# Edit .env with your credentials
+# Edit .env with your Taiwan Unified Futures credentials
 
 # Run the system
 python app.py
 ```
 
-Follow our [Quick Start Guide](docs/getting-started/QUICK_START.md) for detailed instructions.
+**Important**: You must be a Taiwan Unified Futures customer with API access. Follow our [Quick Start Guide](docs/getting-started/QUICK_START.md) for detailed instructions.
 
 ## 🏛️ System Architecture at a Glance
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                      Main Process (app.py)                      │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐      │
-│  │     CLI     │  │ DLL Gateway │  │  Market Data        │      │
-│  │  Interface  │  │   Server    │  │   Publisher         │      │
-│  │             │  │  Port 5557  │  │   Port 5555         │      │
-│  └─────────────┘  └─────────────┘  └─────────────────────┘      │
+│                      Main Process (app.py)                     │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐     │
+│  │     CLI     │  │ DLL Gateway │  │  Market Data        │     │
+│  │  Interface  │  │   Server    │  │   Publisher         │     │
+│  │             │  │  Port 5557  │  │   Port 5555         │     │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘     │
 └─────────────────────────────────────────────────────────────────┘
          │                  ▲                    │
          │                  │ ZMQ REQ/REP        │ ZMQ PUB
@@ -123,7 +109,7 @@ Follow our [Quick Start Guide](docs/getting-started/QUICK_START.md) for detailed
          │          │ ┌────────────┐ │     │ ┌─────────────┐ │
          │          │ │   Signal   │ │     │ │    Tick     │ │
          │          │ │  Receiver  │ ├◄───►┤ │ Subscriber  │ │
-         └───────►──┤│             │ │     │ └─────────────┘ │
+         └──────────┤ │             │ │     │ └─────────────┘ │
                     │ └────────────┘ │     │                 │
                     │                │     │  ┌────────────┐ │
                     │ ┌────────────┐ │     │  │ Support/   │ │
@@ -145,23 +131,20 @@ Follow our [Quick Start Guide](docs/getting-started/QUICK_START.md) for detailed
 ## 🎓 Learning Path
 
 Whether you're interested in:
-- **System Architecture**: Start with [ARCHITECTURE.md](ARCHITECTURE.md) for complete system overview
-- **Detailed Flows**: Explore [docs/architecture/DETAILED_FLOW_DIAGRAMS.md](docs/architecture/DETAILED_FLOW_DIAGRAMS.md) for process flows
-- **OOP Design**: Study [docs/architecture/CLASS_DESIGN_GUIDE.md](docs/architecture/CLASS_DESIGN_GUIDE.md) for design principles
-- **AllInOne Controller**: Understand [docs/guides/ALLINONE_CONTROLLER_GUIDE.md](docs/guides/ALLINONE_CONTROLLER_GUIDE.md) for startup process
+- **System Architecture**: Start with [Class Design Guide](docs/architecture/CLASS_DESIGN_GUIDE.md) for complete system overview
+- **Detailed Flows**: Explore [Detailed Flow Diagrams](docs/architecture/DETAILED_FLOW_DIAGRAMS.md) for process flows
+- **AllInOne Controller**: Understand [AllInOne Controller Guide](docs/guides/ALLINONE_CONTROLLER_GUIDE.md) for startup process
+- **Strategy Development**: Read [Strategy Expansion Guide](docs/guides/STRATEGY_EXPANSION_GUIDE.md) for adding new strategies
 - **Distributed Systems**: Read [Why ZeroMQ?](docs/technical/WHY_ZEROMQ.md) for messaging patterns
+- **Broker Migration**: Check [DLL Porting Guide](docs/architecture/DLL_PORTING_GUIDE.md) for migrating to other brokers
 
 This documentation serves as both a **technical reference** and a **learning resource** for building production-grade trading systems.
 
-## 🤝 Contributing
+## ⚠️ Important Limitations
 
-We welcome contributions! Whether it's:
-- 🐛 Bug fixes
-- ✨ New features
-- 📚 Documentation improvements
-- 🧪 Test coverage
+**Broker Dependency**: This system is highly coupled to Taiwan Unified Futures (PFCF) DLL. If you need to migrate to other brokers like Yuanta Securities or Capital Futures, refer to our [DLL Porting Guide](docs/architecture/DLL_PORTING_GUIDE.md).
 
-Please read our [Contributing Guide](CONTRIBUTING.md) to get started.
+**Single Strategy**: Currently supports only the right-side entry support/resistance strategy. See [Strategy Expansion Guide](docs/guides/STRATEGY_EXPANSION_GUIDE.md) to add more strategies.
 
 ## 📜 License
 
@@ -173,7 +156,7 @@ This project stands on the shoulders of giants:
 - The **ZeroMQ** community for incredible messaging patterns
 - **Clean Architecture** principles by Robert C. Martin
 - High-frequency trading system designs that inspired our architecture
-- All contributors who've helped shape this journey
+- Taiwan Unified Futures for providing the API access
 
 ## 8. Equity Trend Chart
 

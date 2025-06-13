@@ -25,13 +25,17 @@ ZeroMQ enables us to break free from the GIL by using separate processes:
 
 ```python
 # With ZeroMQ - true parallel processing
-# Process 1: Market Data Publisher
-publisher = zmq.socket(zmq.PUB)
-publisher.send_multipart([b"TICK", serialize(tick)])
+# Process 1: Market Data Publisher (TickProducer)
+tick = Tick(commodity_id=commodity_id, match_price=price_value)
+tick_event = TickEvent(datetime.now(), tick)
+serialized_event = serialize(tick_event)
+self.tick_publisher.publish(TICK_TOPIC, serialized_event)  # TICK_TOPIC = b"TICK"
 
 # Process 2: Strategy (runs in parallel)
-subscriber = zmq.socket(zmq.SUB)
-tick_data = subscriber.recv_multipart()
+message_data = self.tick_subscriber.receive(non_blocking=True)
+if message_data:
+    topic, message = message_data
+    tick_event = deserialize(message)
 # This runs in a completely separate process!
 ```
 
@@ -42,7 +46,7 @@ tick_data = subscriber.recv_multipart()
 **Use Case**: Broadcasting market ticks to multiple strategies
 
 ```
-    Gateway (Publisher)
+    MarketDataGatewayService (Publisher)
            |
     Binds Port 5555
            |
@@ -60,15 +64,22 @@ Strategy1  Strategy2  Strategy3
 
 **Our Implementation**:
 ```python
-# Publisher (Gateway)
-self.publisher = context.socket(zmq.PUB)
-self.publisher.bind("tcp://*:5555")
-self.publisher.send_multipart([b"TICK.FUTURES.TSLA", msgpack.packb(tick_data)])
+# Publisher (MarketDataGatewayService)
+# File: src/infrastructure/services/gateway/market_data_gateway_service.py
+# TickProducer is managed by MarketDataGatewayService
+def handle_tick_data(self, commodity_id, match_price, ...):
+    tick = Tick(commodity_id=commodity_id, match_price=price_value)
+    tick_event = TickEvent(datetime.now(), tick)
+    serialized_event = serialize(tick_event)
+    self.tick_publisher.publish(TICK_TOPIC, serialized_event)
 
-# Subscriber (Strategy)
-self.subscriber = context.socket(zmq.SUB)
-self.subscriber.connect("tcp://localhost:5555")
-self.subscriber.setsockopt_string(zmq.SUBSCRIBE, "TICK.FUTURES")
+# Subscriber (Strategy Process)  
+# File: run_strategy.py
+self.tick_subscriber = ZmqSubscriber(
+    connect_to_address="tcp://localhost:5555",
+    topics=[b""],  # Subscribe to all topics
+    logger=self.logger
+)
 ```
 
 ### 2. PUSH/PULL Pattern: Signal Pipeline
@@ -90,14 +101,22 @@ Strategy3 ─┘
 **Our Implementation**:
 ```python
 # Strategy (PUSH)
-self.signal_pusher = context.socket(zmq.PUSH)
-self.signal_pusher.connect("tcp://localhost:5556")
-self.signal_pusher.send(msgpack.packb(trading_signal))
+# File: src/domain/strategy/support_resistance_strategy.py
+signal = TradingSignal(when=datetime.now(), operation=operation, commodity_id=commodity_id)
+serialized_signal = serialize(signal)
+self.signal_pusher.send(serialized_signal)
 
 # Order Executor (PULL)
-self.signal_puller = context.socket(zmq.PULL)
-self.signal_puller.bind("tcp://*:5556")
-signal = msgpack.unpackb(self.signal_puller.recv())
+# File: run_order_executor_gateway.py
+self._signal_puller = ZmqPuller(
+    address="tcp://127.0.0.1:5556",
+    logger=self._logger,
+    poll_timeout_ms=100,
+    bind_mode=True
+)
+serialized_signal = self._signal_puller.receive(non_blocking=True)
+if serialized_signal:
+    signal = deserialize(serialized_signal)
 ```
 
 ### 3. REQ/REP Pattern: Secure Order Execution
@@ -118,18 +137,23 @@ Order Executor ──REQ──> [Port 5557] ──REP──> DLL Gateway Server
 
 **Our Implementation**:
 ```python
-# Order Executor (REQ)
-self.gateway_client = context.socket(zmq.REQ)
-self.gateway_client.connect("tcp://localhost:5557")
-self.gateway_client.send_json({"operation": "send_order", "params": order_data})
-response = self.gateway_client.recv_json()
+# Order Executor (REQ Client)
+# File: src/infrastructure/services/dll_gateway_client.py
+def send_order(self, input_dto):
+    request_data = {
+        "operation": "send_order",
+        "parameters": input_dto.to_dict()
+    }
+    response_data = self._send_request(request_data)
+    return SendMarketOrderOutputDto(...)
 
 # DLL Gateway Server (REP)
-self.server = context.socket(zmq.REP)
-self.server.bind("tcp://*:5557")
-request = self.server.recv_json()
-result = self.execute_order(request)
-self.server.send_json(result)
+# File: src/infrastructure/services/dll_gateway_server.py
+def _handle_send_order(self, request_data):
+    order = self._exchange_client.trade.OrderObject()
+    # Set order parameters from request_data
+    order_result = self._exchange_client.client.DTradeLib.Order(order)
+    return SendMarketOrderOutputDto(...)
 ```
 
 ## 📊 Performance Characteristics
@@ -322,4 +346,4 @@ finally:
 
 *"ZeroMQ is perhaps the nicest way ever devised for moving bits and bytes around."*
 
-**Next**: Explore our [Event-Driven Design](../architecture/EVENT_DRIVEN_DESIGN.md) → 
+**Next**: Explore our [Process Communication](PROCESS_COMMUNICATION.md) patterns → 

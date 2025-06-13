@@ -1,43 +1,43 @@
-# 🚀 AllInOneController 啟動流程與數據流向指南
+# 🚀 AllInOneController Startup Process & Data Flow Guide
 
-## 📋 概述
+## 📋 Overview
 
-**AllInOneController** 是期貨交易系統的統一啟動入口，負責驗證前置條件並啟動整個分散式交易架構。
+**AllInOneController** is the unified entry point for the futures trading system, responsible for validating prerequisites and starting the entire distributed trading architecture.
 
-## 🎯 核心職責
+## 🎯 Core Responsibilities
 
-1. **前置條件驗證** - 確保系統可以安全啟動
-2. **分散式組件協調** - 透過 SystemManager 啟動多進程架構
-3. **用戶反饋** - 提供清晰的啟動狀態和錯誤信息
+1. **Prerequisites Validation** - Ensure the system can start safely
+2. **Distributed Component Coordination** - Launch multi-process architecture through SystemManager
+3. **User Feedback** - Provide clear startup status and error information
 
-## 🔍 詳細初始化流程
+## 🔍 Detailed Initialization Process
 
-### 階段 1: 前置條件檢查
+### Phase 1: Prerequisites Check
 
 ```mermaid
 flowchart TD
-    A[AllInOneController.execute] --> B{用戶已登錄?}
-    B -->|No| C[顯示錯誤: 請先登錄]
+    A[AllInOneController.execute] --> B{User logged in?}
+    B -->|No| C[Show error: Please login first]
     B -->|Yes| D[ApplicationStartupStatusUseCase.execute]
-    D --> E{商品已註冊?}
-    E -->|No| F[顯示錯誤: 請先註冊商品]
-    E -->|Yes| G{帳戶已選定?}
-    G -->|No| H[顯示錯誤: 請選擇交易帳戶]
-    G -->|Yes| I{交易條件已定義?}
-    I -->|No| J[顯示錯誤: 請定義交易條件]
-    I -->|Yes| K[前置條件通過]
+    D --> E{Product registered?}
+    E -->|No| F[Show error: Please register product first]
+    E -->|Yes| G{Account selected?}
+    G -->|No| H[Show error: Please select trading account]
+    G -->|Yes| I{Trading conditions defined?}
+    I -->|No| J[Show error: Please define trading conditions]
+    I -->|Yes| K[Prerequisites passed]
 ```
 
-#### 檢查項目詳解
+#### Check Items Details
 
-| 檢查項目 | 實現位置 | 失敗影響 |
-|---------|---------|----------|
-| `logged_in` | SessionRepository.is_user_logged_in() | 無法訪問 PFCF API |
-| `item_registered` | StatusChecker 透過 Use Case 檢查 | 無市場數據可用 |
-| `order_account_selected` | StatusChecker 檢查帳戶配置 | 無法執行訂單 |
-| `has_conditions` | StatusChecker 檢查交易條件 | 策略無法運行 |
+| Check Item | Implementation Location | Failure Impact |
+|------------|------------------------|----------------|
+| `logged_in` | SessionRepository.is_user_logged_in() | Cannot access PFCF API |
+| `item_registered` | StatusChecker via Use Case check | No market data available |
+| `order_account_selected` | StatusChecker account configuration check | Cannot execute orders |
+| `has_conditions` | StatusChecker trading conditions check | Strategy cannot run |
 
-### 階段 2: 系統組件啟動
+### Phase 2: System Component Startup
 
 ```mermaid
 sequenceDiagram
@@ -49,45 +49,45 @@ sequenceDiagram
     
     AC->>SM: start_trading_system()
     
-    Note over SM: Gateway 啟動 (最優先)
+    Note over SM: Gateway Startup (Highest Priority)
     SM->>SM: _start_gateway()
     SM->>SM: check_port_availability()
     SM->>MG: initialize_market_data_publisher()
-    Note right of MG: 創建 ZMQ Publisher (5555)<br/>創建 TickProducer
+    Note right of MG: Create ZMQ Publisher (5555)<br/>Create TickProducer
     SM->>MG: connect_exchange_callbacks()
-    Note right of MG: 註冊 PFCF OnTickDataTrade<br/>連接到 TickProducer
+    Note right of MG: Register PFCF OnTickDataTrade<br/>Connect to TickProducer
     SM->>DG: start()
-    Note right of DG: 啟動 ZMQ REP Server (5557)<br/>開始監聽訂單請求
+    Note right of DG: Start ZMQ REP Server (5557)<br/>Begin listening for order requests
     
-    Note over SM: Strategy 進程啟動
+    Note over SM: Strategy Process Startup
     SM->>PM: start_strategy_process()
-    Note right of PM: 執行 run_strategy.py<br/>連接 ZMQ SUB (5555)<br/>啟動支撐阻力策略
+    Note right of PM: Execute run_strategy.py<br/>Connect ZMQ SUB (5555)<br/>Start support/resistance strategy
     
-    Note over SM: Order Executor 進程啟動
+    Note over SM: Order Executor Process Startup
     SM->>PM: start_order_executor_process()
-    Note right of PM: 執行 run_order_executor_gateway.py<br/>連接 ZMQ PULL (5556)<br/>連接 ZMQ REQ (5557)
+    Note right of PM: Execute run_order_executor_gateway.py<br/>Connect ZMQ PULL (5556)<br/>Connect ZMQ REQ (5557)
     
     SM-->>AC: SystemStartupResult
     AC->>AC: _display_startup_results()
 ```
 
-## 🌐 分散式架構與數據流
+## 🌐 Distributed Architecture & Data Flow
 
-### 三進程架構概述
+### Three-Process Architecture Overview
 
 ```mermaid
 graph TB
     subgraph "Main Process (app.py)"
-        CLI["CLIApplication<br/>📱 用戶界面<br/>Thread: Main"]
-        DGS["DllGatewayServer<br/>🔄 端口 5557 ZMQ REP<br/>Thread: Background"]
-        MDP["MarketDataPublisher<br/>📡 端口 5555 ZMQ PUB<br/>Thread: ZMQ"]
-        TP["TickProducer<br/>🔄 數據轉換器<br/>Thread: PFCF Callback"]
-        PFCF["PFCF API<br/>💼 DLL 客戶端<br/>Thread: Main"]
+        CLI["CLIApplication<br/>📱 User Interface<br/>Thread: Main"]
+        DGS["DllGatewayServer<br/>🔄 Port 5557 ZMQ REP<br/>Thread: Background"]
+        MDP["MarketDataPublisher<br/>📡 Port 5555 ZMQ PUB<br/>Thread: ZMQ"]
+        TP["TickProducer<br/>🔄 Data Converter<br/>Thread: PFCF Callback"]
+        PFCF["PFCF API<br/>💼 DLL Client<br/>Thread: Main"]
     end
     
     subgraph "Strategy Process (run_strategy.py)"
         SS["StrategySubscriber<br/>📡 ZMQ SUB: 5555<br/>Process: Separate"]
-        SRS["SupportResistanceStrategy<br/>🧠 交易算法<br/>Process: Separate"]
+        SRS["SupportResistanceStrategy<br/>🧠 Trading Algorithm<br/>Process: Separate"]
         SP["SignalPublisher<br/>📤 ZMQ PUSH: 5556<br/>Process: Separate"]
     end
     
@@ -99,48 +99,48 @@ graph TB
     PFCF -->|OnTickDataTrade| TP
     TP -->|serialize TickEvent| MDP
     MDP -->|TICK_TOPIC| SS
-    SS -->|Tick數據| SRS
+    SS -->|Tick Data| SRS
     SRS -->|TradingSignal| SP
     SP -->|serialize Signal| SR
     SR -->|OrderRequest| GC
     GC -->|send_order| DGS
-    DGS -->|DLL調用| PFCF
+    DGS -->|DLL Call| PFCF
 ```
 
-### 關鍵組件功能詳解
+### Key Component Functionality Details
 
-#### 🔧 TickProducer (市場數據轉換器)
+#### 🔧 TickProducer (Market Data Converter)
 
-**位置**: `src/infrastructure/pfcf_client/tick_producer.py`
+**Location**: `src/infrastructure/pfcf_client/tick_producer.py`
 
-**核心功能**:
-- 接收 PFCF API 的 `OnTickDataTrade` 回調
-- 轉換原始數據為標準化 `Tick` 和 `TickEvent` 對象
-- 使用 msgpack 序列化數據
-- 透過 ZMQ Publisher 廣播到端口 5555
+**Core Functions**:
+- Receive PFCF API `OnTickDataTrade` callbacks
+- Convert raw data to standardized `Tick` and `TickEvent` objects
+- Serialize data using msgpack
+- Broadcast through ZMQ Publisher to port 5555
 
 ```python
 def handle_tick_data(self, commodity_id, match_price, ...):
-    # 1. 數據清理和轉換
+    # 1. Data cleaning and conversion
     price_value = float(match_price)
     tick = Tick(commodity_id=commodity_id.upper(), match_price=price_value)
     
-    # 2. 創建事件
+    # 2. Create event
     tick_event = TickEvent(datetime.now(), tick)
     
-    # 3. 序列化並發佈
+    # 3. Serialize and publish
     serialized_event = serialize(tick_event)
     self.tick_publisher.publish(TICK_TOPIC, serialized_event)
 ```
 
-#### 💼 DllGatewayServer (訂單執行網關)
+#### 💼 DllGatewayServer (Order Execution Gateway)
 
-**位置**: `src/infrastructure/services/dll_gateway_server.py`
+**Location**: `src/infrastructure/services/dll_gateway_server.py`
 
-**核心功能**:
-- 監聽端口 5557 的 ZMQ REP 請求
-- 集中化 PFCF DLL 訪問，確保線程安全
-- 支援操作: `send_order`, `get_positions`, `health_check`
+**Core Functions**:
+- Listen for ZMQ REP requests on port 5557
+- Centralized PFCF DLL access ensuring thread safety
+- Supported operations: `send_order`, `get_positions`, `health_check`
 
 ```python
 def _process_request(self, raw_request):
@@ -155,13 +155,13 @@ def _process_request(self, raw_request):
         return self._handle_health_check()
 ```
 
-## 📊 數據流向時序圖
+## 📊 Data Flow Sequence Diagram
 
-### 完整交易生命週期
+### Complete Trading Lifecycle
 
 ```mermaid
 sequenceDiagram
-    participant Exchange as 台灣期貨交易所
+    participant Exchange as Taiwan Futures Exchange
     participant PFCF as PFCF API<br/>(Main Process)
     participant TP as TickProducer<br/>(Main Process)
     participant ZMQ1 as ZMQ Publisher<br/>Port 5555<br/>(Main Process)
@@ -171,138 +171,138 @@ sequenceDiagram
     participant ZMQ3 as ZMQ Request<br/>Port 5557<br/>(Order Executor)
     participant DGS as DllGatewayServer<br/>(Main Process)
     
-    Note over Exchange, DGS: 市場數據流 (毫秒級)
-    Exchange->>PFCF: 即時價格數據
+    Note over Exchange, DGS: Market Data Flow (Millisecond Level)
+    Exchange->>PFCF: Real-time price data
     PFCF->>TP: OnTickDataTrade callback
-    TP->>TP: 創建 TickEvent
+    TP->>TP: Create TickEvent
     TP->>ZMQ1: publish(TICK_TOPIC, data)
     ZMQ1->>Strategy: broadcast tick data
     
-    Note over Strategy: 策略分析 (< 5ms)
-    Strategy->>Strategy: 支撐阻力分析
-    Strategy->>Strategy: 生成交易信號
+    Note over Strategy: Strategy Analysis (< 5ms)
+    Strategy->>Strategy: Support/resistance analysis
+    Strategy->>Strategy: Generate trading signal
     Strategy->>ZMQ2: PUSH TradingSignal
     
-    Note over OrderExec, DGS: 訂單執行流 (< 10ms)
+    Note over OrderExec, DGS: Order Execution Flow (< 10ms)
     ZMQ2->>OrderExec: PULL TradingSignal
-    OrderExec->>OrderExec: 構建 OrderRequest
+    OrderExec->>OrderExec: Build OrderRequest
     OrderExec->>ZMQ3: REQ send_order
-    ZMQ3->>DGS: 轉發訂單請求
-    DGS->>PFCF: DLL.Order() 調用
-    PFCF->>Exchange: 訂單提交
-    Exchange-->>PFCF: 成交回報
+    ZMQ3->>DGS: Forward order request
+    DGS->>PFCF: DLL.Order() call
+    PFCF->>Exchange: Order submission
+    Exchange-->>PFCF: Execution report
     PFCF-->>DGS: OrderResult
-    DGS-->>ZMQ3: 返回執行結果
+    DGS-->>ZMQ3: Return execution result
     ZMQ3-->>OrderExec: REP response
 ```
 
-## ⚡ 性能特性
+## ⚡ Performance Characteristics
 
-### 延遲指標
+### Latency Metrics
 
-| 階段 | 目標延遲 | 關鍵因素 |
-|------|---------|----------|
-| Tick 處理 | < 1ms | ZMQ + msgpack 序列化 |
-| 策略決策 | < 5ms | 支撐阻力算法優化 |
-| 訂單執行 | < 10ms | DLL Gateway + 網路 |
+| Stage | Target Latency | Key Factors |
+|-------|----------------|-------------|
+| Tick Processing | < 1ms | ZMQ + msgpack serialization |
+| Strategy Decision | < 5ms | Support/resistance algorithm optimization |
+| Order Execution | < 10ms | DLL Gateway + network |
 
-### ZMQ 通信模式
+### ZMQ Communication Patterns
 
-| 端口 | 模式 | 用途 | 特性 |
-|------|------|------|------|
-| 5555 | PUB/SUB | 市場數據廣播 | 高throughput, 單向 |
-| 5556 | PUSH/PULL | 交易信號傳遞 | 負載平衡, 可靠 |
-| 5557 | REQ/REP | 訂單執行請求 | 同步, 有回應 |
+| Port | Pattern | Purpose | Characteristics |
+|------|---------|---------|----------------|
+| 5555 | PUB/SUB | Market data broadcast | High throughput, unidirectional |
+| 5556 | PUSH/PULL | Trading signal transmission | Load balancing, reliable |
+| 5557 | REQ/REP | Order execution requests | Synchronous, with response |
 
-## 🔧 故障處理機制
+## 🔧 Failure Handling Mechanisms
 
-### 組件啟動失敗
+### Component Startup Failure
 
 ```mermaid
 flowchart TD
-    A[組件啟動失敗] --> B{是 Gateway?}
-    B -->|Yes| C[檢查端口占用<br/>重新初始化 ZMQ<br/>重連 PFCF API]
-    B -->|No| D{是 Strategy?}
-    D -->|Yes| E[檢查 ZMQ 連接<br/>重啟策略進程]
-    D -->|No| F[Order Executor 問題<br/>檢查 Gateway 連接]
+    A[Component startup failed] --> B{Is Gateway?}
+    B -->|Yes| C[Check port occupancy<br/>Reinitialize ZMQ<br/>Reconnect PFCF API]
+    B -->|No| D{Is Strategy?}
+    D -->|Yes| E[Check ZMQ connection<br/>Restart strategy process]
+    D -->|No| F[Order Executor issue<br/>Check Gateway connection]
     
-    C --> G[自動重試機制]
+    C --> G[Automatic retry mechanism]
     E --> G
     F --> G
     
-    G --> H{重試成功?}
-    H -->|Yes| I[恢復正常運行]
-    H -->|No| J[記錄錯誤<br/>通知用戶]
+    G --> H{Retry successful?}
+    H -->|Yes| I[Resume normal operation]
+    H -->|No| J[Log error<br/>Notify user]
 ```
 
-### 運行時錯誤恢復
+### Runtime Error Recovery
 
-| 錯誤類型 | 檢測方式 | 恢復策略 |
-|---------|---------|---------|
-| ZMQ 連接中斷 | 心跳檢查 | 自動重連 |
-| PFCF API 斷線 | 回調停止 | 重新登錄 |
-| 進程崩潰 | 進程監控 | 自動重啟 |
-| 內存洩漏 | 資源監控 | 定期重啟 |
+| Error Type | Detection Method | Recovery Strategy |
+|------------|------------------|-------------------|
+| ZMQ connection interruption | Heartbeat check | Automatic reconnection |
+| PFCF API disconnection | Callback stopped | Re-login |
+| Process crash | Process monitoring | Automatic restart |
+| Memory leak | Resource monitoring | Periodic restart |
 
-## 🎯 關鍵設計決策
+## 🎯 Key Design Decisions
 
-### 為什麼使用多進程?
+### Why Use Multi-Process?
 
-1. **繞過 Python GIL** - 實現真正的並行處理
-2. **故障隔離** - 單一進程崩潰不影響其他組件
-3. **資源分離** - 不同組件可以獨立調優
-4. **安全隔離** - 只有主進程持有 PFCF 憑證
+1. **Bypass Python GIL** - Achieve true parallel processing
+2. **Fault Isolation** - Single process crash doesn't affect other components
+3. **Resource Separation** - Different components can be independently optimized
+4. **Security Isolation** - Only main process holds PFCF credentials
 
-### 為什麼使用 DLL Gateway?
+### Why Use DLL Gateway?
 
-1. **集中化安全** - 單一進程管理 DLL 訪問
-2. **線程安全** - 避免多線程 DLL 調用問題
-3. **連接池化** - 高效管理 PFCF 連接
-4. **錯誤統一處理** - 集中化錯誤處理和日誌記錄
+1. **Centralized Security** - Single process manages DLL access
+2. **Thread Safety** - Avoid multi-threaded DLL call issues
+3. **Connection Pooling** - Efficiently manage PFCF connections
+4. **Unified Error Handling** - Centralized error handling and logging
 
-### ProcessManagerService 功能澄清
+### ProcessManagerService Functionality Clarification
 
-**實際使用的方法**:
-- `start_strategy()`: 啟動 `run_strategy.py` 作為獨立進程 ✅ **有使用**
-- `start_order_executor()`: 啟動 `run_order_executor_gateway.py` 作為獨立進程 ✅ **有使用**
-- `cleanup_processes()`: 清理所有進程和線程 ✅ **有使用**
+**Actually Used Methods**:
+- `start_strategy()`: Start `run_strategy.py` as independent process ✅ **In Use**
+- `start_order_executor()`: Start `run_order_executor_gateway.py` as independent process ✅ **In Use**
+- `cleanup_processes()`: Clean up all processes and threads ✅ **In Use**
 
-**已清理的死代碼**:
-- `start_gateway_thread(gateway_runner)`: ✅ **已從 Interface 和實現類中移除**
-- `gateway_thread` 和 `gateway_running` 屬性: ✅ **已完全移除**
+**Cleaned Dead Code**:
+- `start_gateway_thread(gateway_runner)`: ✅ **Removed from Interface and implementation classes**
+- `gateway_thread` and `gateway_running` attributes: ✅ **Completely removed**
 
-**清理結果**: 所有未使用的 gateway thread 相關代碼已被安全移除，系統更加簡潔明確。
+**Cleanup Result**: All unused gateway thread related code has been safely removed, making the system more concise and clear.
 
-## 💡 使用指南
+## 💡 Usage Guide
 
-### 正常啟動流程
+### Normal Startup Process
 
-1. 登錄系統 (選項 1)
-2. 註冊商品 (選項 3)  
-3. 選擇交易帳戶 (選項 5)
-4. 創建交易條件 (選項 4)
-5. 一鍵啟動 (選項 10) ← **AllInOneController**
+1. Login to system (Option 1)
+2. Register product (Option 3)  
+3. Select trading account (Option 5)
+4. Create trading conditions (Option 4)
+5. One-click startup (Option 10) ← **AllInOneController**
 
-### 啟動後狀態檢查
+### Post-Startup Status Check
 
-- **Gateway**: `✓ Running` - 市場數據和訂單執行服務運行中
-- **Strategy**: `✓ Running` - 支撐阻力策略正在分析市場
-- **Order Executor**: `✓ Running` - 自動訂單執行已就緒
+- **Gateway**: `✓ Running` - Market data and order execution services running
+- **Strategy**: `✓ Running` - Support/resistance strategy analyzing market
+- **Order Executor**: `✓ Running` - Automatic order execution ready
 
-### 故障排除
+### Troubleshooting
 
-| 狀態顯示 | 可能原因 | 解決方案 |
-|---------|---------|---------|
-| Gateway `✗ Error` | 端口被占用 | 檢查其他應用程式, 重啟系統 |
-| Strategy `✗ Stopped` | ZMQ 連接失敗 | 確認 Gateway 運行, 檢查防火牆 |
-| Order Executor `✗ Error` | Gateway 不可達 | 重啟 Gateway, 檢查端口 5557 |
+| Status Display | Possible Cause | Solution |
+|----------------|----------------|----------|
+| Gateway `✗ Error` | Port occupied | Check other applications, restart system |
+| Strategy `✗ Stopped` | ZMQ connection failed | Confirm Gateway running, check firewall |
+| Order Executor `✗ Error` | Gateway unreachable | Restart Gateway, check port 5557 |
 
 ---
 
-## 📋 架構說明
+## 📋 Architecture Description
 
-*這個架構實現了高頻交易系統的性能要求，同時保持了 Python 開發的靈活性和可維護性。*
+*This architecture achieves the performance requirements of high-frequency trading systems while maintaining the flexibility and maintainability of Python development.*
 
-### ⚠️ 重要限制
+### ⚠️ Important Limitations
 
-**券商依賴性**: 本系統與統一期貨 (PFCF) DLL 高度耦合。如需移植到其他券商，請參考 [DLL 移植指南](../architecture/DLL_PORTING_GUIDE.md)。
+**Broker Dependency**: This system is highly coupled with Taiwan Unified Futures (PFCF) DLL. If you need to migrate to other brokers, please refer to the [DLL Porting Guide](../architecture/DLL_PORTING_GUIDE.md).

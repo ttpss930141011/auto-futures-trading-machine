@@ -1,21 +1,21 @@
-# 🚀 Quick Start Guide - 台灣期貨自動交易
+# 🚀 Quick Start Guide - Taiwan Futures Automated Trading
 
-> *Taiwan Futures Automated Trading System - 統一期貨專用*
+> *Taiwan Futures Automated Trading System - Specifically for Polaris Futures Capital Future (PFCF)*
 
-## ⚠️ 重要說明
+## ⚠️ Important Notice
 
-**這不是通用交易系統**：本系統專為台灣統一期貨 (PFCF) 設計，高度依賴統一期貨的 Python DLL API。如果您不是統一期貨的客戶，此系統將無法使用。
+**This is not a generic trading system**: This system is specifically designed for Taiwan Unified Futures (PFCF) and is highly dependent on their proprietary Python DLL API. If you are not a customer of Taiwan Unified Futures, this system will not work for you.
 
-> 💡 **需要移植到其他券商？** 請參閱 [DLL 移植指南](../architecture/DLL_PORTING_GUIDE.md) 了解如何將系統移植到元大期貨、群益期貨等其他券商。
+> 💡 **Need to migrate to other brokers?** Please refer to the [DLL Porting Guide](../architecture/DLL_PORTING_GUIDE.md) to learn how to migrate the system to other brokers like Yuanta Securities, Capital Futures, etc.
 
 ## 📋 Prerequisites
 
-開始前，您必須具備：
-- ✅ **統一期貨開戶** - 必須是統一期貨客戶
-- ✅ **PFCF Python DLL API** - 向統一期貨申請 API 權限
-- ✅ Python 3.12 或更高版本
-- ✅ Windows 作業系統 (DLL 需求)
-- ✅ 基本命令列操作知識
+Before you begin, you must have:
+- ✅ **Taiwan Unified Futures Account** - Must be a customer of Taiwan Unified Futures
+- ✅ **PFCF Python DLL API** - Apply for API permissions from Taiwan Unified Futures
+- ✅ Python 3.12 or higher
+- ✅ Windows Operating System (DLL requirement)
+- ✅ Basic command line knowledge
 
 ## 🎯 Step 1: Clone and Install
 
@@ -31,44 +31,44 @@ poetry install
 pip install -r requirements.txt
 ```
 
-## 🔐 Step 2: 統一期貨 API 設置
+## 🔐 Step 2: Taiwan Unified Futures API Setup
 
-### 申請 PFCF Python DLL API
-1. 聯繫統一期貨客服申請 Python DLL API 權限
-2. 下載統一期貨提供的 DLL 檔案
-3. 將 DLL 檔案放置到 `src/infrastructure/pfcf_client/dll/`
+### Apply for PFCF Python DLL API
+1. Contact Taiwan Unified Futures customer service to apply for Python DLL API permissions
+2. Download the DLL files provided by Taiwan Unified Futures
+3. Place the DLL files in `src/infrastructure/pfcf_client/dll/`
 
-### 配置環境變數
-創建 `.env` 檔案：
+### Configure Environment Variables
+Create a `.env` file:
 
 ```bash
 # Windows
 copy .env.example .env
 
-# 或手動創建 .env
+# Or manually create .env
 ```
 
-編輯 `.env` 並加入統一期貨提供的資訊：
+Edit `.env` and add the information provided by Taiwan Unified Futures:
 
 ```env
-# 統一期貨 API 端點 (必須向統一期貨取得)
-DEALER_TEST_URL=統一期貨提供的測試環境URL
-DEALER_PROD_URL=統一期貨提供的正式環境URL
+# Taiwan Unified Futures API endpoints (must be obtained from Taiwan Unified Futures)
+DEALER_TEST_URL=Test_environment_URL_provided_by_Taiwan_Unified_Futures
+DEALER_PROD_URL=Production_environment_URL_provided_by_Taiwan_Unified_Futures
 
-# 其他設定
-TEST_MODE=true  # 測試模式
+# Other settings
+TEST_MODE=true  # Test mode
 ```
 
-⚠️ **重要**：API 端點和憑證必須向統一期貨申請，無法自行取得。
+⚠️ **Important**: API endpoints and credentials must be applied for from Taiwan Unified Futures and cannot be obtained independently.
 
-## 🏃 Step 3: 啟動系統
+## 🏃 Step 3: Start the System
 
 ```bash
-# 啟動交易系統
+# Start the trading system
 python app.py
 ```
 
-您會看到系統啟動訊息和主選單：
+You will see the system startup messages and main menu:
 ```
 Initializing Auto Futures Trading Machine with DLL Gateway...
 ✓ DLL Gateway Server: Running on tcp://127.0.0.1:5557
@@ -91,24 +91,24 @@ Please choose an option:
 10: AllInOneController
 ```
 
-## 🎮 Step 4: 完整操作流程 (根據實際使用)
+## 🎮 Step 4: Complete Operation Workflow (Based on Actual Usage)
 
-### 1️⃣ 使用統一期貨帳號登錄
+### 1️⃣ Login with Taiwan Unified Futures Account
 ```
 > 1
 Enter the account: 80020290621
-Enter the password: [輸入密碼]
+Enter the password: [Enter your password]
 Is this login for production?[y/n](blank for n): y
 
-訊息平台連線成功
-內期報價連線
-內期帳務連線
-Login status: 登入成功!
+Message platform connection successful
+Domestic futures quote connection
+Domestic futures account connection
+Login status: Login successful!
 {'action': 'user_login', 'message': 'User logged in successfully', 
  'account': '80020290621', 'ip_address': '122.147.227.66'}
 ```
 
-### 2️⃣ 查看可交易期貨商品
+### 2️⃣ View Available Futures Products
 ```
 > 7
 Enter futures code (leave empty for all): MXF
@@ -116,26 +116,26 @@ Enter futures code (leave empty for all): MXF
 Found 6 futures items
 
 ==== Futures Data ====
-    商品代號         商品名稱         標的物        交割月份       市場代碼       部位價格          到期日
+    Product Code     Product Name     Underlying    Delivery Month    Market Code    Position Price    Expiry Date
 --------------------------------------------------------------------------------
-   MXFF5          小臺指                   202506      MXF       22253
-   MXFG5          小臺指                   202507      MXF       21953
-   MXFH5          小臺指                   202508      MXF       21805
-   MXFI5          小臺指                   202509      MXF       21720
-   MXFL5          小臺指                   202512      MXF       21631
-   MXFC6          小臺指                   202603      MXF       21560
+   MXFF5          Mini Taiwan Index                202506      MXF       22253
+   MXFG5          Mini Taiwan Index                202507      MXF       21953
+   MXFH5          Mini Taiwan Index                202508      MXF       21805
+   MXFI5          Mini Taiwan Index                202509      MXF       21720
+   MXFL5          Mini Taiwan Index                202512      MXF       21631
+   MXFC6          Mini Taiwan Index                202603      MXF       21560
 --------------------------------------------------------------------------------
 Total items: 6
 ```
 
-### 3️⃣ 註冊要交易的商品 (以小台指為例)
+### 3️⃣ Register Trading Product (Using Mini Taiwan Index as Example)
 ```
 > 3
 Enter item code: MXFF5
 {'action': 'register_item', 'message': 'User registered successfully'}
 ```
 
-### 4️⃣ 創建交易條件 (支撐阻力策略)
+### 4️⃣ Create Trading Conditions (Support/Resistance Strategy)
 ```
 > 4
 Enter the action (b/s): b
@@ -150,7 +150,7 @@ Enter if the condition is following (y/n): y
  'condition': {...}}
 ```
 
-### 5️⃣ 選擇交易帳戶
+### 5️⃣ Select Trading Account
 ```
 > 5
 Select the order account:
@@ -160,7 +160,7 @@ Enter the account number: 1
 {'action': 'select_order_account', 'message': 'Order account selected: 0290621'}
 ```
 
-### 6️⃣ 檢查系統前置條件
+### 6️⃣ Check System Prerequisites
 ```
 > 10
 === System Prerequisites ===
@@ -171,7 +171,7 @@ Trading conditions defined: ✓
 ===========================
 ```
 
-### 7️⃣ 啟動自動交易系統
+### 7️⃣ Start Automated Trading System
 ```
 > 10
 === Starting All Trading System Components ===
@@ -187,25 +187,25 @@ Strategy process started. Waiting for market data...
 Order executor gateway process started. Waiting for trading signals...
 ```
 
-## 🛑 Step 5: 停止系統
+## 🛑 Step 5: Stop the System
 
-### 登出並停止系統
+### Logout and Stop System
 ```
-> 2  # 登出
-內期報價斷線
-內期帳務斷線
-Login status: 登出成功!
+> 2  # Logout
+Domestic futures quote disconnected
+Domestic futures account disconnected
+Login status: Logout successful!
 {'action': 'logout', 'message': 'User logout successfully', 
  'account': '80020290621', 'is_success': True}
 
-> 0  # 退出程式
+> 0  # Exit program
 Exiting the program
 
 Shutting down application...
 ```
 
-### 或使用 Ctrl+C 強制停止
-在主終端機按 `Ctrl+C`：
+### Or Use Ctrl+C to Force Stop
+Press `Ctrl+C` in the main terminal:
 ```
 ^C
 Shutting down application...
@@ -243,20 +243,20 @@ pip install pyzmq
 
 Congratulations! Your trading system is running. Here's what to explore next:
 
-1. **📚 [Understand the Architecture](../architecture/ARCHITECTURE_OVERVIEW.md)**
+1. **📚 [Understand the Architecture](../architecture/CLASS_DESIGN_GUIDE.md)**
    - Learn how components communicate
-   - Understand the event-driven design
+   - Understand the clean architecture design
 
-2. **📈 [Configure Your Strategy](../trading/SUPPORT_RESISTANCE.md)**
-   - Fine-tune support/resistance levels
-   - Adjust risk parameters
+2. **📈 [Learn Strategy Details](../guides/STRATEGY_EXPANSION_GUIDE.md)**
+   - Understand the support/resistance strategy
+   - Learn how to add new strategies
 
 3. **🧪 [Run Backtests](../guides/BACKTESTING.md)**
    - Test your strategy on historical data
    - Optimize parameters
 
 4. **📊 [Set Up Monitoring](../guides/MONITORING.md)**
-   - Configure Grafana dashboards
+   - Configure system monitoring
    - Set up alerts
 
 ## 💡 Pro Tips
@@ -265,7 +265,7 @@ Congratulations! Your trading system is running. Here's what to explore next:
 2. **Small Positions**: Begin with minimal position sizes
 3. **Monitor Closely**: Watch the system for the first few hours
 4. **Check Logs**: Review logs daily for insights
-5. **Join Community**: Get help in our Discord server
+5. **Understanding Architecture**: Study the system design before customization
 
 ## 🆘 Need Help?
 
@@ -275,4 +275,4 @@ Congratulations! Your trading system is running. Here's what to explore next:
 
 *Remember: Start small, test thoroughly, and never trade more than you can afford to lose.*
 
-**Ready for more?** Dive into the [Architecture Overview](../architecture/ARCHITECTURE_OVERVIEW.md) → 
+**Ready for more?** Dive into the [Class Design Guide](../architecture/CLASS_DESIGN_GUIDE.md) →

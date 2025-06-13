@@ -1,18 +1,18 @@
-# 🏛️ 類別設計指南
+# 🏛️ Class Design Guide
 
-## 📋 核心類別職責
+## 📋 Core Class Responsibilities
 
-| 類別 | 層次 | 職責 | 依賴 |
-|------|------|------|------|
-| `CLIApplication` | Presentation | 用戶界面協調 | SystemManager |
-| `ApplicationBootstrapper` | Application | 依賴注入管理 | Config, Logger |
-| `SystemManager` | Infrastructure | 系統生命週期管理 | Gateway服務 |
-| `MarketDataGatewayService` | Infrastructure | 市場數據發佈 | ZMQ, TickProducer |
-| `DllGatewayServer` | Infrastructure | 訂單執行服務 | ZMQ REP |
-| `Use Cases` | Interactor | 業務邏輯 | Entities, Repositories |
-| `Controllers` | Presentation | 用戶輸入處理 | Use Cases |
+| Class | Layer | Responsibility | Dependencies |
+|-------|-------|----------------|--------------|
+| `CLIApplication` | Presentation | User interface coordination | SystemManager |
+| `ApplicationBootstrapper` | Application | Dependency injection management | Config, Logger |
+| `SystemManager` | Infrastructure | System lifecycle management | Gateway services |
+| `MarketDataGatewayService` | Infrastructure | Market data publishing | ZMQ, TickProducer |
+| `DllGatewayServer` | Infrastructure | Order execution service | ZMQ REP |
+| `Use Cases` | Interactor | Business logic | Entities, Repositories |
+| `Controllers` | Presentation | User input handling | Use Cases |
 
-## 📊 Clean Architecture 層次
+## 📊 Clean Architecture Layers
 
 ```mermaid
 graph TD
@@ -43,123 +43,123 @@ graph TD
     SystemMgr --> Gateways
 ```
 
-### 🎯 層次職責
+### 🎯 Layer Responsibilities
 
 #### Presentation Layer
-- **CLIApplication**: 應用生命週期管理
-- **Controllers**: 用戶輸入處理，調用 Use Cases
+- **CLIApplication**: Application lifecycle management
+- **Controllers**: User input processing, calling Use Cases
 
 #### Application Layer  
-- **ApplicationBootstrapper**: 依賴注入配置
-- **Use Cases**: 業務邏輯協調
+- **ApplicationBootstrapper**: Dependency injection configuration
+- **Use Cases**: Business logic coordination
 
 #### Domain Layer
-- **Entities**: 業務實體 (User, TradingSignal)
-- **Value Objects**: 不可變值類型
+- **Entities**: Business entities (User, TradingSignal)
+- **Value Objects**: Immutable value types
 
 #### Infrastructure Layer
-- **SystemManager**: 系統組件生命週期管理
-- **Gateway Services**: 外部系統集成 (PFCF, ZMQ)
-- **Repositories**: 數據持久化
+- **SystemManager**: System component lifecycle management
+- **Gateway Services**: External system integration (PFCF, ZMQ)
+- **Repositories**: Data persistence
 
-## 🔧 依賴注入流程
+## 🔧 Dependency Injection Flow
 
-### ApplicationBootstrapper 組裝順序
+### ApplicationBootstrapper Assembly Order
 
-1. **核心組件**: Config, Logger, PFCFApi
-2. **服務容器**: Repositories → Use Cases → Controllers  
-3. **系統管理器**: Gateway Services → SystemManager
+1. **Core Components**: Config, Logger, PFCFApi
+2. **Service Container**: Repositories → Use Cases → Controllers  
+3. **System Manager**: Gateway Services → SystemManager
 
-### 依賴注入原則
+### Dependency Injection Principles
 
-✅ **正確做法**:
+✅ **Correct Approach**:
 ```python
 class UseCase:
     def __init__(self, repository: RepositoryInterface):
-        self._repository = repository  # 依賴抽象
+        self._repository = repository  # Depend on abstraction
 ```
 
-❌ **錯誤做法**:
+❌ **Wrong Approach**:
 ```python
 class UseCase:
     def __init__(self):
-        self._repository = ConcreteRepository()  # 依賴具體實現
+        self._repository = ConcreteRepository()  # Depend on concrete implementation
 ```
 
-## 🎛️ 核心類別
+## 🎛️ Core Classes
 
 ### SystemManager
-**職責**: 系統組件生命週期協調
-- `start_trading_system()`: 按順序啟動 Gateway → Strategy → Order Executor
-- `_start_gateway()`: 端口檢查 → 市場數據初始化 → 回調連接 → 服務器啟動
+**Responsibility**: System component lifecycle coordination
+- `start_trading_system()`: Start components in order: Gateway → Strategy → Order Executor
+- `_start_gateway()`: Port check → Market data initialization → Callback connection → Server startup
 
 ### MarketDataGatewayService
-**職責**: 市場數據處理
-- `initialize_market_data_publisher()`: 創建 ZMQ Publisher (5555) + TickProducer
-- `connect_exchange_callbacks()`: 連接 PFCF OnTickDataTrade 回調
+**Responsibility**: Market data processing
+- `initialize_market_data_publisher()`: Create ZMQ Publisher (5555) + TickProducer
+- `connect_exchange_callbacks()`: Connect PFCF OnTickDataTrade callbacks
 
 ### DllGatewayServer  
-**職責**: 訂單執行服務
-- `start()`: 啟動 ZMQ REP 服務器 (5557)
-- `_process_request()`: 處理 send_order, get_positions, health_check
+**Responsibility**: Order execution service
+- `start()`: Start ZMQ REP server (5557)
+- `_process_request()`: Handle send_order, get_positions, health_check
 
-## 🎨 設計模式
+## 🎨 Design Patterns
 
 ### Factory Pattern
-**ApplicationBootstrapper**: 集中創建和組裝所有服務實例
+**ApplicationBootstrapper**: Centralized creation and assembly of all service instances
 
 ### Repository Pattern  
-**抽象數據訪問**: SessionRepositoryInterface → InMemory/JsonFile 實現
+**Abstract data access**: SessionRepositoryInterface → InMemory/JsonFile implementations
 
 ### Observer Pattern
-**PFCF 回調**: exchange_client.OnTickDataTrade += tick_producer.handle_tick_data
+**PFCF callbacks**: exchange_client.OnTickDataTrade += tick_producer.handle_tick_data
 
 ### Command Pattern
-**Use Cases**: 封裝完整業務操作，支持記錄和審計
+**Use Cases**: Encapsulate complete business operations, support logging and auditing
 
 ### Adapter Pattern
-**DTO 轉換**: 內部格式 ↔ PFCF DLL 格式
+**DTO conversion**: Internal format ↔ PFCF DLL format
 
-## 🔧 擴展指南
+## 🔧 Extension Guide
 
-### 添加新功能步驟
+### Steps to Add New Features
 
-1. **Domain Layer**: 創建 Entity/Value Object
-2. **Interactor Layer**: 實現 Use Case
-3. **Infrastructure Layer**: 添加技術實現
-4. **Application Layer**: 在 Bootstrapper 中註冊
+1. **Domain Layer**: Create Entity/Value Object
+2. **Interactor Layer**: Implement Use Case
+3. **Infrastructure Layer**: Add technical implementation
+4. **Application Layer**: Register in Bootstrapper
 
-### SOLID 原則檢查
+### SOLID Principles Checklist
 
-- **S**ingle Responsibility: 類別只有一個變更理由
-- **O**pen/Closed: 透過擴展而非修改添加功能
-- **L**iskov Substitution: 子類型可以替換基類型
-- **I**nterface Segregation: 客戶端只依賴需要的介面
-- **D**ependency Inversion: 依賴抽象而非具體實現
+- **S**ingle Responsibility: Classes have only one reason to change
+- **O**pen/Closed: Add functionality through extension, not modification
+- **L**iskov Substitution: Subtypes can replace base types
+- **I**nterface Segregation: Clients depend only on interfaces they need
+- **D**ependency Inversion: Depend on abstractions, not concrete implementations
 
-## ⚠️ 架構限制與擴展性
+## ⚠️ Architecture Limitations & Extensibility
 
-### 券商 API 耦合度
+### Broker API Coupling Level
 
-本系統目前與**統一期貨 (PFCF) DLL 高度耦合**，主要耦合點包括：
+This system is currently **highly coupled to Taiwan Unified Futures (PFCF) DLL**, with main coupling points including:
 
-| 層級 | 耦合度 | 影響 |
-|------|-------|------|
-| Infrastructure | 🔴 極高 | PFCF API 直接調用 |
-| Interactor | 🟡 中等 | DTO 包含 PFCF 特定字段 |
-| Domain | 🟢 低 | 實體層相對獨立 |
+| Layer | Coupling Level | Impact |
+|-------|----------------|--------|
+| Infrastructure | 🔴 Extremely High | Direct PFCF API calls |
+| Interactor | 🟡 Medium | DTOs contain PFCF-specific fields |
+| Domain | 🟢 Low | Entity layer relatively independent |
 
-### 移植到其他券商
+### Migrating to Other Brokers
 
-如果需要支援其他券商 (如元大期貨、群益期貨)，建議：
+If you need to support other brokers (such as Yuanta Securities, Capital Futures), we recommend:
 
-1. **創建 ExchangeApiInterface 抽象層**
-2. **重構 DTO 使用券商中立格式**  
-3. **實現券商特定的適配器模式**
+1. **Create ExchangeApiInterface abstraction layer**
+2. **Refactor DTOs to use broker-neutral format**  
+3. **Implement broker-specific adapter patterns**
 
-> 📖 **詳細移植指南**: [DLL 移植指南](DLL_PORTING_GUIDE.md) - 完整的移植步驟和架構重構建議
+> 📖 **Detailed Migration Guide**: [DLL Porting Guide](DLL_PORTING_GUIDE.md) - Complete migration steps and architecture refactoring suggestions
 
 ---
 
-**架構優勢**: 模組化、可測試、可擴展、可維護的 Clean Architecture 實現  
-**架構限制**: 高度依賴統一期貨 API，移植到其他券商需要重大重構
+**Architecture Advantages**: Modular, testable, extensible, maintainable Clean Architecture implementation  
+**Architecture Limitations**: Highly dependent on Taiwan Unified Futures API, migrating to other brokers requires major refactoring

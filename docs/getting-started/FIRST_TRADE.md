@@ -1,206 +1,206 @@
-# 🎯 第一筆自動交易教學 - 統一期貨小台指
+# 🎯 First Automated Trade Tutorial - Taiwan Unified Futures Mini Index
 
-> *逐步完成您的第一筆台灣期貨自動交易*
+> *Step-by-step guide to complete your first Taiwan futures automated trade*
 
-## ⚠️ 重要前提
+## ⚠️ Important Prerequisites
 
-- 您必須是**統一期貨客戶**且已申請 API 權限
-- 此教學以**小台指 (MXFF5)** 為範例
-- 建議先在**測試環境**練習
+- You must be a **Taiwan Unified Futures customer** and have applied for API permissions
+- This tutorial uses **Mini Taiwan Index (MXFF5)** as an example
+- It is recommended to practice in **test environment** first
 
-## 📈 策略說明
+## 📈 Strategy Overview
 
-本系統目前內建**唯一策略**：**右側進場支撐阻力策略**
+This system currently has **one built-in strategy**: **Right-side Entry Support/Resistance Strategy**
 
-### 策略特色
-- **右側進場**: 不搶反彈，等價格確認反轉後才進場
-- **動態追蹤**: 可根據市場走勢調整進場點位
-- **風險控制**: 內建停利停損與假突破過濾機制
+### Strategy Features
+- **Right-side Entry**: Don't catch falling knives, wait for price confirmation reversal before entry
+- **Dynamic Tracking**: Can adjust entry points based on market movements
+- **Risk Control**: Built-in take profit, stop loss, and false breakout filtering mechanisms
 
-### 運作原理 (買入範例)
-1. **觸發條件**: 價格跌破支撐位 (Target Price) 時啟動策略
-2. **等待確認**: 價格反彈至 `Target Price + Turning Point` 時才實際買入
-3. **風險控制**: 自動設定停利 (+120點) 和停損 (-30點)
+### Operating Principle (Buy Example)
+1. **Trigger Condition**: Strategy activates when price breaks below support level (Target Price)
+2. **Wait for Confirmation**: Actually buy when price rebounds to `Target Price + Turning Point`
+3. **Risk Control**: Automatically set take profit (+120 points) and stop loss (-30 points)
 
 ---
 
-## 1. 統一期貨帳號登錄
+## 1. Taiwan Unified Futures Account Login
 
-1. 啟動應用程式：
+1. Start the application:
    ```bash
    python app.py
    ```
 
-2. 選擇 `1` 進行登錄：
+2. Select `1` to login:
    ```text
    > 1
-   Enter the account: 80020290621        # 您的統一期貨帳號
-   Enter the password: [輸入密碼]         # 您的統一期貨密碼
-   Is this login for production?[y/n](blank for n): y  # y=正式環境, n=測試環境
+   Enter the account: 80020290621        # Your Taiwan Unified Futures account
+   Enter the password: [Enter password]  # Your Taiwan Unified Futures password
+   Is this login for production?[y/n](blank for n): y  # y=production, n=test environment
    
-   訊息平台連線成功
-   內期報價連線
-   內期帳務連線
-   Login status: 登入成功!
+   Message platform connection successful
+   Domestic futures quote connection
+   Domestic futures account connection
+   Login status: Login successful!
    ```
 
-## 2. 查看可交易的期貨商品
+## 2. View Available Futures Products
 
-1. 選擇 `7` 查看期貨商品：
+1. Select `7` to view futures products:
    ```text
    > 7
-   Enter futures code (leave empty for all): MXF  # 小台指代碼
+   Enter futures code (leave empty for all): MXF  # Mini Taiwan Index code
    
    Found 6 futures items
    ==== Futures Data ====
-       商品代號         商品名稱         標的物        交割月份       市場代碼       部位價格
+       Product Code     Product Name     Underlying    Delivery Month    Market Code    Position Price
    --------------------------------------------------------------------------------
-      MXFF5          小臺指                   202506      MXF       22253
-      MXFG5          小臺指                   202507      MXF       21953
-      # ... 其他月份合約
+      MXFF5          Mini Taiwan Index              202506      MXF       22253
+      MXFG5          Mini Taiwan Index              202507      MXF       21953
+      # ... other monthly contracts
    ```
 
-## 3. 註冊要交易的商品
+## 3. Register Trading Product
 
-1. 選擇 `3` 註冊商品：
+1. Select `3` to register product:
    ```text
    > 3
-   Enter item code: MXFF5              # 選擇最近月份的小台指
+   Enter item code: MXFF5              # Select nearest month Mini Taiwan Index
    {'action': 'register_item', 'message': 'User registered successfully'}
    ```
 
-## 4. 創建支撐阻力交易條件
+## 4. Create Support/Resistance Trading Conditions
 
-1. 選擇 `4` 創建交易條件：
+1. Select `4` to create trading conditions:
    ```text
    > 4
-   Enter the action (b/s): b                    # b=買進, s=賣出
-   Enter the target price: 22000               # 目標價格 (突破點)
-   Enter the turning point: 30                 # 轉折點 (點數)
-   Enter the quantity: 1                       # 交易口數
-   Enter the take profit point (blank for default): 120  # 停利點 (點數)
-   Enter the stop loss point (blank for default): 30    # 停損點 (點數)
-   Enter if the condition is following (y/n): y          # 是否跟隨市價
+   Enter the action (b/s): b                    # b=buy, s=sell
+   Enter the target price: 22000               # Target price (breakout point)
+   Enter the turning point: 30                 # Turning point (points)
+   Enter the quantity: 1                       # Trading quantity
+   Enter the take profit point (blank for default): 120  # Take profit points
+   Enter the stop loss point (blank for default): 30    # Stop loss points
+   Enter if the condition is following (y/n): y          # Dynamic tracking
    
-   ✅ 交易條件創建成功！
+   ✅ Trading conditions created successfully!
    ```
 
-## 5. 選擇交易帳戶
+## 5. Select Trading Account
 
-1. 選擇 `5` 設定交易帳戶：
+1. Select `5` to configure trading account:
    ```text
    > 5
    Select the order account:
-   1. 0290621                          # 您的期貨交易帳戶
+   1. 0290621                          # Your futures trading account
    
    Enter the account number: 1
    {'action': 'select_order_account', 'message': 'Order account selected: 0290621'}
    ```
 
-## 6. 檢查系統前置條件
+## 6. Check System Prerequisites
 
-1. 選擇 `10` 檢查是否可以啟動：
+1. Select `10` to check if system can start:
    ```text
    > 10
    === System Prerequisites ===
-   User logged in: ✓                   # 已登錄
-   Item registered: ✓                  # 已註冊商品
-   Order account selected: ✓           # 已選擇帳戶
-   Trading conditions defined: ✓       # 已定義交易條件
+   User logged in: ✓                   # Logged in
+   Item registered: ✓                  # Product registered
+   Order account selected: ✓           # Account selected
+   Trading conditions defined: ✓       # Trading conditions defined
    ===========================
    ```
 
-## 7. 啟動自動交易系統
+## 7. Start Automated Trading System
 
-1. 再次選擇 `10` 啟動系統：
+1. Select `10` again to start the system:
    ```text
    > 10
    === Starting All Trading System Components ===
    
    === System Startup Results ===
    Overall Status: ✓ Success
-   Gateway: ✓ Running                  # DLL Gateway 運行中
-   Strategy: ✓ Running                 # 策略進程運行中  
-   Order Executor: ✓ Running           # 訂單執行進程運行中
+   Gateway: ✓ Running                  # DLL Gateway running
+   Strategy: ✓ Running                 # Strategy process running  
+   Order Executor: ✓ Running           # Order executor process running
    =============================
    
    Strategy process started. Waiting for market data...
    Order executor gateway process started. Waiting for trading signals...
    ```
 
-🎉 **恭喜！您的自動交易系統已啟動**
+🎉 **Congratulations! Your automated trading system is now running**
 
-系統現在會：
-- 監聽小台指 (MXFF5) 的即時報價
-- 當價格突破 22000 點時，自動買進 1 口
-- 停利目標：22120 點 (獲利 120 點)
-- 停損目標：21970 點 (虧損 30 點)
+The system will now:
+- Monitor real-time quotes for Mini Taiwan Index (MXFF5)
+- Automatically buy 1 contract when price breaks above 22000 points
+- Take profit target: 22120 points (120 points profit)
+- Stop loss target: 21970 points (30 points loss)
 
-## 8. 監控交易狀態
+## 8. Monitor Trading Status
 
-檢查倉位：
+Check positions:
 ```text
 > 8
 Account: 0290621
-Enter product id (leave blank for all): [留空查看所有部位]
+Enter product id (leave blank for all): [Leave blank to view all positions]
 ```
 
-## 9. 停止交易系統
+## 9. Stop Trading System
 
-### 正常登出
+### Normal Logout
 ```text
-> 2  # 統一期貨系統登出
-內期報價斷線
-內期帳務斷線
-Login status: 登出成功!
+> 2  # Logout from Taiwan Unified Futures system
+Domestic futures quote disconnected
+Domestic futures account disconnected
+Login status: Logout successful!
 
-> 0  # 退出程式
+> 0  # Exit program
 Exiting the program
 ```
 
 ---
 
-## 💡 交易參數說明
+## 💡 Trading Parameters Explanation
 
-| 參數 | 範例值 | 說明 |
-|------|-------|------|
-| **Target Price** | 22000 | 支撐/阻力位價格，作為策略觸發基準點 |
-| **Turning Point** | 30 | 從觸發點到實際進場的點數差距 (避免假突破) |
-| **Quantity** | 1 | 交易口數 (建議新手從 1 口開始) |
-| **Take Profit** | 120 | 停利點數 (自動獲利了結) |
-| **Stop Loss** | 30 | 停損點數 (風險控制機制) |
-| **Following** | y | **動態追蹤**: 啟用後系統會根據價格變化調整進場點位 |
+| Parameter | Example Value | Description |
+|-----------|---------------|-------------|
+| **Target Price** | 22000 | Support/resistance level price, used as strategy trigger baseline |
+| **Turning Point** | 30 | Point difference from trigger to actual entry (prevents false breakouts) |
+| **Quantity** | 1 | Trading quantity (recommended to start with 1 contract for beginners) |
+| **Take Profit** | 120 | Take profit points (automatic profit taking) |
+| **Stop Loss** | 30 | Stop loss points (risk control mechanism) |
+| **Following** | y | **Dynamic Tracking**: System adjusts entry points based on price movements |
 
-### Following 動態追蹤詳解
+### Following Dynamic Tracking Detailed Explanation
 
-**Following = Yes 的運作機制**:
-- **買入策略**: 如果價格持續下跌至更低點，系統會自動調整支撐位向下，等待更好的進場時機
-- **賣出策略**: 如果價格持續上漲至更高點，系統會自動調整阻力位向上，等待更好的進場時機
-- **優勢**: 避免在錯誤時機進場，提高策略成功率
-- **風險**: 可能錯過快速反轉的機會
+**Following = Yes Operating Mechanism**:
+- **Buy Strategy**: If price continues to fall to lower levels, system automatically adjusts support level downward, waiting for better entry timing
+- **Sell Strategy**: If price continues to rise to higher levels, system automatically adjusts resistance level upward, waiting for better entry timing
+- **Advantage**: Avoids entering at wrong timing, improves strategy success rate
+- **Risk**: May miss quick reversal opportunities
 
-**範例說明** (買入, Following=Yes):
-1. 設定支撐位 22000，轉折點 30
-2. 價格跌至 21980 → 觸發策略，等待反彈至 22010 進場
-3. 價格繼續跌至 21950 → 系統調整支撐位為 21950，新進場點為 21980
-4. 價格反彈至 21985 → 系統發出買入信號
+**Example Explanation** (Buy, Following=Yes):
+1. Set support level 22000, turning point 30
+2. Price drops to 21980 → Strategy triggered, waiting for rebound to 22010 to enter
+3. Price continues to drop to 21950 → System adjusts support level to 21950, new entry point 21980
+4. Price rebounds to 21985 → System sends buy signal
 
-## ⚠️ 風險提醒
+## ⚠️ Risk Warning
 
-- **期貨交易具有高風險**，可能導致全部資金損失
-- **建議新手從小口數開始**，熟悉系統後再增加
-- **務必設定停損**，控制最大損失
-- **監控系統運行狀況**，發現異常立即停止
+- **Futures trading carries high risk**, may result in total capital loss
+- **Beginners should start with small positions**, increase after familiarizing with the system
+- **Must set stop loss**, control maximum loss
+- **Monitor system operation status**, stop immediately if abnormalities found
 
-## 🚀 策略擴展
+## 🚀 Strategy Expansion
 
-目前系統只提供**支撐阻力策略**，如果您需要：
-- **其他技術指標策略** (MA, RSI, MACD 等)
-- **量化策略** (統計套利、配對交易等)  
-- **多策略組合管理**
+The system currently only provides **Support/Resistance Strategy**. If you need:
+- **Other technical indicator strategies** (MA, RSI, MACD, etc.)
+- **Quantitative strategies** (statistical arbitrage, pairs trading, etc.)  
+- **Multi-strategy combination management**
 
-請參考 **[策略擴展開發指南](../guides/STRATEGY_EXPANSION_GUIDE.md)** 了解如何擴展系統。
+Please refer to **[Strategy Expansion Development Guide](../guides/STRATEGY_EXPANSION_GUIDE.md)** to learn how to expand the system.
 
 ---
 
-*祝您交易順利！記住：永遠不要投資超過您能承受損失的資金。*
+*Wishing you successful trading! Remember: Never invest more than you can afford to lose.*

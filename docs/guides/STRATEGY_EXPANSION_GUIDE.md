@@ -1,33 +1,33 @@
-# 🚀 策略擴展開發指南
+# 🚀 Strategy Expansion Development Guide
 
-## 📋 概述
+## 📋 Overview
 
-本指南將指導您如何在台灣期貨自動交易系統中**擴展新策略**。目前系統只內建**支撐阻力策略**，但架構設計支援多策略擴展。
+This guide will teach you how to **expand new strategies** in the Taiwan futures automated trading system. Currently, the system only has a built-in **Support/Resistance Strategy**, but the architecture design supports multi-strategy expansion.
 
-## 🏗️ 當前策略架構分析
+## 🏗️ Current Strategy Architecture Analysis
 
-### 現有支撐阻力策略結構
+### Existing Support/Resistance Strategy Structure
 
 ```
 run_strategy.py
-├── StrategySubscriber        # ZMQ 市場數據訂閱
-├── SupportResistanceStrategy # 核心策略邏輯
-├── SignalPublisher          # ZMQ 交易信號發布
-└── TickEventHandler         # 處理tick事件
+├── StrategySubscriber        # ZMQ market data subscription
+├── SupportResistanceStrategy # Core strategy logic
+├── SignalPublisher          # ZMQ trading signal publishing
+└── TickEventHandler         # Handle tick events
 ```
 
-### 核心組件職責
+### Core Component Responsibilities
 
-| 組件 | 檔案位置 | 職責 |
+| Component | File Location | Responsibility |
 |------|---------|------|
-| **StrategySubscriber** | `run_strategy.py` | 訂閱端口5555的市場數據 |
-| **SupportResistanceStrategy** | `run_strategy.py` | 實現右側進場支撐阻力邏輯 |
-| **SignalPublisher** | `run_strategy.py` | 發布交易信號到端口5556 |
-| **TickEventHandler** | `run_strategy.py` | 協調數據流與策略執行 |
+| **StrategySubscriber** | `run_strategy.py` | Subscribe to market data on port 5555 |
+| **SupportResistanceStrategy** | `run_strategy.py` | Implement right-side entry support/resistance logic |
+| **SignalPublisher** | `run_strategy.py` | Publish trading signals to port 5556 |
+| **TickEventHandler** | `run_strategy.py` | Coordinate data flow and strategy execution |
 
-## 🎯 策略接口設計
+## 🎯 Strategy Interface Design
 
-### 1. 抽象策略基類
+### 1. Abstract Strategy Base Class
 
 ```python
 from abc import ABC, abstractmethod
@@ -36,79 +36,79 @@ from src.domain.entities.tick_event import TickEvent
 from src.domain.entities.trading_signal import TradingSignal
 
 class TradingStrategyInterface(ABC):
-    """交易策略抽象介面"""
+    """Trading Strategy Abstract Interface"""
     
     @abstractmethod
     def initialize(self, config: dict) -> None:
-        """策略初始化"""
+        """Strategy initialization"""
         pass
     
     @abstractmethod
     def process_tick(self, tick_event: TickEvent) -> Optional[TradingSignal]:
-        """處理tick數據並生成交易信號"""
+        """Process tick data and generate trading signals"""
         pass
     
     @abstractmethod
     def get_strategy_name(self) -> str:
-        """獲取策略名稱"""
+        """Get strategy name"""
         pass
     
     @abstractmethod
     def get_required_params(self) -> List[str]:
-        """獲取策略所需參數列表"""
+        """Get required parameters list for strategy"""
         pass
     
     @abstractmethod
     def validate_params(self, params: dict) -> bool:
-        """驗證策略參數"""
+        """Validate strategy parameters"""
         pass
     
     @abstractmethod
     def reset_strategy(self) -> None:
-        """重置策略狀態"""
+        """Reset strategy state"""
         pass
 ```
 
-### 2. 策略註冊管理器
+### 2. Strategy Registration Manager
 
 ```python
 class StrategyManager:
-    """策略管理器 - 支援多策略註冊與切換"""
+    """Strategy Manager - Support multi-strategy registration and switching"""
     
     def __init__(self):
         self._strategies = {}
         self._active_strategy = None
     
     def register_strategy(self, strategy: TradingStrategyInterface) -> None:
-        """註冊新策略"""
+        """Register new strategy"""
         name = strategy.get_strategy_name()
         self._strategies[name] = strategy
     
     def set_active_strategy(self, strategy_name: str) -> bool:
-        """設定啟用策略"""
+        """Set active strategy"""
         if strategy_name in self._strategies:
             self._active_strategy = self._strategies[strategy_name]
             return True
         return False
     
     def process_tick(self, tick_event: TickEvent) -> Optional[TradingSignal]:
-        """使用當前啟用策略處理tick"""
+        """Process tick using current active strategy"""
         if self._active_strategy:
             return self._active_strategy.process_tick(tick_event)
         return None
     
     def list_strategies(self) -> List[str]:
-        """列出所有已註冊策略"""
+        """List all registered strategies"""
         return list(self._strategies.keys())
 ```
 
-## 📈 策略擴展範例
+## 📈 Strategy Expansion Examples
 
-### 範例 1: 移動平均策略
+### Example 1: Moving Average Strategy
 
 ```python
 class MovingAverageStrategy(TradingStrategyInterface):
-    """雙移動平均線交叉策略"""
+    """Dual Moving Average Crossover Strategy"""
     
     def __init__(self):
         self.short_period = 5
@@ -118,13 +118,13 @@ class MovingAverageStrategy(TradingStrategyInterface):
         self.last_signal = None
     
     def initialize(self, config: dict) -> None:
-        """初始化策略參數"""
+        """Initialize strategy parameters"""
         self.short_period = config.get('short_period', 5)
         self.long_period = config.get('long_period', 20)
         self.quantity = config.get('quantity', 1)
         
     def process_tick(self, tick_event: TickEvent) -> Optional[TradingSignal]:
-        """處理tick並生成交易信號"""
+        """Process tick and generate trading signals"""
         price = tick_event.tick.match_price
         
         # 更新移動平均值
@@ -186,7 +186,7 @@ class MovingAverageStrategy(TradingStrategyInterface):
         return sum(self.long_ma_values[-self.long_period:]) / min(len(self.long_ma_values), self.long_period)
     
     def get_strategy_name(self) -> str:
-        return "移動平均交叉策略"
+        return "Moving Average Crossover Strategy"
     
     def get_required_params(self) -> List[str]:
         return ['short_period', 'long_period', 'quantity']
@@ -201,11 +201,11 @@ class MovingAverageStrategy(TradingStrategyInterface):
         self.last_signal = None
 ```
 
-### 範例 2: RSI 策略
+### Example 2: RSI Strategy
 
 ```python
 class RSIStrategy(TradingStrategyInterface):
-    """RSI相對強弱指標策略"""
+    """RSI Relative Strength Index Strategy"""
     
     def __init__(self):
         self.period = 14
@@ -220,7 +220,7 @@ class RSIStrategy(TradingStrategyInterface):
         self.overbought_level = config.get('overbought_level', 70)
         
     def process_tick(self, tick_event: TickEvent) -> Optional[TradingSignal]:
-        """處理tick並計算RSI"""
+        """Process tick and calculate RSI"""
         current_price = tick_event.tick.match_price
         
         if self.last_price is None:
@@ -259,7 +259,7 @@ class RSIStrategy(TradingStrategyInterface):
         return None
     
     def _calculate_rsi(self) -> float:
-        """計算RSI指標"""
+        """Calculate RSI indicator"""
         gains = [change if change > 0 else 0 for change in self.price_changes]
         losses = [-change if change < 0 else 0 for change in self.price_changes]
         
@@ -274,7 +274,7 @@ class RSIStrategy(TradingStrategyInterface):
         return rsi
     
     def get_strategy_name(self) -> str:
-        return "RSI相對強弱指標策略"
+        return "RSI Relative Strength Index Strategy"
     
     def get_required_params(self) -> List[str]:
         return ['rsi_period', 'oversold_level', 'overbought_level']
@@ -482,7 +482,7 @@ class RSI:
         return 100 - (100 / (1 + rs))
 ```
 
-## 🚀 實際應用範例
+## 🚀 Practical Application Examples
 
 ### 多策略組合管理
 
@@ -524,7 +524,7 @@ class MultiStrategyManager:
         return signals
 ```
 
-## 📋 開發檢查清單
+## 📋 Development Checklist
 
 ### ✅ 新策略開發檢查
 
@@ -544,7 +544,7 @@ class MultiStrategyManager:
 - [ ] **更新環境變數文檔**
 - [ ] **集成測試通過**
 
-## ⚠️ 重要注意事項
+## ⚠️ Important Considerations
 
 ### 性能要求
 - **Tick 處理**: < 1ms (維持高頻交易性能)

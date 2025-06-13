@@ -4,6 +4,7 @@
 
 
 import pytest
+from unittest.mock import MagicMock, patch
 
 from src.domain.entities.user import User
 from src.interactor.dtos.user_login_dtos import UserLoginInputDto, UserLoginOutputDto
@@ -15,28 +16,31 @@ from src.interactor.interfaces.repositories.user_repository import UserRepositor
 from src.interactor.use_cases import user_login
 
 
-def test_user_login(mocker, fixture_user):
+def test_user_login(fixture_user):
     user = User(
         fixture_user["account"],
         fixture_user["password"],
         fixture_user["ip_address"],
         fixture_user["client"]
     )
-    presenter_mock = mocker.patch.object(UserLoginPresenterInterface, "present")
-    repository_mock = mocker.patch.object(UserRepositoryInterface, "create")
-    config_mock = mocker.patch("src.app.cli_pfcf.config.Config")
-    config_mock.EXCHANGE_CLIENT.PFCLogin = mocker.MagicMock()
-    session_manager_mock = mocker.patch.object(SessionRepositoryInterface, "create_session")
+    # Create mocks
+    presenter_mock = MagicMock(spec=UserLoginPresenterInterface)
+    repository_mock = MagicMock(spec=UserRepositoryInterface)
+    logger_mock = MagicMock(spec=LoggerInterface)
+    session_manager_mock = MagicMock(spec=SessionRepositoryInterface)
 
-    input_dto_validator_mock = mocker.patch("src.interactor.use_cases.user_login.UserLoginInputDtoValidator")
-    logger_mock = mocker.patch.object(LoggerInterface, "log_info")
+    # Create service container mock
+    service_container_mock = MagicMock()
+    service_container_mock.exchange_client.PFCLogin = MagicMock()
+
     repository_mock.get.return_value = None
     repository_mock.create.return_value = user
     presenter_mock.present.return_value = "Test output"
+
     use_case = user_login.UserLoginUseCase(
         presenter_mock,
         repository_mock,
-        config_mock,
+        service_container_mock,
         logger_mock,
         session_manager_mock
     )
@@ -45,11 +49,14 @@ def test_user_login(mocker, fixture_user):
         password=fixture_user["password"],
         ip_address=fixture_user["ip_address"]
     )
-    result = use_case.execute(input_dto)
-    input_dto_validator_mock.assert_called_once_with(input_dto.to_dict())
-    input_dto_validator_instance = input_dto_validator_mock.return_value
-    input_dto_validator_instance.validate.assert_called_once_with()
-    config_mock.EXCHANGE_CLIENT.PFCLogin.assert_called_once_with(
+
+    with patch("src.interactor.use_cases.user_login.UserLoginInputDtoValidator") as input_dto_validator_mock:
+        result = use_case.execute(input_dto)
+        input_dto_validator_mock.assert_called_once_with(input_dto.to_dict())
+        input_dto_validator_instance = input_dto_validator_mock.return_value
+        input_dto_validator_instance.validate.assert_called_once_with()
+
+    service_container_mock.exchange_client.PFCLogin.assert_called_once_with(
         fixture_user["account"],
         fixture_user["password"],
         fixture_user["ip_address"]
@@ -69,17 +76,18 @@ def test_user_login(mocker, fixture_user):
     assert str(exception_info.value) == f"User '{user_account}' was not created correctly"
 
 
-def test_user_login_empty_field(mocker, fixture_user):
-    presenter_mock = mocker.patch.object(UserLoginPresenterInterface, "present")
-    repository_mock = mocker.patch.object(UserRepositoryInterface, "create")
-    config_mock = mocker.patch("src.app.cli_pfcf.config.Config")
-    logger_mock = mocker.patch.object(LoggerInterface, "log_info")
-    session_manager_mock = mocker.patch.object(SessionRepositoryInterface, "create_session")
+def test_user_login_empty_field(fixture_user):
+    # Create mocks
+    presenter_mock = MagicMock(spec=UserLoginPresenterInterface)
+    repository_mock = MagicMock(spec=UserRepositoryInterface)
+    logger_mock = MagicMock(spec=LoggerInterface)
+    session_manager_mock = MagicMock(spec=SessionRepositoryInterface)
+    service_container_mock = MagicMock()
 
     use_case = user_login.UserLoginUseCase(
         presenter_mock,
         repository_mock,
-        config_mock,
+        service_container_mock,
         logger_mock,
         session_manager_mock
     )

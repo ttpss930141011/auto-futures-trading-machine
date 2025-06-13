@@ -14,6 +14,7 @@ class UserLoginController(CliMemoryControllerInterface):
     """
 
     def __init__(self, service_container: ServiceContainer):
+        self.service_container = service_container
         self.logger = service_container.logger
         self.config = service_container.config
         self.session_repository = service_container.session_repository
@@ -38,7 +39,7 @@ class UserLoginController(CliMemoryControllerInterface):
         presenter = UserLoginPresenter()
         input_dto = self._get_user_info()
         use_case = UserLoginUseCase(
-            presenter, repository, self.config, self.logger, self.session_repository)
+            presenter, repository, self.service_container, self.logger, self.session_repository)
         result = use_case.execute(input_dto)
         view = UserLoginView()
         view.show(result)

@@ -1,0 +1,124 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop, refactor-exchange-api-service-container ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: latest
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+    
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: .venv
+        key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-poetry-
+    
+    - name: Install dependencies
+      run: poetry install --with dev
+    
+    - name: Run tests with coverage
+      run: |
+        poetry run pytest --cov=src --cov-report=xml --cov-report=term-missing
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+    
+    # Badge generation (main branch only)
+    - name: Creating badges folder
+      run: mkdir -p badges
+      if: github.ref == 'refs/heads/main'
+    
+    - name: Generate Coverage Badge
+      uses: tj-actions/coverage-badge-py@v1.8
+      with:
+        output: badges/coverage.svg
+      if: github.ref == 'refs/heads/main'
+    
+    - name: Generate Pylint Badge
+      run: |
+        # Run pylint and extract score
+        PYLINT_OUTPUT=$(poetry run pylint src/ --disable=all --enable=E,W --output-format=text --reports=yes 2>&1 || true)
+        PYLINT_SCORE=$(echo "$PYLINT_OUTPUT" | grep "Your code has been rated at" | awk '{print $7}' | sed 's|/10||' || echo "0.0")
+        echo "Pylint score: $PYLINT_SCORE/10"
+        
+        # Generate color based on score
+        if (( $(echo "$PYLINT_SCORE >= 9.0" | bc -l) )); then
+          COLOR="brightgreen"
+        elif (( $(echo "$PYLINT_SCORE >= 8.0" | bc -l) )); then
+          COLOR="green"
+        elif (( $(echo "$PYLINT_SCORE >= 7.0" | bc -l) )); then
+          COLOR="yellowgreen"
+        elif (( $(echo "$PYLINT_SCORE >= 6.0" | bc -l) )); then
+          COLOR="yellow"
+        elif (( $(echo "$PYLINT_SCORE >= 5.0" | bc -l) )); then
+          COLOR="orange"
+        else
+          COLOR="red"
+        fi
+        
+        # Generate SVG badge using shields.io
+        curl -s "https://img.shields.io/badge/pylint-${PYLINT_SCORE}%2F10-${COLOR}" > badges/pylint.svg
+        echo "Generated pylint badge with score $PYLINT_SCORE and color $COLOR"
+      if: github.ref == 'refs/heads/main'
+    
+    - name: Publish badges to GitHub Pages
+      uses: JamesIves/github-pages-deploy-action@v4
+      with:
+        branch: coverage-badge
+        folder: badges
+        clean: false
+      if: github.ref == 'refs/heads/main'
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.12"
+    
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: latest
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+    
+    - name: Install dependencies
+      run: poetry install --with dev
+    
+    - name: Run Ruff
+      run: poetry run ruff check src/ --output-format=github
+    
+    - name: Run Pylint (errors and warnings only)
+      run: poetry run pylint src/ --disable=all --enable=E,W --output-format=text --reports=yes || true

@@ -59,7 +59,7 @@ class CliMemoryProcessHandler:
             if option:
                 try:
                     option.execute()
-                except Exception as exception:
+                except (RuntimeError, ValueError, OSError) as exception:
                     print(f"\nERROR: {str(exception)}\n")
                     self.logger.log_exception(str(exception))
             else:

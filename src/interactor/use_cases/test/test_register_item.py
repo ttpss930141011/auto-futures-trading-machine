@@ -1,4 +1,5 @@
 import pytest
+from unittest.mock import MagicMock, patch
 
 from src.interactor.dtos.register_item_dtos import RegisterItemInputDto, RegisterItemOutputDto
 from src.interactor.errors.error_classes import LoginFailedException
@@ -13,123 +14,129 @@ class Item:
         self.COMMODITYID = commodity_id
 
 
-def test_register_item(mocker, fixture_register_item):
-    presenter_mock = mocker.patch.object(RegisterItemPresenterInterface, "present")
-    config_mock = mocker.patch("src.app.cli_pfcf.config.Config")
-    logger_mock = mocker.patch.object(LoggerInterface, "log_info")
-    session_manager_mock = mocker.patch.object(SessionRepositoryInterface, "get_current_user")
+def test_register_item(fixture_register_item):
+    presenter_mock = MagicMock(spec=RegisterItemPresenterInterface)
+    service_container_mock = MagicMock()
+    logger_mock = MagicMock(spec=LoggerInterface)
+    session_manager_mock = MagicMock(spec=SessionRepositoryInterface)
 
-    validator_mock = mocker.patch("src.interactor.use_cases.register_item.RegisterItemInputDtoValidator")
-    validator_mock_instance = validator_mock.return_value
-    presenter_mock.present.return_value = "Test output"
-    session_manager_mock.return_value = "Test user"
-    config_mock.EXCHANGE_CLIENT.DQuoteLib.RegItem = mocker.MagicMock()
-    config_mock.EXCHANGE_CLIENT.DQuoteLib.OnTickDataTrade = mocker.MagicMock()
-    config_mock.EXCHANGE_CLIENT.PFCGetFutureData = mocker.MagicMock()
+    # Set up service container attributes
+    service_container_mock.logger = logger_mock
+    service_container_mock.session_repository = session_manager_mock
 
-    # Mock data for items_object_list
-    items_object_list = [Item(fixture_register_item["item_code"]), Item("COM5678")]
-    config_mock.EXCHANGE_CLIENT.PFCGetFutureData.return_value = items_object_list
+    with patch("src.interactor.use_cases.register_item.RegisterItemInputDtoValidator") as validator_mock:
+        validator_mock_instance = validator_mock.return_value
+        presenter_mock.present.return_value = "Test output"
+        session_manager_mock.get_current_user.return_value = "Test user"
+        service_container_mock.exchange_client.DQuoteLib.RegItem = MagicMock()
+        service_container_mock.exchange_client.DQuoteLib.OnTickDataTrade = MagicMock()
+        service_container_mock.exchange_client.PFCGetFutureData = MagicMock()
 
-    use_case = RegisterItemUseCase(
-        presenter_mock,
-        config_mock,
-        logger_mock,
-        session_manager_mock,
-    )
-    input_dto = RegisterItemInputDto(
-        account=fixture_register_item["account"],
-        item_code=fixture_register_item["item_code"]
-    )
-    result = use_case.execute(input_dto)
+        # Mock data for items_object_list
+        items_object_list = [Item(fixture_register_item["item_code"]), Item("COM5678")]
+        service_container_mock.exchange_client.PFCGetFutureData.return_value = items_object_list
 
-    validator_mock.assert_called_once_with(input_dto.to_dict())
-    validator_mock_instance.validate.assert_called_once_with()
+        use_case = RegisterItemUseCase(
+            presenter_mock,
+            service_container_mock,
+        )
+        input_dto = RegisterItemInputDto(
+            account=fixture_register_item["account"],
+            item_code=fixture_register_item["item_code"]
+        )
+        result = use_case.execute(input_dto)
 
-    session_manager_mock.get_current_user.assert_called_once()
+        validator_mock.assert_called_once_with(input_dto.to_dict())
+        validator_mock_instance.validate.assert_called_once_with()
 
-    config_mock.EXCHANGE_CLIENT.DQuoteLib.RegItem.assert_called_once_with(fixture_register_item["item_code"])
+        session_manager_mock.get_current_user.assert_called_once()
 
-    output_dto = RegisterItemOutputDto(
-        account=fixture_register_item["account"],
-        item_code=fixture_register_item["item_code"],
-        is_registered=True
-    )
+        service_container_mock.exchange_client.DQuoteLib.RegItem.assert_called_once_with(fixture_register_item["item_code"])
 
-    presenter_mock.present.assert_called_once_with(output_dto)
-    logger_mock.log_info.assert_called_once_with(
-        f"Account {fixture_register_item['account']} register item {fixture_register_item['item_code']} successfully")
+        output_dto = RegisterItemOutputDto(
+            account=fixture_register_item["account"],
+            item_code=fixture_register_item["item_code"],
+            is_registered=True
+        )
 
-    assert result == "Test output"
+        presenter_mock.present.assert_called_once_with(output_dto)
+        logger_mock.log_info.assert_called_once_with(
+            f"Account {fixture_register_item['account']} register item {fixture_register_item['item_code']} successfully")
+
+        assert result == "Test output"
 
 
-def test_register_item_if_user_is_none(mocker, fixture_register_item):
-    presenter_mock = mocker.patch.object(RegisterItemPresenterInterface, "present")
-    config_mock = mocker.patch("src.app.cli_pfcf.config.Config")
-    logger_mock = mocker.patch.object(LoggerInterface, "log_info")
-    session_manager_mock = mocker.patch.object(SessionRepositoryInterface, "get_current_user")
+def test_register_item_if_user_is_none(fixture_register_item):
+    presenter_mock = MagicMock(spec=RegisterItemPresenterInterface)
+    service_container_mock = MagicMock()
+    logger_mock = MagicMock(spec=LoggerInterface)
+    session_manager_mock = MagicMock(spec=SessionRepositoryInterface)
+
+    # Set up service container attributes
+    service_container_mock.logger = logger_mock
+    service_container_mock.session_repository = session_manager_mock
     session_manager_mock.get_current_user.return_value = None
 
-    validator_mock = mocker.patch("src.interactor.use_cases.register_item.RegisterItemInputDtoValidator")
-    validator_mock_instance = validator_mock.return_value
+    with patch("src.interactor.use_cases.register_item.RegisterItemInputDtoValidator") as validator_mock:
+        validator_mock_instance = validator_mock.return_value
 
-    use_case = RegisterItemUseCase(
-        presenter_mock,
-        config_mock,
-        logger_mock,
-        session_manager_mock,
-    )
-    input_dto = RegisterItemInputDto(
-        account=fixture_register_item["account"],
-        item_code=fixture_register_item["item_code"]
-    )
+        use_case = RegisterItemUseCase(
+            presenter_mock,
+            service_container_mock,
+        )
+        input_dto = RegisterItemInputDto(
+            account=fixture_register_item["account"],
+            item_code=fixture_register_item["item_code"]
+        )
 
-    with pytest.raises(LoginFailedException) as exc:
-        use_case.execute(input_dto)
+        with pytest.raises(LoginFailedException) as exc:
+            use_case.execute(input_dto)
 
-    validator_mock.assert_called_once_with(input_dto.to_dict())
-    validator_mock_instance.validate.assert_called_once_with()
+        validator_mock.assert_called_once_with(input_dto.to_dict())
+        validator_mock_instance.validate.assert_called_once_with()
 
-    session_manager_mock.get_current_user.assert_called_once()
+        session_manager_mock.get_current_user.assert_called_once()
 
-    assert str(exc.value) == f"Login failed: Account {fixture_register_item['account']} not login"
+        assert str(exc.value) == f"Login failed: Account {fixture_register_item['account']} not login"
 
 
-def test_register_item_if_item_code_not_in_items_list(mocker, fixture_register_item):
-    presenter_mock = mocker.patch.object(RegisterItemPresenterInterface, "present")
-    config_mock = mocker.patch("src.app.cli_pfcf.config.Config")
-    logger_mock = mocker.patch.object(LoggerInterface, "log_info")
-    session_manager_mock = mocker.patch.object(SessionRepositoryInterface, "get_current_user")
+def test_register_item_if_item_code_not_in_items_list(fixture_register_item):
+    presenter_mock = MagicMock(spec=RegisterItemPresenterInterface)
+    service_container_mock = MagicMock()
+    logger_mock = MagicMock(spec=LoggerInterface)
+    session_manager_mock = MagicMock(spec=SessionRepositoryInterface)
+
+    # Set up service container attributes
+    service_container_mock.logger = logger_mock
+    service_container_mock.session_repository = session_manager_mock
     session_manager_mock.get_current_user.return_value = "Test user"
 
-    validator_mock = mocker.patch("src.interactor.use_cases.register_item.RegisterItemInputDtoValidator")
-    validator_mock_instance = validator_mock.return_value
-    presenter_mock.present.return_value = "Test output"
-    config_mock.EXCHANGE_CLIENT.DQuoteLib.RegItem = mocker.MagicMock()
-    config_mock.EXCHANGE_CLIENT.DQuoteLib.OnTickDataTrade = mocker.MagicMock()
-    config_mock.EXCHANGE_CLIENT.PFCGetFutureData = mocker.MagicMock()
+    with patch("src.interactor.use_cases.register_item.RegisterItemInputDtoValidator") as validator_mock:
+        validator_mock_instance = validator_mock.return_value
+        presenter_mock.present.return_value = "Test output"
+        service_container_mock.exchange_client.DQuoteLib.RegItem = MagicMock()
+        service_container_mock.exchange_client.DQuoteLib.OnTickDataTrade = MagicMock()
+        service_container_mock.exchange_client.PFCGetFutureData = MagicMock()
 
-    # Mock data for items_object_list
-    items_object_list = [Item("COM1234"), Item("COM5678")]
-    config_mock.EXCHANGE_CLIENT.PFCGetFutureData.return_value = items_object_list
+        # Mock data for items_object_list
+        items_object_list = [Item("COM1234"), Item("COM5678")]
+        service_container_mock.exchange_client.PFCGetFutureData.return_value = items_object_list
 
-    use_case = RegisterItemUseCase(
-        presenter_mock,
-        config_mock,
-        logger_mock,
-        session_manager_mock,
-    )
-    input_dto = RegisterItemInputDto(
-        account=fixture_register_item["account"],
-        item_code=fixture_register_item["item_code"]
-    )
+        use_case = RegisterItemUseCase(
+            presenter_mock,
+            service_container_mock,
+        )
+        input_dto = RegisterItemInputDto(
+            account=fixture_register_item["account"],
+            item_code=fixture_register_item["item_code"]
+        )
 
-    with pytest.raises(Exception) as exc:
-        use_case.execute(input_dto)
+        with pytest.raises(Exception) as exc:
+            use_case.execute(input_dto)
 
-    validator_mock.assert_called_once_with(input_dto.to_dict())
-    validator_mock_instance.validate.assert_called_once_with()
+        validator_mock.assert_called_once_with(input_dto.to_dict())
+        validator_mock_instance.validate.assert_called_once_with()
 
-    session_manager_mock.get_current_user.assert_called_once()
+        session_manager_mock.get_current_user.assert_called_once()
 
-    assert str(exc.value) == f"Item not found: {fixture_register_item['item_code']} is not found"
+        assert str(exc.value) == f"Item not found: {fixture_register_item['item_code']} is not found"

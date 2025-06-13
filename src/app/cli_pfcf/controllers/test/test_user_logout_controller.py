@@ -61,7 +61,7 @@ def test_user_logout_success(mocker: "MockerFixture", fixture_user):
     session_repository_mock.get_current_user.assert_called_once_with()
     mock_presenter.assert_called_once_with()
     mock_use_case.assert_called_once_with(
-        mock_presenter.return_value, config_mock, logger_mock, session_repository_mock
+        mock_presenter.return_value, service_container_mock, logger_mock, session_repository_mock
     )
     input_dto = UserLogoutInputDto(account=account)
     mock_use_case_instance.execute.assert_called_once_with(input_dto)

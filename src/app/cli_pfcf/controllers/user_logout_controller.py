@@ -12,6 +12,7 @@ class UserLogoutController(CliMemoryControllerInterface):
     """
 
     def __init__(self, service_container: ServiceContainer):
+        self.service_container = service_container
         self.logger = service_container.logger
         self.config = service_container.config
         self.session_repository = service_container.session_repository
@@ -28,7 +29,7 @@ class UserLogoutController(CliMemoryControllerInterface):
             return
         presenter = UserLogoutPresenter()
         input_dto = self._get_user_info()
-        use_case = UserLogoutUseCase(presenter, self.config, self.logger, self.session_repository)
+        use_case = UserLogoutUseCase(presenter, self.service_container, self.logger, self.session_repository)
         result = use_case.execute(input_dto)
         view = UserLogoutView()
         view.show(result)

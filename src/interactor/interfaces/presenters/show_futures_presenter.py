@@ -16,4 +16,4 @@ class ShowFuturesPresenterInterface(ABC):
     def present_error(self, error_message: str) -> ShowFuturesOutputDto:
         """ Present error message
         """
-        pass 
+        pass

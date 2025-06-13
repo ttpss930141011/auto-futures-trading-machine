@@ -141,7 +141,7 @@ class SessionJsonFileRepository(SessionRepositoryInterface):
         # Convert .NET System.String[] (or other iterable) to Python list for JSON serialization
         try:
             account_list = [str(item) for item in account_set]
-        except Exception:
+        except (TypeError, AttributeError):
             account_list = account_set
         data["order_account_set"] = account_list
         self._write(data)
@@ -167,41 +167,3 @@ class SessionJsonFileRepository(SessionRepositoryInterface):
         data = self._read_data()
         return data.get("item_code")
 
-    def set_auth_details(self, password: str, ip_address: str) -> None:
-        """
-        TEMPORARY: Store authentication details for order executor process.
-        WARNING: This is insecure and should only be used for development.
-        In production, use a secure credential store or token-based auth.
-
-        Args:
-            password: The user password (will be stored temporarily)
-            ip_address: The exchange server address
-        """
-        data = self._read_data()
-        # Add a warning marker to indicate this is temporary
-        data["_temp_auth"] = {
-            "password": password,
-            "ip_address": ip_address,
-            "warning": "TEMPORARY - DO NOT USE IN PRODUCTION",
-        }
-        self._write(data)
-
-    def get_auth_details(self) -> Optional[Dict[str, str]]:
-        """
-        TEMPORARY: Retrieve authentication details.
-        WARNING: This is insecure and should only be used for development.
-
-        Returns:
-            Dict with password and ip_address, or None if not available
-        """
-        data = self._read_data()
-        return data.get("_temp_auth")
-
-    def clear_auth_details(self) -> None:
-        """
-        Clear temporary authentication details.
-        """
-        data = self._read_data()
-        if "_temp_auth" in data:
-            del data["_temp_auth"]
-            self._write(data)

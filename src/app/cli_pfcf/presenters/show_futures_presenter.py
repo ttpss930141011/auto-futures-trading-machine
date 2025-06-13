@@ -27,7 +27,7 @@ class ShowFuturesPresenter(ShowFuturesPresenterInterface):
                     min_price=float(data.MinPrice) if data.MinPrice else 0.0
                 )
                 futures_dtos.append(future_dto)
-            except (AttributeError, ValueError) as e:
+            except (AttributeError, ValueError):
                 # If there's an error converting the data, skip this item
                 continue
 
@@ -46,4 +46,4 @@ class ShowFuturesPresenter(ShowFuturesPresenterInterface):
         return ShowFuturesOutputDto(
             success=False,
             message=f"Error: {error_message}"
-        ) 
+        )

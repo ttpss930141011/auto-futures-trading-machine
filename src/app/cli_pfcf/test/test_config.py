@@ -5,25 +5,15 @@ import pytest
 from src.app.cli_pfcf.config import Config
 
 
-class DummyApi:
-    """Dummy exchange API with required attributes."""
-    def __init__(self):
-        self.client = object()
-        self.trade = object()
-        self.decimal = object()
-
-
 def test_config_properties(monkeypatch):
     # Setup environment variables
     monkeypatch.setenv('DEALER_TEST_URL', 'test_url')
     monkeypatch.setenv('DEALER_PROD_URL', 'prod_url')
-    # Create config with dummy api
-    api = DummyApi()
-    cfg = Config(api)
-    # Test that exchange attributes are set
-    assert cfg.EXCHANGE_CLIENT is api.client
-    assert cfg.EXCHANGE_TRADE is api.trade
-    assert cfg.EXCHANGE_DECIMAL is api.decimal
+    # Create config - no longer needs exchange API
+    cfg = Config()
+    # Test URL properties
+    assert cfg.EXCHANGE_TEST_URL == 'test_url'
+    assert cfg.EXCHANGE_PROD_URL == 'prod_url'
     # Test ZMQ address properties
     host = cfg.ZMQ_HOST
     tz = cfg.ZMQ_TICK_PORT
@@ -34,28 +24,26 @@ def test_config_properties(monkeypatch):
     assert cfg.ZMQ_SIGNAL_PUSH_CONNECT_ADDRESS == f"tcp://localhost:{sz}"
 
 
-@pytest.mark.parametrize('missing_attr', ['client', 'trade'])
-def test_config_missing_api_attr(monkeypatch, missing_attr):
+def test_config_with_valid_env_vars(monkeypatch):
+    """Test config creation with valid environment variables."""
     # Ensure URLs exist
     monkeypatch.setenv('DEALER_TEST_URL', 'test')
     monkeypatch.setenv('DEALER_PROD_URL', 'prod')
-    # Create dummy api and remove attribute
-    api = DummyApi()
-    delattr(api, missing_attr)
-    # Expect SystemExit on missing api attributes
-    with pytest.raises(SystemExit):
-        Config(api)
+    # Config should initialize successfully
+    cfg = Config()
+    assert cfg.EXCHANGE_TEST_URL == 'test'
+    assert cfg.EXCHANGE_PROD_URL == 'prod'
 
 
 def test_config_missing_env_vars(monkeypatch):
+    """Test config fails when required environment variables are missing."""
     # Remove URLs
     monkeypatch.delenv('DEALER_TEST_URL', raising=False)
     monkeypatch.delenv('DEALER_PROD_URL', raising=False)
-    api = DummyApi()
     # Missing test URL first
     with pytest.raises(SystemExit):
-        Config(api)
+        Config()
     # Set test URL only
     monkeypatch.setenv('DEALER_TEST_URL', 'test')
     with pytest.raises(SystemExit):
-        Config(api)
+        Config()

@@ -1,35 +1,42 @@
 import logging
+from unittest.mock import MagicMock
 
 from src.infrastructure.loggers.logger_default import LoggerDefault
 
 
-def test_logger_default(mocker):
-    mocker.patch.object(logging, "debug")
+def test_logger_default(monkeypatch):
+    mock_debug = MagicMock()
+    monkeypatch.setattr(logging, "debug", mock_debug)
     logger = LoggerDefault()
     logger.log_debug("testdebug")
-    logging.debug.assert_called_once_with("testdebug")
+    mock_debug.assert_called_once_with("testdebug")
 
-    mocker.patch.object(logging, "info")
+    mock_info = MagicMock()
+    monkeypatch.setattr(logging, "info", mock_info)
     logger = LoggerDefault()
     logger.log_info("testinfo")
-    logging.info.assert_called_once_with("testinfo")
+    mock_info.assert_called_once_with("testinfo")
 
-    mocker.patch.object(logging, "warning")
+    mock_warning = MagicMock()
+    monkeypatch.setattr(logging, "warning", mock_warning)
     logger = LoggerDefault()
     logger.log_warning("tstwarn")
-    logging.warning.assert_called_once_with("tstwarn")
+    mock_warning.assert_called_once_with("tstwarn")
 
-    mocker.patch.object(logging, "error")
+    mock_error = MagicMock()
+    monkeypatch.setattr(logging, "error", mock_error)
     logger = LoggerDefault()
     logger.log_error("testerror")
-    logging.error.assert_called_once_with("testerror")
+    mock_error.assert_called_once_with("testerror")
 
-    mocker.patch.object(logging, "critical")
+    mock_critical = MagicMock()
+    monkeypatch.setattr(logging, "critical", mock_critical)
     logger = LoggerDefault()
     logger.log_critical("tcrit")
-    logging.critical.assert_called_once_with("tcrit")
+    mock_critical.assert_called_once_with("tcrit")
 
-    mocker.patch.object(logging, "exception")
+    mock_exception = MagicMock()
+    monkeypatch.setattr(logging, "exception", mock_exception)
     logger = LoggerDefault()
     logger.log_exception("texce")
-    logging.exception.assert_called_once_with("texce")
+    mock_exception.assert_called_once_with("texce")

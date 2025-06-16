@@ -32,17 +32,17 @@ class StartOrderExecutorUseCase:
         """
         try:
             self.logger.log_info("Starting order executor component...")
-            
+
             # Use the process manager service to start the order executor
             success = self.process_manager_service.start_order_executor()
-            
+
             if success:
                 self.logger.log_info("Order executor component started successfully")
             else:
                 self.logger.log_error("Failed to start order executor component")
-                
+
             return success
-            
+
         except Exception as e:
             self.logger.log_error(f"Failed to start order executor: {str(e)}")
             return False

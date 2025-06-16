@@ -1,4 +1,3 @@
-import pytest
 from src.interactor.use_cases.start_order_executor_use_case import StartOrderExecutorUseCase
 
 

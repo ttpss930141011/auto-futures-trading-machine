@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List
 
 
 @dataclass
@@ -26,4 +26,4 @@ class ShowFuturesInputDto:
 class ShowFuturesOutputDto:
     success: bool
     message: str
-    futures_data: List[FutureDataDto] = None 
+    futures_data: List[FutureDataDto] = None

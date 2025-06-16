@@ -13,11 +13,12 @@ class GetPositionController(CliMemoryControllerInterface):
     """Controller to fetch and display account positions."""
 
     def __init__(self, service_container):
-        """
+        """Initialize the get position controller.
+
         Args:
-            service_container: Provides shared services (logger, session_repository).
+            service_container: Provides shared services (logger, session_repository, exchange_api).
         """
-        self.config = service_container.config
+        self.service_container = service_container
         self.logger = service_container.logger
         self.session_repository = service_container.session_repository
 
@@ -40,7 +41,7 @@ class GetPositionController(CliMemoryControllerInterface):
             return
 
         # Prepare infrastructure and use case
-        repository = PFCFPositionRepository(client=self.config.EXCHANGE_CLIENT)
+        repository = PFCFPositionRepository(client=self.service_container.exchange_client)
         presenter = GetPositionPresenter()
         use_case = GetPositionUseCase(repository, presenter, self.logger)
 

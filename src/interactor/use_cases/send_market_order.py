@@ -3,7 +3,7 @@
 
 from typing import Dict
 
-from src.app.cli_pfcf.config import Config
+from src.infrastructure.services.service_container import ServiceContainer
 from src.interactor.dtos.send_market_order_dtos import (
     SendMarketOrderInputDto,
     SendMarketOrderOutputDto,
@@ -22,17 +22,29 @@ from src.interactor.validations.send_market_order_validator import SendMarketOrd
 
 
 class SendMarketOrderUseCase:
-    """This class is responsible for sending a market order."""
+    """Handles sending market orders to the exchange.
+
+    This class follows the Single Responsibility Principle by focusing
+    solely on market order execution.
+    """
 
     def __init__(
         self,
         presenter: SendMarketOrderPresenterInterface,
-        config: Config,
+        service_container: ServiceContainer,
         logger: LoggerInterface,
         session_repository: SessionRepositoryInterface,
-    ):
+    ) -> None:
+        """Initialize the send market order use case.
+
+        Args:
+            presenter: Presenter for formatting output.
+            service_container: Container with all application services.
+            logger: Logger for application logging.
+            session_repository: Repository for session management.
+        """
         self.presenter = presenter
-        self.config = config
+        self.service_container = service_container
         self.logger = logger
         self.session_repository = session_repository
 
@@ -50,11 +62,11 @@ class SendMarketOrderUseCase:
         if user is None:
             raise LoginFailedException("User not logged in")
 
-        pfcf_input = input_dto.to_pfcf_dict(self.config)
+        pfcf_input = input_dto.to_pfcf_dict(self.service_container)
 
         print(pfcf_input)
 
-        order = self.config.EXCHANGE_TRADE.OrderObject()
+        order = self.service_container.exchange_trade.OrderObject()
         order.ACTNO = pfcf_input.get("ACTNO")
         order.PRODUCTID = pfcf_input.get("PRODUCTID")
         order.BS = pfcf_input.get("BS")
@@ -66,7 +78,7 @@ class SendMarketOrderUseCase:
         order.DTRADE = pfcf_input.get("DTRADE")
         order.NOTE = pfcf_input.get("NOTE")
 
-        order_result = self.config.EXCHANGE_CLIENT.DTradeLib.Order(order)
+        order_result = self.service_container.exchange_client.DTradeLib.Order(order)
 
         if order_result is None:
             raise ItemNotCreatedException(input_dto.order_account, "Order")

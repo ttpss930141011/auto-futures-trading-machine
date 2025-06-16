@@ -47,7 +47,7 @@ def test_signal_handler_sets_running_false(monkeypatch):
     assert proc.running is False
     # Expect a log_info about signal
     assert any('shutting down strategy process' in msg for msg in dummy.infos)
-    
+
 def test_cleanup_closes_resources(monkeypatch):
     # Setup dummy components
     cfg = {'tick_sub_address': 'x', 'signal_push_address': 'y'}
@@ -77,7 +77,9 @@ def test_cleanup_closes_resources(monkeypatch):
     term_called = {'called': False}
     class DCtx:
         def __init__(self): self.closed = False
-        def term(self): term_called['called'] = True; self.closed = True
+        def term(self):
+            term_called['called'] = True
+            self.closed = True
     proc.context = DCtx()
     # Call cleanup
     proc._cleanup()

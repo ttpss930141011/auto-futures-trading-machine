@@ -41,38 +41,43 @@ def test_send_market_order_input_dto_valid(fixture_send_market_order):
     }
 
 
-def test_send_market_order_input_dto_to_pfcf_dict_valid(mocker, fixture_send_market_order):
-    mock_config = mocker.MagicMock()
-    mock_converter = mocker.patch("src.interactor.dtos.send_market_order_dtos.EnumConverter")
-    mock_converter_instance = mock_converter.return_value
-    mock_converter_instance.to_pfcf_enum.return_value = "Test Enum"
-    mock_converter_instance.to_pfcf_decimal.return_value = "Test Decimal"
+def test_send_market_order_input_dto_to_pfcf_dict_valid(fixture_send_market_order):
+    from unittest.mock import MagicMock, patch
 
-    input_dto = SendMarketOrderInputDto(
-        order_account=fixture_send_market_order["order_account"],
-        item_code=fixture_send_market_order["item_code"],
-        side=fixture_send_market_order["side"],
-        order_type=fixture_send_market_order["order_type"],
-        price=fixture_send_market_order["price"],
-        quantity=fixture_send_market_order["quantity"],
-        time_in_force=fixture_send_market_order["time_in_force"],
-        open_close=fixture_send_market_order["open_close"],
-        note=fixture_send_market_order["note"],
-    )
+    # Create service container mock
+    mock_service_container = MagicMock()
+    mock_service_container.exchange_api = MagicMock()
 
-    pfcf_dict = input_dto.to_pfcf_dict(config=mock_config)
+    with patch("src.interactor.dtos.send_market_order_dtos.EnumConverter") as mock_converter:
+        mock_converter_instance = mock_converter.return_value
+        mock_converter_instance.to_pfcf_enum.return_value = "Test Enum"
+        mock_converter_instance.to_pfcf_decimal.return_value = "Test Decimal"
 
-    mock_converter_instance.to_pfcf_enum.assert_called()
-    mock_converter.assert_called_once_with(mock_config)
-    assert pfcf_dict == {
-        "ACTNO": fixture_send_market_order["order_account"],
-        "PRODUCTID": fixture_send_market_order["item_code"],
-        "BS": "Test Enum",
-        "ORDERTYPE": "Test Enum",
-        "PRICE": "Test Decimal",
-        "ORDERQTY": fixture_send_market_order["quantity"],
-        "TIMEINFORCE": "Test Enum",
-        "OPENCLOSE": "Test Enum",
-        "DTRADE": "Test Enum",
-        "NOTE": fixture_send_market_order["note"],
-    }
+        input_dto = SendMarketOrderInputDto(
+            order_account=fixture_send_market_order["order_account"],
+            item_code=fixture_send_market_order["item_code"],
+            side=fixture_send_market_order["side"],
+            order_type=fixture_send_market_order["order_type"],
+            price=fixture_send_market_order["price"],
+            quantity=fixture_send_market_order["quantity"],
+            time_in_force=fixture_send_market_order["time_in_force"],
+            open_close=fixture_send_market_order["open_close"],
+            note=fixture_send_market_order["note"],
+        )
+
+        pfcf_dict = input_dto.to_pfcf_dict(service_container=mock_service_container)
+
+        mock_converter_instance.to_pfcf_enum.assert_called()
+        mock_converter.assert_called_once_with(mock_service_container.exchange_api)
+        assert pfcf_dict == {
+            "ACTNO": fixture_send_market_order["order_account"],
+            "PRODUCTID": fixture_send_market_order["item_code"],
+            "BS": "Test Enum",
+            "ORDERTYPE": "Test Enum",
+            "PRICE": "Test Decimal",
+            "ORDERQTY": fixture_send_market_order["quantity"],
+            "TIMEINFORCE": "Test Enum",
+            "OPENCLOSE": "Test Enum",
+            "DTRADE": "Test Enum",
+            "NOTE": fixture_send_market_order["note"],
+        }

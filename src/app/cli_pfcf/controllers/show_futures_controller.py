@@ -11,6 +11,7 @@ class ShowFuturesController(CliMemoryControllerInterface):
     """
 
     def __init__(self, service_container: ServiceContainer):
+        self.service_container = service_container
         self.logger = service_container.logger
         self.config = service_container.config
         self.session_repository = service_container.session_repository
@@ -27,10 +28,10 @@ class ShowFuturesController(CliMemoryControllerInterface):
         if self.session_repository.is_user_logged_in() is False:
             self.logger.log_info("User not logged in")
             return
-            
+
         presenter = ShowFuturesPresenter()
         input_dto = self._get_user_info()
-        use_case = ShowFuturesUseCase(presenter, self.config, self.logger, self.session_repository)
+        use_case = ShowFuturesUseCase(presenter, self.service_container)
         result = use_case.execute(input_dto)
         view = ShowFuturesView()
-        view.show(result) 
+        view.show(result)

@@ -64,7 +64,7 @@ def _decode_datetime(dct: Dict[str, Any]) -> Any:
     if "__datetime__" in dct:
         # Convert timestamp back to datetime object (UTC assumed if no timezone info)
         # Using fromtimestamp handles potential float precision issues better
-        return datetime.datetime.fromtimestamp(dct["timestamp"])
+        return datetime.datetime.fromtimestamp(dct["timestamp"], datetime.timezone.utc)
     return dct
 
 

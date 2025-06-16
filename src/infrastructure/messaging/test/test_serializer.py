@@ -16,12 +16,13 @@ def test_serialize_deserialize_enum():
 
 
 def test_serialize_deserialize_datetime():
-    dt = datetime.datetime(2021, 5, 4, 12, 30, 45, 123456)
+    dt = datetime.datetime(2021, 5, 4, 12, 30, 45, 123456, tzinfo=datetime.timezone.utc)
     data = serialize(dt)
     result = deserialize(data)
     assert isinstance(result, datetime.datetime)
     # Compare ISO format to avoid timezone differences
     assert result.isoformat().startswith('2021-05-04T12:30:45')
+    assert result == dt  # Should be exactly equal for UTC datetime
 
 
 def test_serialize_deserialize_tick():
@@ -34,7 +35,7 @@ def test_serialize_deserialize_tick():
 
 
 def test_serialize_deserialize_tick_event():
-    dt = datetime.datetime.utcnow()
+    dt = datetime.datetime.now(datetime.timezone.utc)
     tick = Tick('C2', 50.5)
     ev = TickEvent(dt, tick)
     data = serialize(ev)
@@ -46,7 +47,7 @@ def test_serialize_deserialize_tick_event():
 
 
 def test_serialize_deserialize_trading_signal():
-    dt = datetime.datetime.utcnow()
+    dt = datetime.datetime.now(datetime.timezone.utc)
     sig = TradingSignal(dt, OrderOperation.SELL, 'X9')
     data = serialize(sig)
     result = deserialize(data)
@@ -58,7 +59,7 @@ def test_serialize_deserialize_trading_signal():
 
 def test_serialize_complex_structure():
     # Nested list containing different serializable types
-    dt = datetime.datetime.utcnow()
+    dt = datetime.datetime.now(datetime.timezone.utc)
     tick = Tick('C3', 77.7)
     sig = TradingSignal(dt, OrderOperation.BUY, 'Y1')
     payload = {'time': dt, 'events': [tick, sig, OrderOperation.SELL]}

@@ -179,3 +179,141 @@ class TestZmqPublisher:
         # Close should be called automatically
         mock_socket.close.assert_called_once()
         mock_context_instance.term.assert_called_once()
+
+    @patch('time.sleep')
+    @patch('zmq.Context')
+    def test_init_socket_retry_mechanism(self, mock_context, mock_sleep):
+        """Test socket initialization retry mechanism."""
+        mock_context_instance = Mock()
+        mock_socket = Mock()
+        mock_context.return_value = mock_context_instance
+        mock_context_instance.socket.return_value = mock_socket
+        
+        # First two bind attempts fail, third succeeds
+        mock_socket.bind.side_effect = [
+            zmq.ZMQError("Address already in use"),
+            zmq.ZMQError("Address already in use"),
+            None  # Success on third attempt
+        ]
+        
+        # Test initialization with retries
+        publisher = ZmqPublisher(self.address, self.logger, connect_retry_attempts=3)
+        
+        # Verify bind was called 3 times
+        assert mock_socket.bind.call_count == 3
+        # Verify sleep was called for retry delays
+        assert mock_sleep.call_count >= 2
+
+    @patch('zmq.Context')
+    def test_init_socket_all_retries_fail(self, mock_context):
+        """Test socket initialization when all retry attempts fail."""
+        mock_context_instance = Mock()
+        mock_socket = Mock()
+        mock_context.return_value = mock_context_instance
+        mock_context_instance.socket.return_value = mock_socket
+        
+        # All bind attempts fail
+        mock_socket.bind.side_effect = zmq.ZMQError("Address already in use")
+        
+        # Test initialization should handle all failed attempts gracefully
+        publisher = ZmqPublisher(self.address, self.logger, connect_retry_attempts=2)
+        
+        # Should have attempted bind twice
+        assert mock_socket.bind.call_count == 2
+        # Publisher should not be initialized
+        assert not hasattr(publisher, '_is_initialized') or not publisher._is_initialized
+
+    @patch('zmq.Context')
+    def test_socket_cleanup_during_retry(self, mock_context):
+        """Test socket cleanup during retry attempts."""
+        mock_context_instance = Mock()
+        mock_socket1 = Mock()
+        mock_socket2 = Mock()
+        mock_context.return_value = mock_context_instance
+        
+        # Return different socket instances on subsequent calls
+        mock_context_instance.socket.side_effect = [mock_socket1, mock_socket2]
+        
+        # First bind fails, second succeeds
+        mock_socket1.bind.side_effect = zmq.ZMQError("Bind failed")
+        mock_socket2.bind.return_value = None
+        
+        # Test initialization
+        publisher = ZmqPublisher(self.address, self.logger, connect_retry_attempts=2)
+        
+        # Verify first socket was closed after failure
+        mock_socket1.close.assert_called_once()
+        # Verify second socket was used successfully
+        mock_socket2.bind.assert_called_once()
+
+    @patch('zmq.Context')
+    def test_socket_cleanup_error_handling(self, mock_context):
+        """Test error handling during socket cleanup."""
+        mock_context_instance = Mock()
+        mock_socket = Mock()
+        mock_context.return_value = mock_context_instance
+        mock_context_instance.socket.return_value = mock_socket
+        
+        # Socket close raises error
+        mock_socket.close.side_effect = zmq.ZMQError("Close failed")
+        mock_socket.bind.side_effect = zmq.ZMQError("Bind failed")
+        
+        # Should handle cleanup error gracefully
+        publisher = ZmqPublisher(self.address, self.logger, connect_retry_attempts=1)
+        
+        # Logger should have recorded the warning
+        self.logger.log_warning.assert_called()
+
+    @patch('zmq.Context')
+    def test_socket_options_configuration(self, mock_context):
+        """Test socket options are properly configured."""
+        mock_context_instance = Mock()
+        mock_socket = Mock()
+        mock_context.return_value = mock_context_instance
+        mock_context_instance.socket.return_value = mock_socket
+        
+        # Test initialization
+        publisher = ZmqPublisher(self.address, self.logger)
+        
+        # Verify socket options were set
+        mock_socket.setsockopt.assert_any_call(zmq.LINGER, 0)
+        mock_socket.setsockopt.assert_any_call(zmq.SNDHWM, 1000)
+
+    @patch('zmq.Context')
+    def test_internal_address_storage(self, mock_context):
+        """Test internal address storage."""
+        mock_context_instance = Mock()
+        mock_socket = Mock()
+        mock_context.return_value = mock_context_instance
+        mock_context_instance.socket.return_value = mock_socket
+        
+        publisher = ZmqPublisher(self.address, self.logger)
+        
+        assert publisher._address == self.address
+
+    @patch('zmq.Context')
+    def test_initialization_status(self, mock_context):
+        """Test initialization status tracking."""
+        mock_context_instance = Mock()
+        mock_socket = Mock()
+        mock_context.return_value = mock_context_instance
+        mock_context_instance.socket.return_value = mock_socket
+        
+        publisher = ZmqPublisher(self.address, self.logger)
+        
+        # Should have initialization status
+        assert hasattr(publisher, '_is_initialized')
+
+    @patch('zmq.Context')
+    def test_custom_context_usage(self, mock_context):
+        """Test using custom ZMQ context."""
+        custom_context = Mock()
+        mock_socket = Mock()
+        custom_context.socket.return_value = mock_socket
+        
+        # Test with custom context
+        publisher = ZmqPublisher(self.address, self.logger, context=custom_context)
+        
+        # Should use provided context, not create new one
+        mock_context.instance.assert_not_called()
+        custom_context.socket.assert_called_once_with(zmq.PUB)

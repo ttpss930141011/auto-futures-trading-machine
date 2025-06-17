@@ -1,7 +1,7 @@
 """Tests for PFCF API."""
 
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 
 from src.infrastructure.pfcf_client.api import PFCFApi
 
@@ -9,92 +9,172 @@ from src.infrastructure.pfcf_client.api import PFCFApi
 class TestPFCFApi:
     """Test cases for PFCFApi."""
 
-    def setup_method(self):
-        """Set up test fixtures."""
-        pass
-
-    def test_init_creates_api_instance(self):
-        """Test initialization creates API instance."""
+    @patch('src.infrastructure.pfcf_client.api.PFCFAPI')
+    @patch('src.infrastructure.pfcf_client.api.DTrade')
+    @patch('src.infrastructure.pfcf_client.api.Decimal')
+    def test_init_creates_api_instance(self, mock_decimal, mock_dtrade, mock_pfcf):
+        """Test PFCFApi initialization creates required instances."""
+        mock_client = Mock()
+        mock_pfcf.return_value = mock_client
+        
+        # Mock all the event handlers that get connected
+        self._setup_mock_client_events(mock_client)
+        
         api = PFCFApi()
         
-        assert hasattr(api, 'client')
-        assert hasattr(api, 'trade')
-        assert hasattr(api, 'decimal')
+        assert api.client == mock_client
+        assert api.trade == mock_dtrade
+        assert api.decimal == mock_decimal
 
-    @patch('src.infrastructure.pfcf_client.api.DLLManager')
-    def test_client_property_returns_client(self, mock_dll_manager):
-        """Test client property returns client instance."""
+    @patch('src.infrastructure.pfcf_client.api.PFCFAPI')
+    def test_client_property_returns_client(self, mock_pfcf):
+        """Test that client property returns the PFCF client."""
         mock_client = Mock()
-        mock_dll_manager.return_value.client = mock_client
+        mock_pfcf.return_value = mock_client
+        self._setup_mock_client_events(mock_client)
         
         api = PFCFApi()
         
         assert api.client == mock_client
 
-    @patch('src.infrastructure.pfcf_client.api.DLLManager')
-    def test_trade_property_returns_trade(self, mock_dll_manager):
-        """Test trade property returns trade instance."""
-        mock_trade = Mock()
-        mock_dll_manager.return_value.trade = mock_trade
+    @patch('src.infrastructure.pfcf_client.api.PFCFAPI')
+    @patch('src.infrastructure.pfcf_client.api.DTrade')
+    def test_trade_property_returns_trade(self, mock_dtrade, mock_pfcf):
+        """Test that trade property returns DTrade."""
+        mock_client = Mock()
+        mock_pfcf.return_value = mock_client
+        self._setup_mock_client_events(mock_client)
         
         api = PFCFApi()
         
-        assert api.trade == mock_trade
+        assert api.trade == mock_dtrade
 
-    @patch('src.infrastructure.pfcf_client.api.DLLManager')
-    def test_decimal_property_returns_decimal(self, mock_dll_manager):
-        """Test decimal property returns decimal instance."""
-        mock_decimal = Mock()
-        mock_dll_manager.return_value.decimal = mock_decimal
+    @patch('src.infrastructure.pfcf_client.api.PFCFAPI')
+    @patch('src.infrastructure.pfcf_client.api.Decimal')
+    def test_decimal_property_returns_decimal(self, mock_decimal, mock_pfcf):
+        """Test that decimal property returns Decimal."""
+        mock_client = Mock()
+        mock_pfcf.return_value = mock_client
+        self._setup_mock_client_events(mock_client)
         
         api = PFCFApi()
         
         assert api.decimal == mock_decimal
 
-    @patch('src.infrastructure.pfcf_client.api.DLLManager')
-    def test_api_initialization_with_dll_manager(self, mock_dll_manager):
-        """Test API initializes with DLL manager."""
-        mock_dll_instance = Mock()
-        mock_dll_manager.return_value = mock_dll_instance
+    @patch('src.infrastructure.pfcf_client.api.PFCFAPI')
+    def test_event_handlers_are_connected(self, mock_pfcf):
+        """Test that all event handlers are properly connected."""
+        mock_client = Mock()
+        mock_pfcf.return_value = mock_client
+        self._setup_mock_client_events(mock_client)
         
         api = PFCFApi()
         
-        # Verify DLLManager was called
-        mock_dll_manager.assert_called_once()
-        
-        # Verify the DLL manager instance is stored
-        assert api._dll_manager == mock_dll_instance
+        # Verify all event handlers were connected
+        mock_client.PFCloginStatus.__iadd__.assert_called()
+        mock_client.PFCErrorData.__iadd__.assert_called()
+        mock_client.DQuoteLib.OnConnected.__iadd__.assert_called()
+        mock_client.DQuoteLib.OnDisconnected.__iadd__.assert_called()
+        mock_client.DTradeLib.OnReply.__iadd__.assert_called()
+        mock_client.DTradeLib.OnMatch.__iadd__.assert_called()
+        mock_client.DTradeLib.OnQueryReply.__iadd__.assert_called()
+        mock_client.DTradeLib.OnQueryMatch.__iadd__.assert_called()
+        mock_client.DAccountLib.OnConnected.__iadd__.assert_called()
+        mock_client.DAccountLib.OnDisconnected.__iadd__.assert_called()
+        mock_client.DAccountLib.OnMarginData.__iadd__.assert_called()
+        mock_client.DAccountLib.OnMarginError.__iadd__.assert_called()
+        mock_client.DAccountLib.OnPositionData.__iadd__.assert_called()
+        mock_client.DAccountLib.OnPositionError.__iadd__.assert_called()
+        mock_client.DAccountLib.OnUnLiquidationMainData.__iadd__.assert_called()
+        mock_client.DAccountLib.OnUnLiquidationMainError.__iadd__.assert_called()
+        mock_client.NoticeLib.OnConnected.__iadd__.assert_called()
+        mock_client.NoticeLib.OnDisconnected.__iadd__.assert_called()
 
-    def test_api_properties_are_accessible(self):
-        """Test all API properties are accessible."""
+    @patch('src.infrastructure.pfcf_client.api.PFCFAPI')
+    def test_api_properties_are_accessible(self, mock_pfcf):
+        """Test that all API properties are accessible."""
+        mock_client = Mock()
+        mock_pfcf.return_value = mock_client
+        self._setup_mock_client_events(mock_client)
+        
         api = PFCFApi()
         
-        # These should not raise exceptions
-        try:
-            _ = api.client
-            _ = api.trade  
-            _ = api.decimal
-        except Exception as e:
-            pytest.fail(f"API properties should be accessible: {e}")
+        # Should be able to access all properties without error
+        assert hasattr(api, 'client')
+        assert hasattr(api, 'trade')
+        assert hasattr(api, 'decimal')
 
-    @patch('src.infrastructure.pfcf_client.api.DLLManager')
-    def test_api_handles_dll_manager_exception(self, mock_dll_manager):
-        """Test API handles DLL manager initialization exceptions."""
-        mock_dll_manager.side_effect = Exception("DLL initialization failed")
+    @patch('src.infrastructure.pfcf_client.api.PFCFAPI')
+    def test_api_handles_dll_manager_exception(self, mock_pfcf):
+        """Test API handles DLL manager exceptions gracefully."""
+        mock_pfcf.side_effect = Exception("DLL loading failed")
         
-        # This should still work even if DLL initialization fails
-        # The actual error handling depends on the DLLManager implementation
-        with pytest.raises(Exception, match="DLL initialization failed"):
+        # Should propagate the exception
+        with pytest.raises(Exception, match="DLL loading failed"):
             PFCFApi()
 
-    @patch('src.infrastructure.pfcf_client.api.DLLManager')
-    def test_multiple_api_instances(self, mock_dll_manager):
-        """Test multiple API instances can be created."""
-        mock_dll_manager.return_value = Mock()
+    @patch('src.infrastructure.pfcf_client.api.PFCFAPI')
+    def test_multiple_api_instances(self, mock_pfcf):
+        """Test that multiple API instances can be created."""
+        mock_client1 = Mock()
+        mock_client2 = Mock()
+        mock_pfcf.side_effect = [mock_client1, mock_client2]
+        
+        self._setup_mock_client_events(mock_client1)
+        self._setup_mock_client_events(mock_client2)
         
         api1 = PFCFApi()
         api2 = PFCFApi()
         
-        # Each should have its own DLL manager
-        assert mock_dll_manager.call_count == 2
-        assert api1._dll_manager != api2._dll_manager
+        assert api1.client == mock_client1
+        assert api2.client == mock_client2
+        assert api1.client != api2.client
+
+    @patch('src.infrastructure.pfcf_client.api.PFCFAPI')
+    def test_api_initialization_with_mock_dll(self, mock_pfcf):
+        """Test API initialization works with mock DLL."""
+        mock_client = Mock()
+        mock_pfcf.return_value = mock_client
+        self._setup_mock_client_events(mock_client)
+        
+        # Should complete initialization without errors
+        api = PFCFApi()
+        
+        # Verify initialization completed
+        assert api.client is not None
+        assert api.trade is not None
+        assert api.decimal is not None
+
+    def _setup_mock_client_events(self, mock_client):
+        """Set up all required mock events for the client."""
+        # Main client events
+        mock_client.PFCloginStatus = Mock()
+        mock_client.PFCErrorData = Mock()
+        
+        # DQuoteLib events
+        mock_client.DQuoteLib = Mock()
+        mock_client.DQuoteLib.OnConnected = Mock()
+        mock_client.DQuoteLib.OnDisconnected = Mock()
+        
+        # DTradeLib events
+        mock_client.DTradeLib = Mock()
+        mock_client.DTradeLib.OnReply = Mock()
+        mock_client.DTradeLib.OnMatch = Mock()
+        mock_client.DTradeLib.OnQueryReply = Mock()
+        mock_client.DTradeLib.OnQueryMatch = Mock()
+        
+        # DAccountLib events
+        mock_client.DAccountLib = Mock()
+        mock_client.DAccountLib.OnConnected = Mock()
+        mock_client.DAccountLib.OnDisconnected = Mock()
+        mock_client.DAccountLib.OnMarginData = Mock()
+        mock_client.DAccountLib.OnMarginError = Mock()
+        mock_client.DAccountLib.OnPositionData = Mock()
+        mock_client.DAccountLib.OnPositionError = Mock()
+        mock_client.DAccountLib.OnUnLiquidationMainData = Mock()
+        mock_client.DAccountLib.OnUnLiquidationMainError = Mock()
+        
+        # NoticeLib events
+        mock_client.NoticeLib = Mock()
+        mock_client.NoticeLib.OnConnected = Mock()
+        mock_client.NoticeLib.OnDisconnected = Mock()

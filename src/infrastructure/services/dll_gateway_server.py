@@ -11,7 +11,7 @@ import zmq
 from typing import Any, Dict, Optional, List
 from dataclasses import asdict
 
-from src.infrastructure.pfcf_client.api import PFCFApi
+from src.domain.interfaces.exchange_api_interface import ExchangeApiInterface
 from src.interactor.interfaces.logger.logger import LoggerInterface
 from src.app.cli_pfcf.config import Config
 from src.interactor.dtos.send_market_order_dtos import (
@@ -36,7 +36,7 @@ class DllGatewayServer:
 
     def __init__(
         self,
-        exchange_client: PFCFApi,
+        exchange_client: ExchangeApiInterface,
         config: Config,
         logger: LoggerInterface,
         bind_address: str = "tcp://*:5557",
@@ -45,7 +45,7 @@ class DllGatewayServer:
         """Initialize DLL Gateway Server.
 
         Args:
-            exchange_client: The exchange API client instance.
+            exchange_client: The exchange API client instance implementing ExchangeApiInterface.
             config: Configuration object for enum conversion.
             logger: Logger for recording events.
             bind_address: ZeroMQ bind address for the server.
@@ -266,7 +266,7 @@ class DllGatewayServer:
             }
 
     def _execute_order(self, input_dto: SendMarketOrderInputDto) -> SendMarketOrderOutputDto:
-        """Execute order using exchange DLL.
+        """Execute order using exchange API.
 
         Args:
             input_dto: The order input DTO to execute.
@@ -275,45 +275,30 @@ class DllGatewayServer:
             SendMarketOrderOutputDto with execution result.
         """
         try:
-            # Convert to PFCF format using the exchange API
-            # Create a temporary service container-like object for enum conversion
-            from types import SimpleNamespace
-            temp_service_container = SimpleNamespace()
-            temp_service_container.exchange_api = self._exchange_client
-            pfcf_input = input_dto.to_pfcf_dict(temp_service_container)
+            # Convert DTO to standard OrderRequest format
+            from src.domain.interfaces.exchange_api_interface import OrderRequest
+            
+            order_request = OrderRequest(
+                account=input_dto.order_account,
+                symbol=input_dto.item_code,
+                side='BUY' if input_dto.side.value == 'BUY' else 'SELL',
+                order_type='MARKET' if input_dto.order_type.value == 'Market' else 'LIMIT',
+                quantity=input_dto.quantity,
+                price=input_dto.price,
+                time_in_force=input_dto.time_in_force.value,
+                note=input_dto.note
+            )
 
-            # Use the correct DLL API pattern matching send_market_order.py
-            order = self._exchange_client.trade.OrderObject()
-            order.ACTNO = pfcf_input.get("ACTNO")
-            order.PRODUCTID = pfcf_input.get("PRODUCTID")
-            order.BS = pfcf_input.get("BS")
-            order.ORDERTYPE = pfcf_input.get("ORDERTYPE")
-            order.PRICE = pfcf_input.get("PRICE")
-            order.ORDERQTY = pfcf_input.get("ORDERQTY")
-            order.TIMEINFORCE = pfcf_input.get("TIMEINFORCE")
-            order.OPENCLOSE = pfcf_input.get("OPENCLOSE")
-            order.DTRADE = pfcf_input.get("DTRADE")
-            order.NOTE = pfcf_input.get("NOTE")
+            # Execute order using abstract interface
+            order_result = self._exchange_client.send_order(order_request)
 
-            # Execute order using the correct API (same as send_market_order.py)
-            order_result = self._exchange_client.client.DTradeLib.Order(order)
-
-            if order_result is None:
-                return SendMarketOrderOutputDto(
-                    is_send_order=False,
-                    note="",
-                    order_serial="",
-                    error_code="NULL_RESULT",
-                    error_message="Order execution returned None"
-                )
-
-            # Return the result in the same format as send_market_order.py
+            # Convert result back to DTO format
             return SendMarketOrderOutputDto(
-                is_send_order=order_result.ISSEND,
-                note=order_result.NOTE,
-                order_serial=order_result.SEQ,
-                error_code=str(order_result.ERRORCODE),
-                error_message=order_result.ERRORMSG,
+                is_send_order=order_result.success,
+                note=order_result.message or "",
+                order_serial=order_result.order_id or "",
+                error_code=order_result.error_code or "",
+                error_message=order_result.message or ""
             )
 
         except Exception as e:
@@ -355,7 +340,7 @@ class DllGatewayServer:
             }
 
     def _get_account_positions(self, _account: str) -> List[PositionInfo]:
-        """Get positions for an account using exchange DLL.
+        """Get positions for an account using exchange API.
 
         Args:
             _account: The trading account identifier.
@@ -364,15 +349,23 @@ class DllGatewayServer:
             List of position information.
         """
         try:
-            # Query positions through exchange API
-            # This is a placeholder - actual implementation depends on DLL API
-            positions = []
-
-            # Note: Actual implementation would call DLL methods like:
-            # position_data = self._exchange_client.client.DAccountLib.QueryPosition(account)
-            # Then parse the response and create PositionInfo objects
-
-            return positions
+            # Query positions through abstract interface
+            positions = self._exchange_client.get_positions(_account)
+            
+            # Convert to PositionInfo format
+            position_infos = []
+            for pos in positions:
+                position_infos.append(PositionInfo(
+                    account=pos.account,
+                    symbol=pos.symbol,
+                    quantity=pos.quantity,
+                    side=pos.side,
+                    average_price=pos.average_price,
+                    unrealized_pnl=pos.unrealized_pnl,
+                    realized_pnl=pos.realized_pnl
+                ))
+            
+            return position_infos
 
         except Exception as e:
             self._logger.log_error(f"Error querying positions from exchange: {e}")
@@ -385,8 +378,8 @@ class DllGatewayServer:
             Health status dictionary.
         """
         try:
-            # Check exchange client connectivity
-            is_connected = self._exchange_client.client is not None
+            # Check exchange client connectivity using abstract interface
+            is_connected = self._exchange_client.is_connected()
 
             return {
                 "success": True,

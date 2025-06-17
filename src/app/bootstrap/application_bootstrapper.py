@@ -186,9 +186,18 @@ class ApplicationBootstrapper:
         Returns:
             Configured SystemManager instance
         """
-        # Create DLL Gateway Server
+        # Create exchange API using factory
+        from src.infrastructure.exchange_adapters import ExchangeFactory
+        
+        # For now, we wrap the existing PFCF API with the adapter
+        exchange_api = ExchangeFactory.create_exchange_api(
+            provider="PFCF",
+            service_container=service_container
+        )
+        
+        # Create DLL Gateway Server with abstract interface
         gateway_server = DllGatewayServer(
-            exchange_client=self._exchange_api,
+            exchange_client=exchange_api,
             config=self._config,
             logger=self._logger,
             bind_address=self._config.DLL_GATEWAY_BIND_ADDRESS,

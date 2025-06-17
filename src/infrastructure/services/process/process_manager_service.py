@@ -38,8 +38,8 @@ class ProcessManagerService(ProcessManagerServiceInterface):
         self.project_root: Path = Path(__file__).resolve().parents[4]
 
         # Paths to standalone process scripts
-        self.strategy_script_path: Path = self.project_root / "run_strategy.py"
-        self.order_executor_script_path: Path = self.project_root / "run_order_executor_gateway.py"
+        self.strategy_script_path: Path = self.project_root / "process" / "run_strategy.py"
+        self.order_executor_script_path: Path = self.project_root / "process" / "run_order_executor_gateway.py"
 
         # Directory for PID files
         self.pid_dir: Path = self.project_root / "tmp" / "pids"

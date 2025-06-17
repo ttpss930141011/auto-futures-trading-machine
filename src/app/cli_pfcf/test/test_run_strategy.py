@@ -2,6 +2,8 @@ import sys
 import signal
 import pytest
 
+# Add process directory to path for importing run_strategy
+sys.path.insert(0, str(sys.path[0] + '/../../../../process'))
 import run_strategy
 
 

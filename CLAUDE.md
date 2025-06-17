@@ -62,10 +62,10 @@ ruff format .
 python app.py
 
 # Strategy process (separate process)
-python run_strategy.py
+python process/run_strategy.py
 
 # Order executor process (separate process)
-python run_order_executor_gateway.py
+python process/run_order_executor_gateway.py
 ```
 
 ## 🏛️ High-Level Architecture
@@ -93,8 +93,10 @@ The system uses a **DLL Gateway Architecture** with three main processes managed
 - **Clean Architecture**: Domain layer isolated from infrastructure
 - **Event-Driven Design**: ZeroMQ messaging for real-time communication
 - **Repository Pattern**: Abstracted data access layer
-- **Dependency Injection**: Service container pattern
+- **Dependency Injection**: ServiceContainer manages all dependencies
+- **Service Layer**: Gateway Services for infrastructure abstraction
 - **CQRS**: Separate DTOs for commands and queries
+- **Component Status Management**: Enum-based status tracking with health checks
 
 ### ZeroMQ Communication Ports
 - `5555`: Market data broadcast (PUB/SUB)
@@ -112,9 +114,23 @@ src/
 ```
 
 ### Important Component Locations
-- **SystemManager**: `src/infrastructure/services/system_manager.py` - Centralized lifecycle management
-- **MarketDataGatewayService**: `src/infrastructure/services/gateway/market_data_gateway_service.py` - Market data publishing
+
+#### Core Infrastructure
+- **ApplicationBootstrapper**: `src/app/bootstrap/application_bootstrapper.py` - Dependency injection and initialization
+- **ServiceContainer**: `src/infrastructure/services/service_container.py` - Centralized dependency management
+- **SystemManager**: `src/infrastructure/services/system_manager.py` - Component lifecycle with status management
+
+#### Gateway Services Layer
+- **MarketDataGatewayService**: `src/infrastructure/services/gateway/market_data_gateway_service.py` - Market data infrastructure
+- **PortCheckerService**: `src/infrastructure/services/gateway/port_checker_service.py` - Port availability validation
+- **GatewayInitializerService**: `src/infrastructure/services/gateway/gateway_initializer_service.py` - ZMQ component initialization
+
+#### Core Services
 - **DllGatewayServer**: `src/infrastructure/services/dll_gateway_server.py` - Order execution server
+- **ProcessManagerService**: `src/infrastructure/services/process/process_manager_service.py` - Process lifecycle with PID management
+- **StatusChecker**: `src/infrastructure/services/status_checker.py` - System health monitoring
+
+#### Application Layer
 - **Controllers**: `src/app/cli_pfcf/controllers/` - Handle CLI user interactions
 - **Use Cases**: `src/interactor/use_cases/` - Business logic orchestration
 - **Entities**: `src/domain/entities/` - Core business objects
@@ -126,8 +142,29 @@ src/
 
 ### Environment Setup
 - Copy `.env.example` to `.env` and configure PFCF credentials
-- Required: `DEALER_TEST_URL`, `DEALER_PROD_URL`
-- Optional: ZMQ ports, logging levels, timeouts
+
+#### Required Environment Variables
+- `DEALER_TEST_URL`: PFCF test environment URL
+- `DEALER_PROD_URL`: PFCF production environment URL
+
+#### Optional Environment Variables
+```bash
+# ZMQ Configuration
+ZMQ_HOST=127.0.0.1
+ZMQ_TICK_PORT=5555
+ZMQ_SIGNAL_PORT=5556
+
+# DLL Gateway Configuration
+DLL_GATEWAY_HOST=127.0.0.1
+DLL_GATEWAY_PORT=5557
+DLL_GATEWAY_REQUEST_TIMEOUT_MS=5000
+DLL_GATEWAY_RETRY_COUNT=3
+```
+
+#### Directory Structure Created at Runtime
+- `tmp/pids/`: Process ID files for lifecycle management
+- `logs/`: Application logs
+- `src/data/`: JSON file repositories (sessions, conditions)
 
 ### Key Files
 - `pyproject.toml`: Poetry dependencies and tool configurations
@@ -135,9 +172,10 @@ src/
 - `.cursor/rules/python.mdc`: Development standards and practices
 
 ### 📚 Architecture Documentation
-- `ARCHITECTURE.md`: 系統總覽和架構圖表
-- `DETAILED_FLOW_DIAGRAMS.md`: 詳細的流程圖和數據流向
-- `CLASS_DESIGN_GUIDE.md`: 類別設計指南和 OOP 原則應用
+- [Architecture Guide](docs/ARCHITECTURE.md): Complete system overview with English documentation
+- [ServiceContainer Architecture Update](docs/architecture/SERVICECONTAINER_ARCHITECTURE_UPDATE.md): Latest architectural improvements
+- [Detailed Flow Diagrams](docs/architecture/DETAILED_FLOW_DIAGRAMS.md): Process flows and data interactions
+- [Class Design Guide](docs/architecture/CLASS_DESIGN_GUIDE.md): OOP principles and design patterns
 
 ## 🧪 Testing Strategy
 
@@ -148,7 +186,10 @@ src/
 - Comprehensive mocking with pytest-mock
 
 ### Critical Test Areas
-- **SystemManager lifecycle management** - Component startup/shutdown coordination
+- **ApplicationBootstrapper** - Dependency injection and validation
+- **ServiceContainer** - Centralized dependency management
+- **SystemManager lifecycle management** - Component status management, health checks, startup/shutdown coordination
+- **Gateway Services** - Port checking, market data gateway, process management
 - Use case business logic validation
 - ZMQ messaging serialization/deserialization
 - DLL Gateway client/server communication
@@ -177,3 +218,15 @@ src/
 - Tick processing: < 1ms latency target
 - Signal generation: < 5ms from tick to decision
 - Order execution: < 10ms round-trip to exchange
+
+### Component Status Management
+- **Status Tracking**: All components use `ComponentStatus` enum (STOPPED, STARTING, RUNNING, STOPPING, ERROR)
+- **Health Monitoring**: SystemManager provides health checks and uptime tracking
+- **Graceful Shutdown**: Coordinated shutdown sequence with proper cleanup
+- **PID Management**: ProcessManagerService handles PID files in `tmp/pids/` directory
+
+### Dependency Injection Architecture
+- **ServiceContainer**: Centralized container for all application dependencies
+- **ApplicationBootstrapper**: Handles initialization sequence and validation
+- **Clean Separation**: Core components, repositories, and services properly injected
+- **Configuration Validation**: Comprehensive environment variable validation during bootstrap

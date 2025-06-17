@@ -1,17 +1,17 @@
-# 🔄 Auto Futures Trading Machine - 詳細流程圖
+# 🔄 Auto Futures Trading Machine - Detailed Flow Diagrams
 
-## 📋 目錄
-1. [應用程式啟動詳細流程](#應用程式啟動詳細流程)
-2. [All-In-One 初始化流程](#all-in-one-初始化流程)
-3. [市場數據處理流程](#市場數據處理流程)
-4. [訂單執行完整流程](#訂單執行完整流程)
-5. [SystemManager 狀態管理](#systemmanager-狀態管理)
+## 📋 Table of Contents
+1. [Application Startup Detailed Flow](#application-startup-detailed-flow)
+2. [All-In-One Initialization Flow](#all-in-one-initialization-flow)
+3. [Market Data Processing Flow](#market-data-processing-flow)
+4. [Order Execution Complete Flow](#order-execution-complete-flow)
+5. [SystemManager State Management](#systemmanager-state-management)
 
 ---
 
-## 應用程式啟動詳細流程
+## Application Startup Detailed Flow
 
-### 🚀 **從 app.py 到運行的完整路徑**
+### 🚀 **Complete Path from app.py to Running**
 
 ```mermaid
 sequenceDiagram
@@ -21,36 +21,36 @@ sequenceDiagram
     participant SM as SystemManager
     participant Container as ServiceContainer
     
-    Note over Main: 程式入口點
-    Main->>Bootstrap: 創建 ApplicationBootstrapper()
+    Note over Main: Program entry point
+    Main->>Bootstrap: Create ApplicationBootstrapper()
     Main->>Bootstrap: bootstrap()
     
-    Note over Bootstrap: 依賴注入階段
+    Note over Bootstrap: Dependency injection phase
     Bootstrap->>Bootstrap: _create_required_directories()
     Bootstrap->>Bootstrap: _initialize_core_components()
-    Note right of Bootstrap: 創建 Logger, Config, PFCFApi
+    Note right of Bootstrap: Create Logger, Config, PFCFApi
     
     Bootstrap->>Bootstrap: validate_configuration()
-    Note right of Bootstrap: 驗證配置文件和環境變數
+    Note right of Bootstrap: Validate config files and env variables
     
     Bootstrap->>Container: create_service_container()
-    Note right of Container: 創建所有 Repositories<br/>和 Use Cases
+    Note right of Container: Create all Repositories<br/>and Use Cases
     
     Bootstrap->>SM: _create_system_manager()
-    Note right of SM: 組裝 SystemManager<br/>和所有基礎設施服務
+    Note right of SM: Assemble SystemManager<br/>and all infrastructure services
     
     Bootstrap-->>Main: BootstrapResult(success=True)
     
-    Note over Main: 啟動 CLI 應用程式
+    Note over Main: Start CLI application
     Main->>CLI: CLIApplication(system_manager, service_container)
     Main->>CLI: run()
     
-    Note over CLI: 進入主菜單循環
+    Note over CLI: Enter main menu loop
     CLI->>CLI: _display_main_menu()
     CLI->>CLI: _handle_user_choice()
 ```
 
-### 🏗️ **ApplicationBootstrapper 內部詳細流程**
+### 🏗️ **ApplicationBootstrapper Internal Detailed Flow**
 
 ```mermaid
 graph TD
@@ -60,26 +60,26 @@ graph TD
     D --> E[create_service_container]
     E --> F[_create_system_manager]
     
-    subgraph "_initialize_core_components 細節"
-        C1[創建 LoggerDefault] --> C2[載入 Config]
-        C2 --> C3[初始化 PFCFApi]
-        C3 --> C4[設定 self._logger, self._config, self._exchange_api]
+    subgraph "_initialize_core_components Details"
+        C1[Create LoggerDefault] --> C2[Load Config]
+        C2 --> C3[Initialize PFCFApi]
+        C3 --> C4[Set self._logger, self._config, self._exchange_api]
     end
     
-    subgraph "create_service_container 細節"
-        E1[創建 Repositories] --> E2[創建 Use Cases]
-        E2 --> E3[創建 Controllers]
-        E3 --> E4[創建 Presenters]
-        E4 --> E5[創建 Views]
-        E5 --> E6[組裝 ServiceContainer]
+    subgraph "create_service_container Details"
+        E1[Create Repositories] --> E2[Create Use Cases]
+        E2 --> E3[Create Controllers]
+        E3 --> E4[Create Presenters]
+        E4 --> E5[Create Views]
+        E5 --> E6[Assemble ServiceContainer]
     end
     
-    subgraph "_create_system_manager 細節"
-        F1[創建 DllGatewayServer] --> F2[創建 PortCheckerService]
-        F2 --> F3[創建 MarketDataGatewayService]
-        F3 --> F4[創建 ProcessManagerService]
-        F4 --> F5[創建 StatusChecker]
-        F5 --> F6[組裝 SystemManager]
+    subgraph "_create_system_manager Details"
+        F1[Create DllGatewayServer] --> F2[Create PortCheckerService]
+        F2 --> F3[Create MarketDataGatewayService]
+        F3 --> F4[Create ProcessManagerService]
+        F4 --> F5[Create StatusChecker]
+        F5 --> F6[Assemble SystemManager]
     end
     
     C --> C1
@@ -89,13 +89,13 @@ graph TD
 
 ---
 
-## All-In-One 初始化流程
+## All-In-One Initialization Flow
 
-### 🎯 **當用戶選擇選項 10 (All-In-One) 時**
+### 🎯 **When User Selects Option 10 (All-In-One)**
 
 ```mermaid
 sequenceDiagram
-    participant User as 用戶
+    participant User as User
     participant CLI as CLIApplication
     participant Controller as AllInOneController
     participant SM as SystemManager
@@ -103,141 +103,141 @@ sequenceDiagram
     participant DGS as DllGatewayServer
     participant PM as ProcessManagerService
     
-    User->>CLI: 選擇選項 10
+    User->>CLI: Select option 10
     CLI->>Controller: execute()
     
-    Note over Controller: 前置條件檢查
+    Note over Controller: Prerequisites check
     Controller->>Controller: _check_prerequisites()
-    Note right of Controller: 檢查用戶登入狀態<br/>檢查必要配置
+    Note right of Controller: Check user login status<br/>Check necessary configuration
     
     Controller->>SM: start_trading_system()
     
-    Note over SM: 系統啟動序列
+    Note over SM: System startup sequence
     SM->>SM: _start_gateway()
     
-    Note over SM: Gateway 啟動步驟
+    Note over SM: Gateway startup steps
     SM->>SM: _port_checker.check_port_availability()
-    Note right of SM: 檢查 ZMQ 端口 5555, 5556, 5557
+    Note right of SM: Check ZMQ ports 5555, 5556, 5557
     
     SM->>MDG: initialize_market_data_publisher()
-    Note right of MDG: 創建 ZMQ Publisher<br/>創建 TickProducer
+    Note right of MDG: Create ZMQ Publisher<br/>Create TickProducer
     
     SM->>MDG: connect_exchange_callbacks()
-    Note right of MDG: 連接 PFCF API 回調<br/>OnTickDataTrade += handle_tick_data
+    Note right of MDG: Connect PFCF API callbacks<br/>OnTickDataTrade += handle_tick_data
     
     SM->>DGS: start()
-    Note right of DGS: 啟動 ZMQ REP 服務器<br/>監聽端口 5557
+    Note right of DGS: Start ZMQ REP server<br/>Listen on port 5557
     
     SM->>SM: _start_strategy()
-    SM->>PM: 啟動策略進程
-    Note right of PM: 執行 run_strategy.py
+    SM->>PM: Start strategy process
+    Note right of PM: Execute run_strategy.py
     
     SM->>SM: _start_order_executor()
-    SM->>PM: 啟動訂單執行進程
-    Note right of PM: 執行 run_order_executor_gateway.py
+    SM->>PM: Start order executor process
+    Note right of PM: Execute run_order_executor_gateway.py
     
     SM-->>Controller: SystemStartupResult(success=True)
-    Controller-->>User: 顯示啟動成功訊息
+    Controller-->>User: Display startup success message
     
-    Note over User: 系統現在完全運行<br/>三個進程都在工作
+    Note over User: System now fully running<br/>All three processes working
 ```
 
-### 🔧 **SystemManager.start_trading_system() 內部邏輯**
+### 🔧 **SystemManager.start_trading_system() Internal Logic**
 
 ```mermaid
 graph TD
-    A[start_trading_system] --> B{檢查組件狀態}
-    B --> C[設定 gateway = STARTING]
+    A[start_trading_system] --> B{Check component status}
+    B --> C[Set gateway = STARTING]
     C --> D[_start_gateway]
     
-    D --> E{Gateway 啟動成功?}
-    E -->|否| F[設定 gateway = ERROR]
-    F --> G[返回失敗結果]
+    D --> E{Gateway startup success?}
+    E -->|No| F[Set gateway = ERROR]
+    F --> G[Return failure result]
     
-    E -->|是| H[等待 3 秒讓 Gateway 穩定]
-    H --> I[設定 strategy = STARTING]
+    E -->|Yes| H[Wait 3 seconds for Gateway stability]
+    H --> I[Set strategy = STARTING]
     I --> J[_start_strategy]
     
-    J --> K{Strategy 啟動成功?}
-    K -->|否| L[設定 strategy = ERROR]
-    L --> M[返回部分成功結果]
+    J --> K{Strategy startup success?}
+    K -->|No| L[Set strategy = ERROR]
+    L --> M[Return partial success result]
     
-    K -->|是| N[設定 order_executor = STARTING]
+    K -->|Yes| N[Set order_executor = STARTING]
     N --> O[_start_order_executor]
     
-    O --> P{Order Executor 啟動成功?}
-    P -->|否| Q[設定 order_executor = ERROR]
-    Q --> R[返回部分成功結果]
+    O --> P{Order Executor startup success?}
+    P -->|No| Q[Set order_executor = ERROR]
+    Q --> R[Return partial success result]
     
-    P -->|是| S[記錄啟動時間]
-    S --> T[設定所有組件 = RUNNING]
-    T --> U[返回完全成功結果]
+    P -->|Yes| S[Record startup time]
+    S --> T[Set all components = RUNNING]
+    T --> U[Return complete success result]
 ```
 
 ---
 
-## 市場數據處理流程
+## Market Data Processing Flow
 
-### 📊 **從 PFCF 交易所到策略進程的數據流**
+### 📊 **Data Flow from PFCF Exchange to Strategy Process**
 
 ```mermaid
 sequenceDiagram
-    participant Exchange as PFCF 交易所
+    participant Exchange as PFCF Exchange
     participant API as PFCFApi.client
-    participant Callback as OnTickDataTrade 回調
+    participant Callback as OnTickDataTrade Callback
     participant Producer as TickProducer
     participant Publisher as ZmqPublisher
     participant Strategy as Strategy Process
     participant Analyzer as Technical Analyzer
     
-    Note over Exchange: 市場價格變動
-    Exchange->>API: 推送即時報價
-    API->>Callback: 觸發 OnTickDataTrade 事件
+    Note over Exchange: Market price changes
+    Exchange->>API: Push real-time quotes
+    API->>Callback: Trigger OnTickDataTrade event
     
-    Note over Callback: PFCF 格式的 Tick 數據
+    Note over Callback: PFCF format Tick data
     Callback->>Producer: handle_tick_data(tick_data)
     
-    Note over Producer: 數據轉換和包裝
-    Producer->>Producer: 轉換為 TickEvent 格式
+    Note over Producer: Data conversion and packaging
+    Producer->>Producer: Convert to TickEvent format
     Producer->>Publisher: publish_tick_event(tick_event)
     
-    Note over Publisher: ZMQ 廣播
-    Publisher->>Strategy: 發佈到端口 5555 (PUB/SUB)
+    Note over Publisher: ZMQ broadcast
+    Publisher->>Strategy: Publish to port 5555 (PUB/SUB)
     
-    Note over Strategy: 策略進程處理
-    Strategy->>Strategy: 接收並解序列化 TickEvent
-    Strategy->>Analyzer: 執行技術分析
+    Note over Strategy: Strategy process handling
+    Strategy->>Strategy: Receive and deserialize TickEvent
+    Strategy->>Analyzer: Execute technical analysis
     
-    Note over Analyzer: Support/Resistance 分析
-    Analyzer->>Analyzer: 計算支撐阻力位
-    Analyzer->>Analyzer: 判斷突破信號
+    Note over Analyzer: Support/Resistance analysis
+    Analyzer->>Analyzer: Calculate support/resistance levels
+    Analyzer->>Analyzer: Determine breakout signals
     
-    Analyzer-->>Strategy: 返回分析結果
-    Strategy->>Strategy: 根據分析結果決定是否下單
+    Analyzer-->>Strategy: Return analysis results
+    Strategy->>Strategy: Decide whether to place order based on analysis
 ```
 
-### 📈 **TickProducer 內部處理機制**
+### 📈 **TickProducer Internal Processing Mechanism**
 
 ```mermaid
 graph TD
-    A[PFCF Tick Data 進入] --> B[handle_tick_data]
-    B --> C{數據格式驗證}
-    C -->|無效| D[記錄錯誤並丟棄]
-    C -->|有效| E[轉換為 TickEvent 格式]
+    A[PFCF Tick Data Entry] --> B[handle_tick_data]
+    B --> C{Data format validation}
+    C -->|Invalid| D[Log error and discard]
+    C -->|Valid| E[Convert to TickEvent format]
     
-    E --> F[添加時間戳]
-    F --> G[序列化為 JSON/MessagePack]
+    E --> F[Add timestamp]
+    F --> G[Serialize to JSON/MessagePack]
     G --> H[ZmqPublisher.publish]
     
-    H --> I[ZMQ Socket 發送]
-    I --> J[廣播給所有訂閱者]
+    H --> I[ZMQ Socket send]
+    I --> J[Broadcast to all subscribers]
     
-    subgraph "TickEvent 結構"
-        K[symbol: 商品代號]
-        L[price: 價格]
-        M[volume: 成交量]
-        N[timestamp: 時間戳]
-        O[bid/ask: 買賣價]
+    subgraph "TickEvent Structure"
+        K[symbol: Product code]
+        L[price: Price]
+        M[volume: Volume]
+        N[timestamp: Timestamp]
+        O[bid/ask: Bid/Ask prices]
     end
     
     E --> K
@@ -249,9 +249,9 @@ graph TD
 
 ---
 
-## 訂單執行完整流程
+## Order Execution Complete Flow
 
-### 💰 **從策略信號到訂單執行的完整路徑**
+### 💰 **Complete Path from Strategy Signal to Order Execution**
 
 ```mermaid
 sequenceDiagram
@@ -260,72 +260,72 @@ sequenceDiagram
     participant OrderExec as Order Executor Process
     participant Gateway as DllGatewayServer
     participant API as PFCFApi
-    participant Exchange as PFCF 交易所
+    participant Exchange as PFCF Exchange
     
-    Note over Strategy: 技術分析完成，產生信號
-    Strategy->>Strategy: 創建 TradingSignal
-    Strategy->>SignalQueue: 推送信號 (PUSH to port 5556)
+    Note over Strategy: Technical analysis completed, generate signal
+    Strategy->>Strategy: Create TradingSignal
+    Strategy->>SignalQueue: Push signal (PUSH to port 5556)
     
-    Note over OrderExec: 訂單執行進程監聽信號
-    SignalQueue->>OrderExec: 拉取信號 (PULL from port 5556)
-    OrderExec->>OrderExec: 驗證信號格式
+    Note over OrderExec: Order executor process listening for signals
+    SignalQueue->>OrderExec: Pull signal (PULL from port 5556)
+    OrderExec->>OrderExec: Validate signal format
     
-    Note over OrderExec: 風險控制檢查
-    OrderExec->>OrderExec: 檢查倉位限制
-    OrderExec->>OrderExec: 檢查資金充足性
+    Note over OrderExec: Risk control checks
+    OrderExec->>OrderExec: Check position limits
+    OrderExec->>OrderExec: Check capital adequacy
     
-    OrderExec->>Gateway: 發送訂單請求 (ZMQ REQ to port 5557)
-    Note right of Gateway: REQ 包含:<br/>operation: "send_order"<br/>parameters: 訂單參數
+    OrderExec->>Gateway: Send order request (ZMQ REQ to port 5557)
+    Note right of Gateway: REQ contains:<br/>operation: "send_order"<br/>parameters: order parameters
     
-    Note over Gateway: DLL Gateway 處理
-    Gateway->>Gateway: 解析訂單請求
-    Gateway->>Gateway: 轉換為 PFCF 格式
+    Note over Gateway: DLL Gateway processing
+    Gateway->>Gateway: Parse order request
+    Gateway->>Gateway: Convert to PFCF format
     
-    Gateway->>API: 調用 DTradeLib.Order()
-    API->>Exchange: 發送訂單到交易所
+    Gateway->>API: Call DTradeLib.Order()
+    API->>Exchange: Send order to exchange
     
-    Note over Exchange: 交易所處理訂單
-    Exchange-->>API: 返回執行結果
-    API-->>Gateway: OrderResult 物件
+    Note over Exchange: Exchange processes order
+    Exchange-->>API: Return execution result
+    API-->>Gateway: OrderResult object
     
-    Gateway->>Gateway: 轉換為統一格式
-    Gateway-->>OrderExec: 回應執行結果 (ZMQ REP)
+    Gateway->>Gateway: Convert to unified format
+    Gateway-->>OrderExec: Reply execution result (ZMQ REP)
     
-    Note over OrderExec: 處理執行結果
-    OrderExec->>OrderExec: 記錄交易日誌
-    OrderExec->>OrderExec: 更新倉位狀態
-    OrderExec->>OrderExec: 風險監控
+    Note over OrderExec: Process execution result
+    OrderExec->>OrderExec: Log transaction
+    OrderExec->>OrderExec: Update position status
+    OrderExec->>OrderExec: Risk monitoring
 ```
 
-### 🎯 **TradingSignal 和 OrderRequest 轉換過程**
+### 🎯 **TradingSignal to OrderRequest Conversion Process**
 
 ```mermaid
 graph TD
-    A[Strategy 產生 TradingSignal] --> B[包含策略決策信息]
+    A[Strategy generates TradingSignal] --> B[Contains strategic decision info]
     B --> C[symbol, direction, confidence, timestamp]
     
-    C --> D[OrderExecutor 接收]
-    D --> E[轉換為 OrderRequest]
+    C --> D[OrderExecutor receives]
+    D --> E[Convert to OrderRequest]
     
-    E --> F[添加交易參數]
+    E --> F[Add trading parameters]
     F --> G[order_account, price, quantity]
     F --> H[order_type, time_in_force]
     F --> I[open_close, day_trade]
     
-    G --> J[發送給 DllGatewayServer]
+    G --> J[Send to DllGatewayServer]
     H --> J
     I --> J
     
-    J --> K[轉換為 PFCF 格式]
-    K --> L[調用 exchange_client.Order()]
+    J --> K[Convert to PFCF format]
+    K --> L["Call exchange_client.Order()"]
     
-    subgraph "PFCF DLL 格式"
+    subgraph "PFCF DLL Format"
         M[OrderObject]
-        N[ACTNO: 帳號]
-        O[PRODUCTID: 商品]
-        P[BS: 買賣別]
-        Q[PRICE: 價格]
-        R[ORDERQTY: 數量]
+        N[ACTNO: Account]
+        O[PRODUCTID: Product]
+        P[BS: Buy/Sell]
+        Q[PRICE: Price]
+        R[ORDERQTY: Quantity]
     end
     
     K --> M
@@ -338,69 +338,69 @@ graph TD
 
 ---
 
-## SystemManager 狀態管理
+## SystemManager State Management
 
-### 🎛️ **組件狀態轉換圖**
+### 🎛️ **Component State Transition Diagram**
 
 ```mermaid
 stateDiagram-v2
-    [*] --> STOPPED: 初始狀態
+    [*] --> STOPPED: Initial state
     
     STOPPED --> STARTING: start_trading_system()
-    STARTING --> RUNNING: 啟動成功
-    STARTING --> ERROR: 啟動失敗
+    STARTING --> RUNNING: Startup success
+    STARTING --> ERROR: Startup failure
     
     RUNNING --> STOPPING: stop_trading_system()
-    STOPPING --> STOPPED: 關閉完成
+    STOPPING --> STOPPED: Shutdown complete
     
     ERROR --> STARTING: restart_component()
     RUNNING --> STARTING: restart_component()
     
     note right of STARTING
-        執行初始化步驟:
-        1. 檢查端口
-        2. 初始化組件
-        3. 連接回調
-        4. 啟動服務
+        Execute initialization steps:
+        1. Check ports
+        2. Initialize components
+        3. Connect callbacks
+        4. Start services
     end note
     
     note right of RUNNING
-        正常運行狀態:
-        - 接收市場數據
-        - 處理交易信號
-        - 執行訂單
-        - 健康監控
+        Normal running state:
+        - Receive market data
+        - Process trading signals
+        - Execute orders
+        - Health monitoring
     end note
     
     note right of STOPPING
-        優雅關閉順序:
+        Graceful shutdown order:
         1. Order Executor
         2. Strategy
-        3. Gateway (最後)
+        3. Gateway (last)
     end note
 ```
 
-### 🔄 **SystemManager.get_system_health() 檢查流程**
+### 🔄 **SystemManager.get_system_health() Check Flow**
 
 ```mermaid
 graph TD
-    A[get_system_health 被調用] --> B[檢查啟動時間]
-    B --> C[計算運行時間]
-    C --> D[檢查所有組件狀態]
+    A[get_system_health called] --> B[Check startup time]
+    B --> C[Calculate uptime]
+    C --> D[Check all component status]
     
-    D --> E{所有組件都是 RUNNING?}
-    E -->|是| F[is_healthy = True]
-    E -->|否| G[is_healthy = False]
+    D --> E{All components RUNNING?}
+    E -->|Yes| F[is_healthy = True]
+    E -->|No| G[is_healthy = False]
     
-    F --> H[創建 SystemHealth 物件]
+    F --> H[Create SystemHealth object]
     G --> H
     
-    H --> I[包含組件狀態字典]
-    I --> J[包含運行時間]
-    J --> K[包含檢查時間戳]
-    K --> L[返回健康狀態報告]
+    H --> I[Include component status dict]
+    I --> J[Include uptime]
+    J --> K[Include check timestamp]
+    K --> L[Return health status report]
     
-    subgraph "組件狀態字典"
+    subgraph "Component Status Dictionary"
         M["gateway": ComponentStatus]
         N["strategy": ComponentStatus] 
         O["order_executor": ComponentStatus]
@@ -411,35 +411,35 @@ graph TD
     I --> O
 ```
 
-### 📊 **SystemManager 依賴關係圖**
+### 📊 **SystemManager Dependency Diagram**
 
 ```mermaid
 graph TB
-    subgraph "SystemManager 構造函數依賴"
+    subgraph "SystemManager Constructor Dependencies"
         SM[SystemManager]
         
-        SM --> Logger[LoggerDefault<br/>日誌記錄]
-        SM --> DGS[DllGatewayServer<br/>訂單執行服務器]
-        SM --> PC[PortCheckerService<br/>端口可用性檢查]
-        SM --> MDG[MarketDataGatewayService<br/>市場數據網關]
-        SM --> PM[ProcessManagerService<br/>進程管理]
-        SM --> SC[StatusChecker<br/>狀態檢查器]
+        SM --> Logger[LoggerDefault<br/>Logging]
+        SM --> DGS[DllGatewayServer<br/>Order Execution Server]
+        SM --> PC[PortCheckerService<br/>Port Availability Check]
+        SM --> MDG[MarketDataGatewayService<br/>Market Data Gateway]
+        SM --> PM[ProcessManagerService<br/>Process Management]
+        SM --> SC[StatusChecker<br/>Status Checker]
     end
     
-    subgraph "MarketDataGatewayService 依賴"
-        MDG --> Config1[Config<br/>配置]
-        MDG --> Logger1[LoggerInterface<br/>日誌]
-        MDG --> PFCF1[PFCFApi<br/>交易所API]
+    subgraph "MarketDataGatewayService Dependencies"
+        MDG --> Config1[Config<br/>Configuration]
+        MDG --> Logger1[LoggerInterface<br/>Logger]
+        MDG --> PFCF1[PFCFApi<br/>Exchange API]
     end
     
-    subgraph "DllGatewayServer 依賴"
-        DGS --> Config2[Config<br/>配置]
-        DGS --> Logger2[LoggerInterface<br/>日誌] 
-        DGS --> PFCF2[PFCFApi<br/>交易所API]
+    subgraph "DllGatewayServer Dependencies"
+        DGS --> Config2[Config<br/>Configuration]
+        DGS --> Logger2[LoggerInterface<br/>Logger] 
+        DGS --> PFCF2[PFCFApi<br/>Exchange API]
     end
     
-    subgraph "外部進程 (SystemManager 管理但不直接依賴)"
-        ExtProc[外部進程]
+    subgraph "External Processes (Managed by SystemManager but not direct dependencies)"
+        ExtProc[External Processes]
         Strategy[Strategy Process<br/>run_strategy.py]
         OrderExec[Order Executor<br/>run_order_executor_gateway.py]
     end
@@ -450,24 +450,24 @@ graph TB
 
 ---
 
-## 🎯 **關鍵洞察**
+## 🎯 **Key Insights**
 
-### 💡 **設計亮點**
+### 💡 **Design Highlights**
 
-1. **分離關注點**: MarketDataGatewayService 和 DllGatewayServer 各司其職
-2. **狀態管理**: SystemManager 統一管理所有組件的生命週期
-3. **錯誤處理**: 組件啟動失敗時，系統可以部分運行或優雅降級
-4. **可觀測性**: 詳細的狀態追蹤和健康檢查機制
+1. **Separation of Concerns**: MarketDataGatewayService and DllGatewayServer each have their own responsibilities
+2. **State Management**: SystemManager uniformly manages lifecycle of all components
+3. **Error Handling**: System can run partially or degrade gracefully when component startup fails
+4. **Observability**: Detailed state tracking and health check mechanisms
 
-### ⚠️ **潛在改進點**
+### ⚠️ **Potential Improvements**
 
-1. **硬編碼延遲**: `time.sleep(3)` 等待 Gateway 初始化缺乏靈活性
-2. **錯誤恢復**: 組件失敗後的自動重試機制
-3. **監控增強**: 更詳細的性能指標和監控數據
-4. **配置熱重載**: 運行時修改配置的能力
+1. **Hardcoded Delays**: `time.sleep(3)` waiting for Gateway initialization lacks flexibility
+2. **Error Recovery**: Automatic retry mechanism after component failure
+3. **Enhanced Monitoring**: More detailed performance metrics and monitoring data
+4. **Configuration Hot Reload**: Ability to modify configuration at runtime
 
-這些流程圖幫助開發者：
-- 🎯 **精確定位問題**: 知道在哪個步驟可能出錯
-- 🔧 **指導開發**: 了解添加新功能時的插入點
-- 📊 **性能優化**: 識別瓶頸和優化機會
-- 🛡️ **故障排除**: 快速診斷系統問題
+These flow diagrams help developers:
+- 🎯 **Pinpoint Issues**: Know where errors might occur at each step
+- 🔧 **Guide Development**: Understand insertion points when adding new features
+- 📊 **Performance Optimization**: Identify bottlenecks and optimization opportunities
+- 🛡️ **Troubleshooting**: Quickly diagnose system problems

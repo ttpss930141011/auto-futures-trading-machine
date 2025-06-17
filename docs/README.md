@@ -1,103 +1,103 @@
-# 📚 文檔目錄
+# 📚 Documentation Directory
 
-## 🎯 主要文檔 (專案根目錄)
+## 🎯 Main Documents (Project Root)
 
-### 🏛️ 系統架構
-- **[ARCHITECTURE.md](../ARCHITECTURE.md)** - 完整系統概述與視覺圖表
-- **[CLAUDE.md](../CLAUDE.md)** - 開發者指令與基本指令
+### 🏛️ System Architecture
+- **[ARCHITECTURE.md](../ARCHITECTURE.md)** - Complete system overview with visual diagrams
+- **[CLAUDE.md](../CLAUDE.md)** - Developer instructions and essential commands
 
-### 📖 快速開始
-- **[README.md](../README.md)** - 專案概述與學習路徑
+### 📖 Quick Start
+- **[README.md](../README.md)** - Project overview and learning paths
 
 ---
 
-## 📁 docs/ 資料夾結構
+## 📁 docs/ Folder Structure
 
 ### 🏗️ architecture/
-系統架構相關的詳細文檔
+Detailed documentation related to system architecture
 
-- **[DETAILED_FLOW_DIAGRAMS.md](architecture/DETAILED_FLOW_DIAGRAMS.md)** - 詳細流程圖與時序圖
-- **[CLASS_DESIGN_GUIDE.md](architecture/CLASS_DESIGN_GUIDE.md)** - 類別設計指南與 SOLID 原則
+- **[DETAILED_FLOW_DIAGRAMS.md](architecture/DETAILED_FLOW_DIAGRAMS.md)** - Detailed flow diagrams and sequence diagrams
+- **[CLASS_DESIGN_GUIDE.md](architecture/CLASS_DESIGN_GUIDE.md)** - Class design guide and SOLID principles
 
 ### 📋 guides/
-使用指南和操作手冊
+User guides and operation manuals
 
-- **[ALLINONE_CONTROLLER_GUIDE.md](guides/ALLINONE_CONTROLLER_GUIDE.md)** - AllInOneController 啟動流程詳解
+- **[ALLINONE_CONTROLLER_GUIDE.md](guides/ALLINONE_CONTROLLER_GUIDE.md)** - AllInOneController startup flow detailed explanation
 
 ### 🔧 technical/
-技術深度解析
+Technical deep-dive analysis
 
-- **[WHY_ZEROMQ.md](technical/WHY_ZEROMQ.md)** - ZeroMQ 選擇理由與消息模式
-- **[HFT_CONCEPTS.md](technical/HFT_CONCEPTS.md)** - 高頻交易概念應用
-- **[PROCESS_COMMUNICATION.md](technical/PROCESS_COMMUNICATION.md)** - 進程間通信模式
+- **[WHY_ZEROMQ.md](technical/WHY_ZEROMQ.md)** - ZeroMQ selection rationale and messaging patterns
+- **[HFT_CONCEPTS.md](technical/HFT_CONCEPTS.md)** - High-frequency trading concepts application
+- **[PROCESS_COMMUNICATION.md](technical/PROCESS_COMMUNICATION.md)** - Inter-process communication patterns
 
 ### 🚀 getting-started/
-新手入門教程
+Beginner tutorials
 
-- **[INSTALLATION.md](getting-started/INSTALLATION.md)** - 詳細安裝指南
-- **[QUICK_START.md](getting-started/QUICK_START.md)** - 5分鐘快速開始
-- **[FIRST_TRADE.md](getting-started/FIRST_TRADE.md)** - 第一筆自動交易教程
+- **[INSTALLATION.md](getting-started/INSTALLATION.md)** - Detailed installation guide
+- **[QUICK_START.md](getting-started/QUICK_START.md)** - 5-minute quick start
+- **[FIRST_TRADE.md](getting-started/FIRST_TRADE.md)** - First automated trade tutorial
 
 ### 📊 guides/
-進階使用指南
+Advanced usage guides
 
-- **[BACKTESTING.md](guides/BACKTESTING.md)** - 回測系統指南
-- **[MONITORING.md](guides/MONITORING.md)** - 系統監控配置
+- **[BACKTESTING.md](guides/BACKTESTING.md)** - Backtesting system guide
+- **[MONITORING.md](guides/MONITORING.md)** - System monitoring configuration
 
 ### 📚 stories/
-開發故事與決策過程
+Development stories and decision processes
 
-- **[DESIGN_DECISIONS.md](stories/DESIGN_DECISIONS.md)** - 重要設計決策記錄
-- **[LESSONS_LEARNED.md](stories/LESSONS_LEARNED.md)** - 開發過程經驗總結
+- **[DESIGN_DECISIONS.md](stories/DESIGN_DECISIONS.md)** - Important design decisions record
+- **[LESSONS_LEARNED.md](stories/LESSONS_LEARNED.md)** - Development process experience summary
 
 ### 🗺️ decisions/
-架構決策記錄 (ADR)
+Architecture Decision Records (ADR)
 
-- **[001-use-zeromq-for-ipc.md](decisions/001-use-zeromq-for-ipc.md)** - 選擇 ZeroMQ 的決策
-- **[004-dll-gateway-centralization.md](decisions/004-dll-gateway-centralization.md)** - DLL Gateway 集中化
-- 其他 ADR 文檔...
+- **[001-use-zeromq-for-ipc.md](decisions/001-use-zeromq-for-ipc.md)** - Decision to use ZeroMQ
+- **[004-dll-gateway-centralization.md](decisions/004-dll-gateway-centralization.md)** - DLL Gateway centralization
+- Other ADR documents...
 
 ### 🔧 api/
-API 文檔
+API Documentation
 
-- **[README.md](api/README.md)** - 組件 API 概述
+- **[README.md](api/README.md)** - Component API overview
 
 ### 🗃️ archived/
-歷史文檔存檔
+Historical document archive
 
-- **已廢棄或過時的文檔** - 保留作為歷史參考，不應用於當前開發
-
----
-
-## 🎓 推薦學習順序
-
-### 🔰 新手開發者
-1. [README.md](../README.md) - 了解專案概述
-2. [ARCHITECTURE.md](../ARCHITECTURE.md) - 理解系統架構
-3. [getting-started/INSTALLATION.md](getting-started/INSTALLATION.md) - 環境設置
-4. [getting-started/QUICK_START.md](getting-started/QUICK_START.md) - 快速開始
-
-### 👨‍💻 有經驗開發者
-1. [ARCHITECTURE.md](../ARCHITECTURE.md) - 系統概述
-2. [architecture/CLASS_DESIGN_GUIDE.md](architecture/CLASS_DESIGN_GUIDE.md) - 設計模式
-3. [architecture/DETAILED_FLOW_DIAGRAMS.md](architecture/DETAILED_FLOW_DIAGRAMS.md) - 詳細流程
-4. [guides/ALLINONE_CONTROLLER_GUIDE.md](guides/ALLINONE_CONTROLLER_GUIDE.md) - 啟動機制
-
-### 🏗️ 架構設計者
-1. [decisions/](decisions/) - 查看所有 ADR
-2. [technical/WHY_ZEROMQ.md](technical/WHY_ZEROMQ.md) - 技術選型
-3. [stories/DESIGN_DECISIONS.md](stories/DESIGN_DECISIONS.md) - 設計理念
-4. [stories/LESSONS_LEARNED.md](stories/LESSONS_LEARNED.md) - 經驗總結
+- **Deprecated or outdated documents** - Kept for historical reference, should not be used for current development
 
 ---
 
-## ⚠️ 重要提醒
+## 🎓 Recommended Learning Sequence
 
-- **已歸檔文檔**: `archived/` 資料夾中的文檔已過時，請勿參考
-- **文檔同步**: 修改代碼時請同步更新相關文檔
-- **圖表格式**: 所有圖表使用 Mermaid 格式，便於維護和版本控制
-- **超連結驗證**: 定期檢查文檔間的超連結是否有效
+### 🔰 New Developers
+1. [README.md](../README.md) - Understand project overview
+2. [ARCHITECTURE.md](../ARCHITECTURE.md) - Understand system architecture
+3. [getting-started/INSTALLATION.md](getting-started/INSTALLATION.md) - Environment setup
+4. [getting-started/QUICK_START.md](getting-started/QUICK_START.md) - Quick start
+
+### 👨‍💻 Experienced Developers
+1. [ARCHITECTURE.md](../ARCHITECTURE.md) - System overview
+2. [architecture/CLASS_DESIGN_GUIDE.md](architecture/CLASS_DESIGN_GUIDE.md) - Design patterns
+3. [architecture/DETAILED_FLOW_DIAGRAMS.md](architecture/DETAILED_FLOW_DIAGRAMS.md) - Detailed flow
+4. [guides/ALLINONE_CONTROLLER_GUIDE.md](guides/ALLINONE_CONTROLLER_GUIDE.md) - Startup mechanism
+
+### 🏗️ Architecture Designers
+1. [decisions/](decisions/) - Review all ADRs
+2. [technical/WHY_ZEROMQ.md](technical/WHY_ZEROMQ.md) - Technology selection
+3. [stories/DESIGN_DECISIONS.md](stories/DESIGN_DECISIONS.md) - Design philosophy
+4. [stories/LESSONS_LEARNED.md](stories/LESSONS_LEARNED.md) - Experience summary
 
 ---
 
-*最後更新: 2024年12月*
+## ⚠️ Important Reminders
+
+- **Archived Documents**: Documents in the `archived/` folder are outdated, please do not reference
+- **Document Synchronization**: Please update related documents when modifying code
+- **Diagram Format**: All diagrams use Mermaid format for easy maintenance and version control
+- **Hyperlink Validation**: Regularly check if hyperlinks between documents are valid
+
+---
+
+*Last Updated: December 2024*

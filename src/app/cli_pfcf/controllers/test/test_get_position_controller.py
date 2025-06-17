@@ -221,7 +221,10 @@ class TestGetPositionController:
         
         # 4. Execute use case and display result
         mock_use_case.execute.assert_called_once()
-        mock_print.assert_called_once_with("formatted_output")
+        # Print is called twice: once for account display, once for result
+        assert mock_print.call_count == 2
+        mock_print.assert_any_call("Account: ACCOUNT123")
+        mock_print.assert_any_call("formatted_output")
 
     @patch('builtins.input', side_effect=Exception("Input error"))
     def test_input_error_handling(self, mock_input):

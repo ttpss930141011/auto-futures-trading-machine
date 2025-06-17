@@ -33,7 +33,7 @@ class User:
         return asdict(self)
 
     def __repr__(self):
-        return f"<Window {self.window_id}>"
+        return f"<User {self.account}>"
 
     def __str__(self):
-        return f"<Window {self.window_id}>"
+        return f"<User {self.account}>"

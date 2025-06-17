@@ -8,9 +8,8 @@ for various trading system components.
 import sys
 import time
 import subprocess
-import threading
 from pathlib import Path
-from typing import Optional, Callable
+from typing import Optional
 
 from src.app.cli_pfcf.config import Config
 from src.interactor.interfaces.logger.logger import LoggerInterface
@@ -39,8 +38,8 @@ class ProcessManagerService(ProcessManagerServiceInterface):
         self.project_root: Path = Path(__file__).resolve().parents[4]
 
         # Paths to standalone process scripts
-        self.strategy_script_path: Path = self.project_root / "run_strategy.py"
-        self.order_executor_script_path: Path = self.project_root / "run_order_executor.py"
+        self.strategy_script_path: Path = self.project_root / "process" / "run_strategy.py"
+        self.order_executor_script_path: Path = self.project_root / "process" / "run_order_executor_gateway.py"
 
         # Directory for PID files
         self.pid_dir: Path = self.project_root / "tmp" / "pids"
@@ -49,8 +48,6 @@ class ProcessManagerService(ProcessManagerServiceInterface):
         # Store process handles
         self._strategy_process: Optional[subprocess.Popen] = None
         self._order_executor_process: Optional[subprocess.Popen] = None
-        self._gateway_thread: Optional[threading.Thread] = None
-        self._gateway_running = False
 
     def start_strategy(self) -> bool:
         """Start the Strategy process.
@@ -96,18 +93,19 @@ class ProcessManagerService(ProcessManagerServiceInterface):
             return False
 
     def start_order_executor(self) -> bool:
-        """Start the Order Executor process.
+        """Start the Order Executor process with Gateway integration.
 
         Returns:
             bool: True if started successfully, False otherwise
         """
         try:
-            self.logger.log_info("Starting Order Executor process...")
+            self.logger.log_info("Starting Order Executor process with Gateway integration...")
 
             # Get ZMQ addresses from config
             signal_pull_address = self.config.ZMQ_SIGNAL_PULL_ADDRESS
+            dll_gateway_address = self.config.DLL_GATEWAY_CONNECT_ADDRESS
 
-            # Launch the process
+            # Launch the Gateway-enabled process
             self._order_executor_process = subprocess.Popen(
                 [
                     sys.executable,
@@ -115,69 +113,28 @@ class ProcessManagerService(ProcessManagerServiceInterface):
                     str(self.order_executor_script_path),
                     "--signal-address",
                     signal_pull_address,
+                    "--gateway-address",
+                    dll_gateway_address,
                 ]
             )
 
             # Verify process started
             if self._order_executor_process.poll() is None:
                 self.logger.log_info(
-                    f"Order Executor process started with PID {self._order_executor_process.pid}"
+                    f"Order Executor Gateway process started with PID {self._order_executor_process.pid}"
                 )
 
                 # Save PID for future reference
-                self._save_pid("order_executor", self._order_executor_process.pid)
+                self._save_pid("order_executor_gateway", self._order_executor_process.pid)
                 return True
             else:
-                self.logger.log_error("Order Executor process failed to start")
+                self.logger.log_error("Order Executor Gateway process failed to start")
                 return False
 
         except Exception as e:
-            self.logger.log_error(f"Failed to start Order Executor process: {str(e)}")
+            self.logger.log_error(f"Failed to start Order Executor Gateway process: {str(e)}")
             return False
 
-    def start_gateway_thread(self, gateway_runner: Callable) -> bool:
-        """Start the Gateway in a separate thread.
-
-        Args:
-            gateway_runner: A callable that will run the gateway when executed
-
-        Returns:
-            bool: True if thread started successfully, False otherwise
-        """
-        try:
-            self.logger.log_info("Starting Gateway in a background thread...")
-
-            # Define thread target function to run gateway
-            def run_gateway():
-                try:
-                    self._gateway_running = True
-                    gateway_runner()
-                except Exception as e:
-                    self.logger.log_error(f"Gateway thread error: {str(e)}")
-                finally:
-                    self._gateway_running = False
-
-            # Create and start the thread
-            self._gateway_thread = threading.Thread(
-                target=run_gateway,
-                daemon=True,  # Use daemon thread to ensure it exits when main program exits
-            )
-
-            self._gateway_thread.start()
-
-            # A brief pause to allow initialization to start
-            time.sleep(2)
-
-            if self._gateway_thread.is_alive():
-                self.logger.log_info("Gateway thread started successfully")
-                return True
-            else:
-                self.logger.log_error("Gateway thread failed to start")
-                return False
-
-        except Exception as e:
-            self.logger.log_error(f"Failed to start Gateway thread: {str(e)}")
-            return False
 
     def cleanup_processes(self) -> None:
         """Clean up all processes when exiting."""
@@ -207,9 +164,6 @@ class ProcessManagerService(ProcessManagerServiceInterface):
                 self.logger.log_info("Force killing Order Executor process...")
                 self._order_executor_process.kill()
 
-        # Gateway is handled by the thread daemon attribute
-        if self._gateway_thread and self._gateway_thread.is_alive():
-            self.logger.log_info("Gateway thread will terminate when main application exits")
 
         # Clean up PID files
         self._cleanup_pid_files()
@@ -255,20 +209,3 @@ class ProcessManagerService(ProcessManagerServiceInterface):
         """
         return self._order_executor_process
 
-    @property
-    def gateway_thread(self) -> Optional[threading.Thread]:
-        """Get the gateway thread.
-
-        Returns:
-            The gateway thread if it exists, None otherwise
-        """
-        return self._gateway_thread
-
-    @property
-    def gateway_running(self) -> bool:
-        """Check if the gateway is running.
-
-        Returns:
-            True if the gateway is running, False otherwise
-        """
-        return self._gateway_running

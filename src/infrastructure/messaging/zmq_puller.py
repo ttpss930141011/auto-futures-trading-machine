@@ -1,6 +1,6 @@
 """ZeroMQ Puller Implementation."""
 
-from typing import Optional, Tuple, Dict, Any
+from typing import Optional
 import zmq
 import time
 
@@ -64,7 +64,7 @@ class ZmqPuller:
                             self._logger.log_warning(
                                 f"Error closing socket during init: {str(init_error)}"
                             )
-                    except Exception as socket_cleanup_error:
+                    except (OSError, RuntimeError) as socket_cleanup_error:
                         if self._logger:
                             self._logger.log_warning(
                                 f"Unexpected error during socket cleanup: {str(socket_cleanup_error)}"
@@ -124,7 +124,7 @@ class ZmqPuller:
                             self._logger.log_warning(
                                 f"Error closing socket after failed bind: {str(close_error)}"
                             )
-                    except Exception as socket_cleanup_error:
+                    except (OSError, RuntimeError) as socket_cleanup_error:
                         if self._logger:
                             self._logger.log_warning(
                                 f"Unexpected error during socket cleanup: {str(socket_cleanup_error)}"
@@ -179,7 +179,7 @@ class ZmqPuller:
                 # Socket may be in a bad state - try to reinitialize for next attempt
                 self._is_initialized = False
                 return None
-            except Exception as e:  # Catch other potential errors
+            except (OSError, RuntimeError) as e:  # Catch other potential errors
                 if self._logger:
                     self._logger.log_error(f"Unexpected error during ZMQ receive: {str(e)}")
                 return None
@@ -201,7 +201,7 @@ class ZmqPuller:
             except zmq.ZMQError as close_error:
                 if self._logger:
                     self._logger.log_error(f"Error closing ZMQ Puller socket: {str(close_error)}")
-            except Exception as unregister_error:
+            except (OSError, RuntimeError) as unregister_error:
                 if self._logger:
                     self._logger.log_warning(
                         f"Error unregistering poller for ZMQ Puller: {str(unregister_error)}"

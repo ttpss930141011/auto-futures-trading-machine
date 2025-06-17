@@ -138,7 +138,7 @@ def DAccountLib_PFCQueryMarginData(
     return
 
 
-def DAccountLib_PFCQueryMarginError(ERRORCODE, ERRORMESSAGE):
+def DAccountLib_PFCQueryMarginError(_ERRORCODE, ERRORMESSAGE):
     print("內期查詢保證金發生錯誤: %s" % ERRORMESSAGE)
     return
 
@@ -231,7 +231,7 @@ def DAccountLib_OnUnLiquidationMainData(
     RefTotalPrice,
     RefTotalPL,
     AvgMatchPrice,
-    productKind,
+    _productKind,
     Curren,
     RealPrice,
     multiplecomno,
@@ -457,8 +457,8 @@ def DQuote_OnTickDataTrade(
             MatchTotalQty,
         )
     )
-    client.DQuoteLib.UnRegItem(PRODUCTID)
-    client.DQuoteLib.OnTickDataTrade -= DQuote_OnTickDataTrade
+    # client.DQuoteLib.UnRegItem(PRODUCTID)
+    # client.DQuoteLib.OnTickDataTrade -= DQuote_OnTickDataTrade
     return MatchPriceData, MatchQtyData
 
 
@@ -511,7 +511,7 @@ def DQuote_OnTickDataBidOffer(
             SQ5,
         )
     )
-    client.DQuoteLib.OnTickDataBidOffer -= DQuote_OnTickDataBidOffer
+    # client.DQuoteLib.OnTickDataBidOffer -= DQuote_OnTickDataBidOffer
     return True
 
 
@@ -540,8 +540,8 @@ def DQuote_OnTickDataBeforeTrade(
             MatchTotalQty,
         )
     )
-    client.DQuoteLib.UnRegItem(PRODUCTID)
-    client.DQuoteLib.OnTickDataTrade -= DQuote_OnTickDataTrade
+    # client.DQuoteLib.UnRegItem(PRODUCTID)
+    # client.DQuoteLib.OnTickDataTrade -= DQuote_OnTickDataTrade
     return MatchPriceData, MatchQtyData
 
 
@@ -594,7 +594,7 @@ def DQuote_OnTickDataBeforeBidOffer(
             SQ5,
         )
     )
-    client.DQuoteLib.OnTickDataBidOffer -= DQuote_OnTickDataBidOffer
+    # client.DQuoteLib.OnTickDataBidOffer -= DQuote_OnTickDataBidOffer
     return True
 
 

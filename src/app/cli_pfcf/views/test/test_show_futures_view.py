@@ -1,5 +1,3 @@
-import pytest
-
 from src.app.cli_pfcf.views.show_futures_view import ShowFuturesView
 from src.interactor.dtos.show_futures_dtos import FutureDataDto, ShowFuturesOutputDto
 

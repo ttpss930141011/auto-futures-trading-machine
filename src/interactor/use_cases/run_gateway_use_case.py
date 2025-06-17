@@ -36,10 +36,10 @@ class RunGatewayUseCase:
         self.port_checker_service = port_checker_service
         self.gateway_initializer_service = gateway_initializer_service
         self.session_repository = session_repository
-        
+
         # Gateway running state flag
         self.running = False
-        
+
         # Signal handlers
         self._original_sigint_handler = None
         self._original_sigterm_handler = None
@@ -59,39 +59,39 @@ class RunGatewayUseCase:
                 self.logger.log_info("User not logged in")
                 print("Please login first (option 1)")
                 return False
-            
+
             # Check if required ports are available
             port_status = self.port_checker_service.check_port_availability()
             if not all(port_status.values()):
                 self.logger.log_error("Required ports are not available")
                 self._display_port_error(port_status)
                 return False
-            
+
             # Initialize gateway components
             if not self.gateway_initializer_service.initialize_components():
                 self.logger.log_error("Failed to initialize gateway components")
                 return False
-            
+
             # Connect API callbacks to tick producer
             if not self.gateway_initializer_service.connect_api_callbacks():
                 self.logger.log_error("Failed to connect API callbacks")
                 self.gateway_initializer_service.cleanup_zmq()
                 return False
-            
+
             # Display information about the running gateway
             self._display_gateway_info()
-            
+
             if not is_threaded_mode:
                 print("\nThe gateway is now running. Press Ctrl+C to stop.")
-            
+
             # Set running flag
             self.running = True
-            
+
             # Start the main processing loop
             self._run_event_loop(is_threaded_mode)
-            
+
             return True
-            
+
         except Exception as e:
             self.logger.log_error(f"Failed to run gateway: {str(e)}")
             print(f"\nERROR: Gateway start failed: {str(e)}")
@@ -119,19 +119,19 @@ class RunGatewayUseCase:
             # Register signal handlers for graceful shutdown - ONLY in main thread mode
             if not is_threaded_mode:
                 self._setup_signal_handlers()
-            
+
             self.logger.log_info("Gateway event loop started")
-            
+
             # Simple loop that keeps the process alive
             while self.running:
                 # Sleep to reduce CPU usage
                 time.sleep(0.1)
-                
+
                 # Here additional periodic tasks could be added:
                 # - Health checks
                 # - Status updates
                 # - Monitoring
-                
+
         except KeyboardInterrupt:
             self.logger.log_info("Gateway shutdown initiated by keyboard interrupt")
             print("\nGateway shutdown initiated")
@@ -147,7 +147,7 @@ class RunGatewayUseCase:
         """Set up signal handlers for graceful shutdown."""
         self._original_sigint_handler = signal.getsignal(signal.SIGINT)
         self._original_sigterm_handler = signal.getsignal(signal.SIGTERM)
-        
+
         signal.signal(signal.SIGINT, self._signal_handler)
         signal.signal(signal.SIGTERM, self._signal_handler)
 
@@ -155,7 +155,7 @@ class RunGatewayUseCase:
         """Restore original signal handlers."""
         if self._original_sigint_handler:
             signal.signal(signal.SIGINT, self._original_sigint_handler)
-            
+
         if self._original_sigterm_handler:
             signal.signal(signal.SIGTERM, self._original_sigterm_handler)
 
@@ -171,7 +171,7 @@ class RunGatewayUseCase:
 
     def _display_port_error(self, port_status: Dict[int, bool]) -> None:
         """Display port error information to the user.
-        
+
         Args:
             port_status: Dictionary with port numbers as keys and availability as values
         """
@@ -183,12 +183,12 @@ class RunGatewayUseCase:
         print("- Close other instances of this application")
         print("- Close any other applications using these ports")
         print("- Change the port configuration (requires code modification)")
-        
+
     def _display_gateway_info(self) -> None:
         """Display information about the running gateway."""
         # Get connection addresses from the gateway initializer service
         tick_sub_address, signal_push_address = self.gateway_initializer_service.get_connection_addresses()
-        
+
         print("\n=== ZeroMQ Market Data Gateway Initialized ===")
         print(f"Publishing ticks on: {tick_sub_address}")
         print(f"Receiving signals on: {signal_push_address}")

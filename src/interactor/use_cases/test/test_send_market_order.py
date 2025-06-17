@@ -1,4 +1,5 @@
 import pytest
+from unittest.mock import MagicMock
 
 from src.interactor.dtos.send_market_order_dtos import (
     SendMarketOrderInputDto,
@@ -16,7 +17,7 @@ from src.interactor.interfaces.presenters.send_market_order_presenter import (
 from src.interactor.use_cases.send_market_order import SendMarketOrderUseCase
 
 
-def test_send_market_order(mocker, fixture_send_market_order):
+def test_send_market_order(fixture_send_market_order):
     fake_pfcf_dict = {
         "ACTNO": "12345678900",
         "PRODUCTID": "1234567890",
@@ -31,20 +32,20 @@ def test_send_market_order(mocker, fixture_send_market_order):
     }
 
     # mock all dependencies in the use case
-    mock_presenter = mocker.patch.object(SendMarketOrderPresenterInterface, "present")
-    mock_config = mocker.patch("src.app.cli_pfcf.config.Config")
-    mock_config.EXCHANGE_CLIENT.DTradeLib.Order = mocker.MagicMock()
+    mock_presenter = MagicMock(spec=SendMarketOrderPresenterInterface)
+    mock_service_container = MagicMock()
+    mock_service_container.exchange_client.DTradeLib.Order = MagicMock()
 
-    mock_order_result = mocker.MagicMock()
+    mock_order_result = MagicMock()
     mock_order_result.SEQ = "Test order serial"
     mock_order_result.ERRORCODE = ""
     mock_order_result.ERRORMSG = ""
     mock_order_result.ISSEND = True
     mock_order_result.NOTE = fixture_send_market_order["note"]
 
-    mock_config.EXCHANGE_CLIENT.DTradeLib.Order.return_value = mock_order_result
+    mock_service_container.exchange_client.DTradeLib.Order.return_value = mock_order_result
 
-    mock_order_obejct = mocker.MagicMock()
+    mock_order_obejct = MagicMock()
     mock_order_obejct.ACTNO = ""
     mock_order_obejct.PRODUCTID = ""
     mock_order_obejct.BS = ""
@@ -56,42 +57,39 @@ def test_send_market_order(mocker, fixture_send_market_order):
     mock_order_obejct.DTRADE = ""
     mock_order_obejct.NOTE = ""
 
-    mock_config.EXCHANGE_TRADE.OrderObject = mocker.MagicMock()
-    mock_config.EXCHANGE_TRADE.OrderObject.return_value = mock_order_obejct
-    mock_logger = mocker.patch.object(LoggerInterface, "log_info")
-    mock_session_repository = mocker.patch(
-        "src.infrastructure.repositories.session_in_memory_repository.SessionInMemoryRepository"
-    )
+    mock_service_container.exchange_trade.OrderObject = MagicMock()
+    mock_service_container.exchange_trade.OrderObject.return_value = mock_order_obejct
+    mock_logger = MagicMock(spec=LoggerInterface)
+    mock_session_repository = MagicMock()
     mock_session_repository.get_current_user.return_value = "Test user"
 
-    mock_validator = mocker.patch(
-        "src.interactor.use_cases.send_market_order.SendMarketOrderInputDtoValidator"
-    )
-    mock_validator_instance = mock_validator.return_value
+    from src.interactor.validations.send_market_order_validator import SendMarketOrderInputDtoValidator
+    mock_validator = MagicMock(spec=SendMarketOrderInputDtoValidator)
     mock_presenter.present.return_value = "Test output"
-    mock_session_repository.return_value = "Test user"
 
     use_case = SendMarketOrderUseCase(
         mock_presenter,
-        mock_config,
+        mock_service_container,
         mock_logger,
         mock_session_repository,
     )
 
     input_dto = SendMarketOrderInputDto(**fixture_send_market_order)
-    input_dto.to_pfcf_dict = mocker.MagicMock()
+    input_dto.to_pfcf_dict = MagicMock()
     input_dto.to_pfcf_dict.return_value = fake_pfcf_dict
-    result = use_case.execute(input_dto)
 
-    mock_validator.assert_called_once_with(input_dto.to_dict())
-    mock_validator_instance.validate.assert_called_once_with()
+    # Mock the validator creation
+    with pytest.MonkeyPatch.context() as m:
+        m.setattr("src.interactor.use_cases.send_market_order.SendMarketOrderInputDtoValidator", lambda x: mock_validator)
+        result = use_case.execute(input_dto)
 
-    input_dto.to_pfcf_dict.assert_called_once_with(mock_config)
+    mock_validator.validate.assert_called_once_with()
+    input_dto.to_pfcf_dict.assert_called_once_with(mock_service_container)
 
     mock_session_repository.get_current_user.assert_called_once()
 
-    mock_config.EXCHANGE_TRADE.OrderObject.assert_called_once()
-    mock_config.EXCHANGE_CLIENT.DTradeLib.Order.assert_called_once()
+    mock_service_container.exchange_trade.OrderObject.assert_called_once()
+    mock_service_container.exchange_client.DTradeLib.Order.assert_called_once()
 
     output_dto = SendMarketOrderOutputDto(
         is_send_order=True,
@@ -107,36 +105,34 @@ def test_send_market_order(mocker, fixture_send_market_order):
     assert result == "Test output"
 
 
-def test_send_market_order_if_user_is_none(mocker, fixture_send_market_order):
+def test_send_market_order_if_user_is_none(fixture_send_market_order):
     # mock all dependencies in the use case
-    mock_presenter = mocker.patch.object(SendMarketOrderPresenterInterface, "present")
-    mock_config = mocker.patch("src.app.cli_pfcf.config.Config")
-    mock_logger = mocker.patch.object(LoggerInterface, "log_info")
-    mock_session_repository = mocker.patch(
-        "src.infrastructure.repositories.session_in_memory_repository.SessionInMemoryRepository"
-    )
+    mock_presenter = MagicMock(spec=SendMarketOrderPresenterInterface)
+    mock_service_container = MagicMock()
+    mock_logger = MagicMock(spec=LoggerInterface)
+    mock_session_repository = MagicMock()
     mock_session_repository.get_current_user.return_value = None
 
-    mock_validator = mocker.patch(
-        "src.interactor.use_cases.send_market_order.SendMarketOrderInputDtoValidator"
-    )
-    mock_validator_instance = mock_validator.return_value
+    from src.interactor.validations.send_market_order_validator import SendMarketOrderInputDtoValidator
+    mock_validator = MagicMock(spec=SendMarketOrderInputDtoValidator)
 
     use_case = SendMarketOrderUseCase(
         mock_presenter,
-        mock_config,
+        mock_service_container,
         mock_logger,
         mock_session_repository,
     )
 
     input_dto = SendMarketOrderInputDto(**fixture_send_market_order)
-    input_dto.to_pfcf_dict = mocker.MagicMock()
+    input_dto.to_pfcf_dict = MagicMock()
 
-    with pytest.raises(LoginFailedException) as exc:
-        use_case.execute(input_dto)
+    # Mock the validator creation
+    with pytest.MonkeyPatch.context() as m:
+        m.setattr("src.interactor.use_cases.send_market_order.SendMarketOrderInputDtoValidator", lambda x: mock_validator)
+        with pytest.raises(LoginFailedException) as exc:
+            use_case.execute(input_dto)
 
-    mock_validator.assert_called_once_with(input_dto.to_dict())
-    mock_validator_instance.validate.assert_called_once_with()
+    mock_validator.validate.assert_called_once_with()
     mock_session_repository.get_current_user.assert_called_once()
 
     mock_presenter.present.assert_not_called()
@@ -146,7 +142,7 @@ def test_send_market_order_if_user_is_none(mocker, fixture_send_market_order):
     assert str(exc.value) == "Login failed: User not logged in"
 
 
-def test_send_market_order_if_order_result_is_none(mocker, fixture_send_market_order):
+def test_send_market_order_if_order_result_is_none(fixture_send_market_order):
     fake_pfcf_dict = {
         "ACTNO": "12345678900",
         "PRODUCTID": "1234567890",
@@ -161,15 +157,15 @@ def test_send_market_order_if_order_result_is_none(mocker, fixture_send_market_o
     }
 
     # mock all dependencies in the use case
-    mock_presenter = mocker.patch.object(SendMarketOrderPresenterInterface, "present")
-    mock_config = mocker.patch("src.app.cli_pfcf.config.Config")
-    mock_config.EXCHANGE_CLIENT.DTradeLib.Order = mocker.MagicMock()
+    mock_presenter = MagicMock(spec=SendMarketOrderPresenterInterface)
+    mock_service_container = MagicMock()
+    mock_service_container.exchange_client.DTradeLib.Order = MagicMock()
 
     mock_order_result = None
 
-    mock_config.EXCHANGE_CLIENT.DTradeLib.Order.return_value = mock_order_result
+    mock_service_container.exchange_client.DTradeLib.Order.return_value = mock_order_result
 
-    mock_order_obejct = mocker.MagicMock()
+    mock_order_obejct = MagicMock()
     mock_order_obejct.ACTNO = ""
     mock_order_obejct.PRODUCTID = ""
     mock_order_obejct.BS = ""
@@ -181,43 +177,40 @@ def test_send_market_order_if_order_result_is_none(mocker, fixture_send_market_o
     mock_order_obejct.DTRADE = ""
     mock_order_obejct.NOTE = ""
 
-    mock_config.EXCHANGE_TRADE.OrderObject = mocker.MagicMock()
-    mock_config.EXCHANGE_TRADE.OrderObject.return_value = mock_order_obejct
-    mock_logger = mocker.patch.object(LoggerInterface, "log_info")
-    mock_session_repository = mocker.patch(
-        "src.infrastructure.repositories.session_in_memory_repository.SessionInMemoryRepository"
-    )
+    mock_service_container.exchange_trade.OrderObject = MagicMock()
+    mock_service_container.exchange_trade.OrderObject.return_value = mock_order_obejct
+    mock_logger = MagicMock(spec=LoggerInterface)
+    mock_session_repository = MagicMock()
     mock_session_repository.get_current_user.return_value = "Test user"
 
-    mock_validator = mocker.patch(
-        "src.interactor.use_cases.send_market_order.SendMarketOrderInputDtoValidator"
-    )
-    mock_validator_instance = mock_validator.return_value
+    from src.interactor.validations.send_market_order_validator import SendMarketOrderInputDtoValidator
+    mock_validator = MagicMock(spec=SendMarketOrderInputDtoValidator)
     mock_presenter.present.return_value = "Test output"
-    mock_session_repository.return_value = "Test user"
 
     use_case = SendMarketOrderUseCase(
         mock_presenter,
-        mock_config,
+        mock_service_container,
         mock_logger,
         mock_session_repository,
     )
 
     input_dto = SendMarketOrderInputDto(**fixture_send_market_order)
-    input_dto.to_pfcf_dict = mocker.MagicMock()
+    input_dto.to_pfcf_dict = MagicMock()
     input_dto.to_pfcf_dict.return_value = fake_pfcf_dict
-    with pytest.raises(ItemNotCreatedException) as exc:
-        use_case.execute(input_dto)
 
-    mock_validator.assert_called_once_with(input_dto.to_dict())
-    mock_validator_instance.validate.assert_called_once_with()
+    # Mock the validator creation
+    with pytest.MonkeyPatch.context() as m:
+        m.setattr("src.interactor.use_cases.send_market_order.SendMarketOrderInputDtoValidator", lambda x: mock_validator)
+        with pytest.raises(ItemNotCreatedException) as exc:
+            use_case.execute(input_dto)
 
-    input_dto.to_pfcf_dict.assert_called_once_with(mock_config)
+    mock_validator.validate.assert_called_once_with()
+    input_dto.to_pfcf_dict.assert_called_once_with(mock_service_container)
 
     mock_session_repository.get_current_user.assert_called_once()
 
-    mock_config.EXCHANGE_TRADE.OrderObject.assert_called_once()
-    mock_config.EXCHANGE_CLIENT.DTradeLib.Order.assert_called_once()
+    mock_service_container.exchange_trade.OrderObject.assert_called_once()
+    mock_service_container.exchange_client.DTradeLib.Order.assert_called_once()
 
     mock_presenter.present.assert_not_called()
     mock_logger.log_info.assert_not_called()
@@ -225,7 +218,7 @@ def test_send_market_order_if_order_result_is_none(mocker, fixture_send_market_o
     assert str(exc.value) == f"Order '{input_dto.order_account}' was not created correctly"
 
 
-def test_send_market_order_if_order_result_has_error(mocker, fixture_send_market_order):
+def test_send_market_order_if_order_result_has_error(fixture_send_market_order):
     fake_pfcf_dict = {
         "ACTNO": "12345678900",
         "PRODUCTID": "1234567890",
@@ -240,20 +233,20 @@ def test_send_market_order_if_order_result_has_error(mocker, fixture_send_market
     }
 
     # mock all dependencies in the use case
-    mock_presenter = mocker.patch.object(SendMarketOrderPresenterInterface, "present")
-    mock_config = mocker.patch("src.app.cli_pfcf.config.Config")
-    mock_config.EXCHANGE_CLIENT.DTradeLib.Order = mocker.MagicMock()
+    mock_presenter = MagicMock(spec=SendMarketOrderPresenterInterface)
+    mock_service_container = MagicMock()
+    mock_service_container.exchange_client.DTradeLib.Order = MagicMock()
 
-    mock_order_result = mocker.MagicMock()
+    mock_order_result = MagicMock()
     mock_order_result.SEQ = ""
     mock_order_result.ERRORCODE = "Test error code"
     mock_order_result.ERRORMSG = "Test error message"
     mock_order_result.ISSEND = True
     mock_order_result.NOTE = fixture_send_market_order["note"]
 
-    mock_config.EXCHANGE_CLIENT.DTradeLib.Order.return_value = mock_order_result
+    mock_service_container.exchange_client.DTradeLib.Order.return_value = mock_order_result
 
-    mock_order_obejct = mocker.MagicMock()
+    mock_order_obejct = MagicMock()
     mock_order_obejct.ACTNO = ""
     mock_order_obejct.PRODUCTID = ""
     mock_order_obejct.BS = ""
@@ -265,44 +258,40 @@ def test_send_market_order_if_order_result_has_error(mocker, fixture_send_market
     mock_order_obejct.DTRADE = ""
     mock_order_obejct.NOTE = ""
 
-    mock_config.EXCHANGE_TRADE.OrderObject = mocker.MagicMock()
-    mock_config.EXCHANGE_TRADE.OrderObject.return_value = mock_order_obejct
-    mock_logger = mocker.patch.object(LoggerInterface, "log_info")
-    mock_session_repository = mocker.patch(
-        "src.infrastructure.repositories.session_in_memory_repository.SessionInMemoryRepository"
-    )
+    mock_service_container.exchange_trade.OrderObject = MagicMock()
+    mock_service_container.exchange_trade.OrderObject.return_value = mock_order_obejct
+    mock_logger = MagicMock(spec=LoggerInterface)
+    mock_session_repository = MagicMock()
     mock_session_repository.get_current_user.return_value = "Test user"
 
-    mock_validator = mocker.patch(
-        "src.interactor.use_cases.send_market_order.SendMarketOrderInputDtoValidator"
-    )
-    mock_validator_instance = mock_validator.return_value
+    from src.interactor.validations.send_market_order_validator import SendMarketOrderInputDtoValidator
+    mock_validator = MagicMock(spec=SendMarketOrderInputDtoValidator)
     mock_presenter.present.return_value = "Test output"
-    mock_session_repository.return_value = "Test user"
 
     use_case = SendMarketOrderUseCase(
         mock_presenter,
-        mock_config,
+        mock_service_container,
         mock_logger,
         mock_session_repository,
     )
 
     input_dto = SendMarketOrderInputDto(**fixture_send_market_order)
-    input_dto.to_pfcf_dict = mocker.MagicMock()
+    input_dto.to_pfcf_dict = MagicMock()
     input_dto.to_pfcf_dict.return_value = fake_pfcf_dict
 
-    with pytest.raises(SendMarketOrderFailedException) as exc:
-        use_case.execute(input_dto)
+    # Mock the validator creation
+    with pytest.MonkeyPatch.context() as m:
+        m.setattr("src.interactor.use_cases.send_market_order.SendMarketOrderInputDtoValidator", lambda x: mock_validator)
+        with pytest.raises(SendMarketOrderFailedException) as exc:
+            use_case.execute(input_dto)
 
-    mock_validator.assert_called_once_with(input_dto.to_dict())
-    mock_validator_instance.validate.assert_called_once_with()
-
-    input_dto.to_pfcf_dict.assert_called_once_with(mock_config)
+    mock_validator.validate.assert_called_once_with()
+    input_dto.to_pfcf_dict.assert_called_once_with(mock_service_container)
 
     mock_session_repository.get_current_user.assert_called_once()
 
-    mock_config.EXCHANGE_TRADE.OrderObject.assert_called_once()
-    mock_config.EXCHANGE_CLIENT.DTradeLib.Order.assert_called_once()
+    mock_service_container.exchange_trade.OrderObject.assert_called_once()
+    mock_service_container.exchange_client.DTradeLib.Order.assert_called_once()
 
     mock_presenter.present.assert_not_called()
     mock_logger.log_info.assert_not_called()

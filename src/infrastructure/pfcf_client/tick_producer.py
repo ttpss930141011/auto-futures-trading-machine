@@ -35,15 +35,15 @@ class TickProducer:
     def handle_tick_data(
         self,
         commodity_id: str,
-        info_time: str,
-        match_time: str,
+        _info_time: str,
+        _match_time: str,
         match_price: str,
-        match_buy_cnt: str,
-        match_sell_cnt: str,
-        match_quantity: str,
-        match_total_qty: str,
-        match_price_data,
-        match_qty_data,
+        _match_buy_cnt: str,
+        _match_sell_cnt: str,
+        _match_quantity: str,
+        _match_total_qty: str,
+        _match_price_data,
+        _match_qty_data,
     ) -> None:
         """Process tick data from PFCF API callback and publish via ZeroMQ.
 
@@ -84,19 +84,17 @@ class TickProducer:
             if self.logger and self._tick_count % 500 == 0:  # Log every 500 ticks
                 self.logger.log_info(f"Published {self._tick_count} ticks via ZMQ.")
 
-        except Exception as e:
+        except (RuntimeError, OSError, ValueError) as e:
             self._handle_error(e)
 
     def _handle_error(self, e):
-        # Implementation of _handle_error method
+        """Handle errors during tick data processing."""
         if self.logger:
             self.logger.log_error(f"Error in TickProducer handle_tick_data: {e}")
         # Depending on the error, might need more robust handling
-        pass
 
-    # Add a close method for the publisher if needed, though typically managed by the context owner
     def close(self):
+        """Close TickProducer resources."""
         if self.logger:
             self.logger.log_info("Closing TickProducer resources (ZMQ publisher).")
         # self.tick_publisher.close() # Publisher might be shared, close at higher level
-        pass

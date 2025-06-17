@@ -6,8 +6,8 @@ import zmq
 
 from src.infrastructure.messaging.zmq_publisher import ZmqPublisher
 from src.infrastructure.exceptions.communication_exceptions import (
-    ConnectionError as CommConnectionError,
-    MessageSerializationError,
+    ZMQConnectionException,
+    ZMQMessageException,
 )
 
 
@@ -63,7 +63,7 @@ class TestZmqPublisher:
         publisher = ZmqPublisher(self.address, self.logger)
         
         # Test connect failure
-        with pytest.raises(CommConnectionError):
+        with pytest.raises(ZMQConnectionException):
             publisher.connect()
 
     @patch('zmq.Context')
@@ -105,7 +105,7 @@ class TestZmqPublisher:
         test_data = {"test": "data"}
         
         # Test publish without connection
-        with pytest.raises(CommConnectionError, match="Publisher not connected"):
+        with pytest.raises(ZMQConnectionException, match="Publisher not connected"):
             publisher.publish(test_data)
 
     @patch('zmq.Context')
@@ -127,7 +127,7 @@ class TestZmqPublisher:
         test_data = {"test": "data"}
         
         # Test publish with serialization error
-        with pytest.raises(MessageSerializationError):
+        with pytest.raises(ZMQMessageException):
             publisher.publish(test_data)
 
     @patch('zmq.Context')

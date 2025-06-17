@@ -6,8 +6,8 @@ import zmq
 
 from src.infrastructure.messaging.zmq_subscriber import ZmqSubscriber
 from src.infrastructure.exceptions.communication_exceptions import (
-    ConnectionError as CommConnectionError,
-    MessageSerializationError,
+    ZMQConnectionException,
+    ZMQMessageException,
 )
 
 
@@ -64,7 +64,7 @@ class TestZmqSubscriber:
         subscriber = ZmqSubscriber(self.address, self.logger)
         
         # Test connect failure
-        with pytest.raises(CommConnectionError):
+        with pytest.raises(ZMQConnectionException):
             subscriber.connect()
 
     @patch('zmq.Context')
@@ -105,7 +105,7 @@ class TestZmqSubscriber:
         # Don't set _connected = True
         
         # Test receive without connection
-        with pytest.raises(CommConnectionError, match="Subscriber not connected"):
+        with pytest.raises(ZMQConnectionException, match="Subscriber not connected"):
             subscriber.receive()
 
     @patch('zmq.Context')
@@ -147,7 +147,7 @@ class TestZmqSubscriber:
         subscriber.serializer = mock_serializer
         
         # Test receive with deserialization error
-        with pytest.raises(MessageSerializationError):
+        with pytest.raises(ZMQMessageException):
             subscriber.receive()
 
     @patch('zmq.Context')

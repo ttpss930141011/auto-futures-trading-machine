@@ -6,8 +6,8 @@ import zmq
 
 from src.infrastructure.messaging.zmq_puller import ZmqPuller
 from src.infrastructure.exceptions.communication_exceptions import (
-    ConnectionError as CommConnectionError,
-    MessageSerializationError,
+    ZMQConnectionException,
+    ZMQMessageException,
 )
 
 
@@ -63,7 +63,7 @@ class TestZmqPuller:
         puller = ZmqPuller(self.address, self.logger)
         
         # Test connect failure
-        with pytest.raises(CommConnectionError):
+        with pytest.raises(ZMQConnectionException):
             puller.connect()
 
     @patch('zmq.Context')
@@ -104,7 +104,7 @@ class TestZmqPuller:
         # Don't set _connected = True
         
         # Test pull without connection
-        with pytest.raises(CommConnectionError, match="Puller not connected"):
+        with pytest.raises(ZMQConnectionException, match="Puller not connected"):
             puller.pull()
 
     @patch('zmq.Context')
@@ -146,7 +146,7 @@ class TestZmqPuller:
         puller.serializer = mock_serializer
         
         # Test pull with deserialization error
-        with pytest.raises(MessageSerializationError):
+        with pytest.raises(ZMQMessageException):
             puller.pull()
 
     @patch('zmq.Context')

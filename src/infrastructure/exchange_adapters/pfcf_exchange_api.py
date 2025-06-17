@@ -13,7 +13,10 @@ from src.domain.interfaces.exchange_api_interface import (
 )
 from src.infrastructure.pfcf_client.api import PFCFApi
 from src.infrastructure.exchange_adapters.pfcf_converter import PFCFConverter
+from src.infrastructure.exchange_adapters.pfcf_event_adapter import PFCFEventAdapter
+from src.infrastructure.events.exchange_event_manager import ExchangeEventManager
 from src.infrastructure.services.service_container import ServiceContainer
+from src.domain.interfaces.exchange_event_interface import ExchangeEventManagerInterface
 
 
 class PFCFExchangeApi(ExchangeApiInterface):
@@ -31,6 +34,10 @@ class PFCFExchangeApi(ExchangeApiInterface):
         self._converter = PFCFConverter()
         self._connected = False
         
+        # Create event management system
+        self._event_manager = ExchangeEventManager("PFCF")
+        self._event_adapter = PFCFEventAdapter(self._pfcf_api.client, self._event_manager)
+        
     def connect(self, credentials: LoginCredentials) -> LoginResult:
         """Connect to PFCF exchange."""
         try:
@@ -45,6 +52,8 @@ class PFCFExchangeApi(ExchangeApiInterface):
             
             if success:
                 self._connected = True
+                # Connect all events after successful login
+                self._event_adapter.connect_all_events()
                 return LoginResult(
                     success=True,
                     message="Successfully connected to PFCF",
@@ -68,6 +77,8 @@ class PFCFExchangeApi(ExchangeApiInterface):
     def disconnect(self) -> bool:
         """Disconnect from PFCF exchange."""
         try:
+            # Disconnect all events before disconnecting
+            self._event_adapter.disconnect_all_events()
             # PFCF doesn't have explicit disconnect, just mark as disconnected
             self._connected = False
             return True
@@ -158,6 +169,10 @@ class PFCFExchangeApi(ExchangeApiInterface):
     def get_exchange_name(self) -> str:
         """Get exchange name."""
         return "PFCF (Taiwan Unified Futures)"
+    
+    def get_event_manager(self) -> ExchangeEventManagerInterface:
+        """Get the event manager for this exchange."""
+        return self._event_manager
     
     # Private helper methods
     

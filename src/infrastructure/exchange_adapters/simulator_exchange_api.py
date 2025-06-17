@@ -13,6 +13,14 @@ from src.domain.interfaces.exchange_api_interface import (
     OrderResult,
     Position
 )
+from src.domain.interfaces.exchange_event_interface import (
+    ExchangeEventManagerInterface,
+    EventType,
+    Event,
+    TickEvent,
+    OrderEvent
+)
+from src.infrastructure.events.exchange_event_manager import ExchangeEventManager
 
 
 class SimulatorExchangeApi(ExchangeApiInterface):
@@ -30,6 +38,9 @@ class SimulatorExchangeApi(ExchangeApiInterface):
         }
         self._market_data_callbacks: List[Callable] = []
         
+        # Create event manager
+        self._event_manager = ExchangeEventManager("Simulator")
+        
     def connect(self, credentials: LoginCredentials) -> LoginResult:
         """Simulate connection."""
         self._logger.info(f"Simulator connecting with user: {credentials.username}")
@@ -37,10 +48,20 @@ class SimulatorExchangeApi(ExchangeApiInterface):
         # Simulate login validation
         if credentials.username == "test" and credentials.password == "test":
             self._connected = True
+            session_id = f"SIM_{uuid.uuid4().hex[:8]}"
+            
+            # Emit login success event
+            self._event_manager.emit(Event(
+                event_type=EventType.LOGIN_SUCCESS,
+                timestamp=datetime.now().isoformat(),
+                data={"session_id": session_id},
+                source="Simulator"
+            ))
+            
             return LoginResult(
                 success=True,
                 message="Successfully connected to simulator",
-                session_id=f"SIM_{uuid.uuid4().hex[:8]}"
+                session_id=session_id
             )
         else:
             return LoginResult(
@@ -79,6 +100,37 @@ class SimulatorExchangeApi(ExchangeApiInterface):
         
         # Update positions
         self._update_positions(order)
+        
+        # Emit order accepted event
+        self._event_manager.emit(OrderEvent(
+            event_type=EventType.ORDER_ACCEPTED,
+            timestamp=datetime.now().isoformat(),
+            data={},
+            source="Simulator",
+            order_id=order_id,
+            account=order.account,
+            symbol=order.symbol,
+            side=order.side,
+            quantity=order.quantity,
+            price=order.price,
+            status="accepted"
+        ))
+        
+        # Simulate immediate fill for market orders
+        if order.order_type == "MARKET":
+            self._event_manager.emit(OrderEvent(
+                event_type=EventType.ORDER_FILLED,
+                timestamp=datetime.now().isoformat(),
+                data={"fill_price": order.price or 100.0},
+                source="Simulator",
+                order_id=order_id,
+                account=order.account,
+                symbol=order.symbol,
+                side=order.side,
+                quantity=order.quantity,
+                price=order.price or 100.0,
+                status="filled"
+            ))
         
         return OrderResult(
             success=True,
@@ -119,6 +171,10 @@ class SimulatorExchangeApi(ExchangeApiInterface):
     def get_exchange_name(self) -> str:
         """Get exchange name."""
         return "Simulator (Test Exchange)"
+    
+    def get_event_manager(self) -> ExchangeEventManagerInterface:
+        """Get the event manager for this exchange."""
+        return self._event_manager
     
     # Private helper methods
     

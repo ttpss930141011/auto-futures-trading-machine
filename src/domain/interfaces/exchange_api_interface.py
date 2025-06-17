@@ -115,3 +115,12 @@ class ExchangeApiInterface(ABC):
     def get_exchange_name(self) -> str:
         """Get the name of the exchange/broker."""
         pass
+    
+    @abstractmethod
+    def get_event_manager(self) -> 'ExchangeEventManagerInterface':
+        """Get the event manager for this exchange.
+        
+        Returns:
+            Event manager for subscribing to exchange events
+        """
+        pass

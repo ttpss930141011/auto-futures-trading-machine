@@ -5,6 +5,7 @@ dependencies following the Dependency Inversion Principle.
 """
 
 from src.app.cli_pfcf.config import Config
+from src.domain.interfaces.exchange_api_interface import ExchangeApiInterface
 from src.infrastructure.pfcf_client.api import PFCFApi
 from src.interactor.interfaces.repositories.condition_repository import ConditionRepositoryInterface
 from src.interactor.interfaces.logger.logger import LoggerInterface
@@ -26,6 +27,7 @@ class ServiceContainer:
         session_repository: SessionRepositoryInterface,
         condition_repository: ConditionRepositoryInterface,
         exchange_api: PFCFApi,
+        exchange_api_v2: ExchangeApiInterface = None,
     ) -> None:
         """Initialize the service container.
 
@@ -34,13 +36,15 @@ class ServiceContainer:
             config: Configuration instance for application settings.
             session_repository: Repository for managing user sessions.
             condition_repository: Repository for managing trading conditions.
-            exchange_api: PFCF API instance for exchange operations.
+            exchange_api: PFCF API instance for exchange operations (legacy).
+            exchange_api_v2: New abstracted exchange API interface.
         """
         self.logger = logger
         self.config = config
         self.session_repository = session_repository
         self.condition_repository = condition_repository
-        self.exchange_api = exchange_api
+        self.exchange_api = exchange_api  # Legacy PFCF API
+        self.exchange_api_v2 = exchange_api_v2  # New abstracted API
 
     @property
     def exchange_client(self):

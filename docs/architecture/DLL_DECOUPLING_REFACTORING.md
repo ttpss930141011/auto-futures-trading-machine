@@ -122,12 +122,78 @@ class DllGatewayServer:
         result = self._exchange_client.send_order(order_request)
 ```
 
+## Implementation Progress
+
+### Phase 1: Infrastructure Layer ✅
+- ✅ Created `ExchangeApiInterface` 
+- ✅ Created `ExchangeConverterInterface`
+- ✅ Implemented `PFCFExchangeApi` adapter
+- ✅ Created `ExchangeFactory`
+- ✅ Updated `DllGatewayServer` to use interface
+- ✅ Created `SimulatorExchangeApi` for testing
+
+### Phase 2: Event System ✅
+- ✅ Created `ExchangeEventInterface` for standard events
+- ✅ Implemented `ExchangeEventManager` 
+- ✅ Created `PFCFEventAdapter` to convert PFCF += events
+- ✅ Updated exchanges to use event system
+- ✅ Created `MarketDataGatewayServiceV2` using events
+
+### Phase 3: Business Layer (In Progress)
+- ✅ Updated `ServiceContainer` to support both APIs
+- ✅ Created `SendMarketOrderUseCaseV2` as example
+- ✅ Created `PositionRepositoryInterface`
+- ✅ Implemented `ExchangePositionRepository`
+- ⏳ Migrate remaining Use Cases
+- ⏳ Create broker-neutral DTOs
+
+## Key Architecture Improvements
+
+### 1. Dual API Support
+The system now supports both legacy PFCF API and new abstract API:
+```python
+service_container.exchange_api      # Legacy PFCF API
+service_container.exchange_api_v2   # New abstract API
+```
+
+### 2. Event System Abstraction
+No more direct PFCF event registration:
+```python
+# Old way (coupled)
+client.DQuoteLib.OnTickDataTrade += handler
+
+# New way (abstract)
+event_manager.subscribe(EventType.TICK_DATA, handler)
+```
+
+### 3. Repository Pattern Enhancement
+Positions can now be fetched from any exchange:
+```python
+# Using abstract repository
+repo = ExchangePositionRepository(exchange_api)
+positions = repo.get_all_positions(account_id)
+```
+
+## Migration Guide
+
+### For Use Cases
+1. Accept `ExchangeApiInterface` instead of `PFCFApi`
+2. Use standard data classes (OrderRequest, Position)
+3. Subscribe to events via event manager
+
+### For New Brokers
+1. Implement `ExchangeApiInterface`
+2. Create event adapter (like `PFCFEventAdapter`)
+3. Implement data converter
+4. Register in `ExchangeFactory`
+
 ## Next Steps
 
-1. Continue refactoring Use Cases
+1. Migrate remaining Use Cases to V2
 2. Create broker-neutral DTOs
-3. Test with simulator
-4. Document new broker integration process
+3. Test complete flow with simulator
+4. Performance benchmarking
+5. Documentation for adding new brokers
 
 ## Notes
 

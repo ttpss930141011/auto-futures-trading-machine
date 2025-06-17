@@ -112,13 +112,14 @@ class ApplicationBootstrapper:
         session_repository = SessionJsonFileRepository(self._config.DEFAULT_SESSION_TIMEOUT)
         condition_repository = ConditionJsonFileRepository()
 
-        # Create service container
+        # Create service container with both legacy and new API
         service_container = ServiceContainer(
             logger=self._logger,
             config=self._config,
             session_repository=session_repository,
             condition_repository=condition_repository,
             exchange_api=self._exchange_api,
+            exchange_api_v2=None,  # Will be set in _create_system_manager
         )
 
         return service_container
@@ -190,14 +191,17 @@ class ApplicationBootstrapper:
         from src.infrastructure.exchange_adapters import ExchangeFactory
         
         # For now, we wrap the existing PFCF API with the adapter
-        exchange_api = ExchangeFactory.create_exchange_api(
+        exchange_api_v2 = ExchangeFactory.create_exchange_api(
             provider="PFCF",
             service_container=service_container
         )
         
+        # Update service container with the new API
+        service_container.exchange_api_v2 = exchange_api_v2
+        
         # Create DLL Gateway Server with abstract interface
         gateway_server = DllGatewayServer(
-            exchange_client=exchange_api,
+            exchange_client=exchange_api_v2,
             config=self._config,
             logger=self._logger,
             bind_address=self._config.DLL_GATEWAY_BIND_ADDRESS,

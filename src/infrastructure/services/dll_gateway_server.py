@@ -244,7 +244,11 @@ class DllGatewayServer:
                 f"{input_dto.item_code} - Success: {response.is_send_order}"
             )
 
-            return asdict(response)
+            # Return unified response format
+            return {
+                "success": True,
+                "data": asdict(response)
+            }
 
         except InvalidOrderError as e:
             self._logger.log_error(f"Invalid order request: {e}")
@@ -339,7 +343,7 @@ class DllGatewayServer:
 
             return {
                 "success": True,
-                "positions": [asdict(pos) for pos in positions]
+                "data": {"positions": [asdict(pos) for pos in positions]}
             }
 
         except Exception as e:
@@ -386,10 +390,12 @@ class DllGatewayServer:
 
             return {
                 "success": True,
-                "status": "healthy" if is_connected else "unhealthy",
-                "exchange_connected": is_connected,
-                "timestamp": int(time.time()),
-                "server_running": self._running
+                "data": {
+                    "status": "healthy" if is_connected else "unhealthy",
+                    "exchange_connected": is_connected,
+                    "timestamp": int(time.time()),
+                    "server_running": self._running
+                }
             }
 
         except Exception as e:

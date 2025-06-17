@@ -175,13 +175,16 @@ class DllGatewayClient(DllGatewayServiceInterface):
 
             response_data = self._send_request(request_data)
 
-            # Create SendMarketOrderOutputDto from response
+            # Extract data from unified response format
+            order_data = response_data.get("data", {})
+
+            # Create SendMarketOrderOutputDto from response data
             return SendMarketOrderOutputDto(
-                is_send_order=response_data.get("is_send_order", False),
-                note=response_data.get("note", ""),
-                order_serial=response_data.get("order_serial", ""),
-                error_code=response_data.get("error_code", ""),
-                error_message=response_data.get("error_message", ""),
+                is_send_order=order_data.get("is_send_order", False),
+                note=order_data.get("note", ""),
+                order_serial=order_data.get("order_serial", ""),
+                error_code=order_data.get("error_code", ""),
+                error_message=order_data.get("error_message", ""),
             )
 
         except DllGatewayError:
@@ -212,9 +215,13 @@ class DllGatewayClient(DllGatewayServiceInterface):
 
             response_data = self._send_request(request_data)
 
+            # Extract data from unified response format
+            data = response_data.get("data", {})
+            positions_data = data.get("positions", [])
+
             # Convert response to PositionInfo objects
             positions = []
-            for pos_data in response_data.get("positions", []):
+            for pos_data in positions_data:
                 positions.append(PositionInfo(
                     account=pos_data["account"],
                     item_code=pos_data["item_code"],
@@ -256,9 +263,8 @@ class DllGatewayClient(DllGatewayServiceInterface):
             request_data = {"operation": "health_check"}
             response_data = self._send_request(request_data)
 
-            # Remove success flag from health status as it's not part of status
-            health_status = response_data.copy()
-            health_status.pop("success", None)
+            # Extract health status from unified response format
+            health_status = response_data.get("data", {})
 
             return health_status
 

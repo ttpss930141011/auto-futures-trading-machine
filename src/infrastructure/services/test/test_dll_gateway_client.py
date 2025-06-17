@@ -74,12 +74,16 @@ class TestDllGatewayClient:
 
     def test_send_order_success(self, gateway_client, mock_socket):
         """Test successful order sending."""
-        # Setup mock response
+        # Setup mock response with unified format
         mock_socket.recv_string.return_value = json.dumps({
             "success": True,
-            "is_send_order": True,
-            "order_serial": "ORDER123",
-            "note": "Order sent successfully"
+            "data": {
+                "is_send_order": True,
+                "order_serial": "ORDER123",
+                "note": "Order sent successfully",
+                "error_code": "",
+                "error_message": ""
+            }
         })
 
         # Create order request
@@ -110,14 +114,11 @@ class TestDllGatewayClient:
 
     def test_send_order_failure(self, gateway_client, mock_socket):
         """Test order sending failure from server."""
-        # Setup mock response with error
+        # Setup mock response with error (server error format)
         mock_socket.recv_string.return_value = json.dumps({
             "success": False,
-            "is_send_order": False,
             "error_message": "Invalid order",
-            "error_code": "INVALID_ORDER",
-            "order_serial": "",
-            "note": "Order failed"
+            "error_code": "INVALID_ORDER"
         })
 
         order_request = SendMarketOrderInputDto(
@@ -141,18 +142,20 @@ class TestDllGatewayClient:
 
     def test_get_positions_success(self, gateway_client, mock_socket):
         """Test successful position retrieval."""
-        # Setup mock response
+        # Setup mock response with unified format
         mock_socket.recv_string.return_value = json.dumps({
             "success": True,
-            "positions": [
-                {
-                    "account": "TEST001",
-                    "item_code": "TXFF4",
-                    "quantity": 5,
-                    "average_price": 15000.0,
-                    "unrealized_pnl": 1000.0
-                }
-            ]
+            "data": {
+                "positions": [
+                    {
+                        "account": "TEST001",
+                        "item_code": "TXFF4",
+                        "quantity": 5,
+                        "average_price": 15000.0,
+                        "unrealized_pnl": 1000.0
+                    }
+                ]
+            }
         })
 
         positions = gateway_client.get_positions("TEST001")
@@ -164,12 +167,14 @@ class TestDllGatewayClient:
 
     def test_get_health_status_success(self, gateway_client, mock_socket):
         """Test successful health status retrieval."""
-        # Setup mock response
+        # Setup mock response with unified format
         mock_socket.recv_string.return_value = json.dumps({
             "success": True,
-            "status": "healthy",
-            "exchange_connected": True,
-            "timestamp": 1234567890
+            "data": {
+                "status": "healthy",
+                "exchange_connected": True,
+                "timestamp": 1234567890
+            }
         })
 
         health_status = gateway_client.get_health_status()
@@ -182,11 +187,13 @@ class TestDllGatewayClient:
 
     def test_is_connected_true(self, gateway_client, mock_socket):
         """Test is_connected returns True when gateway is healthy."""
-        # Setup mock response
+        # Setup mock response with unified format
         mock_socket.recv_string.return_value = json.dumps({
             "success": True,
-            "status": "healthy",
-            "exchange_connected": True
+            "data": {
+                "status": "healthy",
+                "exchange_connected": True
+            }
         })
 
         result = gateway_client.is_connected()
@@ -194,11 +201,13 @@ class TestDllGatewayClient:
 
     def test_is_connected_false(self, gateway_client, mock_socket):
         """Test is_connected returns False when gateway is not connected."""
-        # Setup mock response
+        # Setup mock response with unified format
         mock_socket.recv_string.return_value = json.dumps({
             "success": True,
-            "status": "unhealthy",
-            "exchange_connected": False
+            "data": {
+                "status": "unhealthy",
+                "exchange_connected": False
+            }
         })
 
         result = gateway_client.is_connected()
@@ -278,9 +287,13 @@ class TestDllGatewayClientIntegration:
             mock_context.return_value.socket.return_value = mock_socket
             mock_socket.recv_string.return_value = json.dumps({
                 "success": True,
-                "is_send_order": True,
-                "order_serial": "ORDER456",
-                "note": "Integration test success"
+                "data": {
+                    "is_send_order": True,
+                    "order_serial": "ORDER456",
+                    "note": "Integration test success",
+                    "error_code": "",
+                    "error_message": ""
+                }
             })
 
             client = DllGatewayClient(

@@ -165,12 +165,13 @@ class TestDllGatewayServer:
         # Process request
         response = gateway_server._process_request(json.dumps(request_data).encode())
 
-        # Verify response format matches SendMarketOrderOutputDto
-        assert response["is_send_order"] is True
-        assert response["order_serial"] == "ORDER123"
-        assert response["note"] == "Test order"
-        assert response["error_code"] == "0"
-        assert response["error_message"] == ""
+        # Verify response format matches unified format
+        assert response["success"] is True
+        assert response["data"]["is_send_order"] is True
+        assert response["data"]["order_serial"] == "ORDER123"
+        assert response["data"]["note"] == "Test order"
+        assert response["data"]["error_code"] == "0"
+        assert response["data"]["error_message"] == ""
 
         # Verify DLL was called
         mock_exchange_client.client.DTradeLib.Order.assert_called_once()
@@ -228,7 +229,7 @@ class TestDllGatewayServer:
 
         # Note: Current implementation returns empty list
         assert response["success"] is True
-        assert response["positions"] == []
+        assert response["data"]["positions"] == []
 
     def test_get_positions_missing_account(self, gateway_server):
         """Test get positions request without account parameter."""
@@ -249,9 +250,9 @@ class TestDllGatewayServer:
         response = gateway_server._process_request(json.dumps(request_data).encode())
 
         assert response["success"] is True
-        assert response["status"] == "healthy"
-        assert response["exchange_connected"] is True
-        assert "timestamp" in response
+        assert response["data"]["status"] == "healthy"
+        assert response["data"]["exchange_connected"] is True
+        assert "timestamp" in response["data"]
 
     def test_unknown_operation(self, gateway_server):
         """Test handling of unknown operation."""
@@ -406,7 +407,7 @@ class TestDllGatewayServerIntegration:
             response = server._process_request(json.dumps(request).encode())
 
             assert response["success"] is True
-            assert response["status"] == "healthy"
+            assert response["data"]["status"] == "healthy"
 
     def test_server_lifecycle_with_multiple_requests(self, mock_exchange_client, mock_config, mock_logger, integration_server_address):
         """Test server handling multiple requests over its lifecycle."""

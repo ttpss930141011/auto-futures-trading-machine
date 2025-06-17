@@ -4,9 +4,9 @@ import pytest
 
 from src.infrastructure.exceptions.application_exceptions import (
     ApplicationException,
-    ConfigurationError,
-    InitializationError,
-    ServiceUnavailableError,
+    ProcessException,
+    BootstrapException,
+    ControllerException,
 )
 
 
@@ -27,55 +27,55 @@ class TestApplicationException:
         assert isinstance(exception, Exception)
 
 
-class TestConfigurationError:
-    """Test cases for ConfigurationError."""
+class TestProcessException:
+    """Test cases for ProcessException."""
 
-    def test_configuration_error_creation(self):
-        """Test ConfigurationError can be created with message."""
-        message = "Invalid configuration"
-        error = ConfigurationError(message)
+    def test_process_exception_creation(self):
+        """Test ProcessException can be created with message."""
+        message = "Process operation failed"
+        error = ProcessException(message)
         
         assert str(error) == message
         assert isinstance(error, ApplicationException)
 
-    def test_configuration_error_inheritance(self):
-        """Test ConfigurationError inherits from ApplicationException."""
-        error = ConfigurationError("test")
+    def test_process_exception_inheritance(self):
+        """Test ProcessException inherits from ApplicationException."""
+        error = ProcessException("test")
         assert isinstance(error, ApplicationException)
         assert isinstance(error, Exception)
 
 
-class TestInitializationError:
-    """Test cases for InitializationError."""
+class TestBootstrapException:
+    """Test cases for BootstrapException."""
 
-    def test_initialization_error_creation(self):
-        """Test InitializationError can be created with message."""
-        message = "Initialization failed"
-        error = InitializationError(message)
+    def test_bootstrap_exception_creation(self):
+        """Test BootstrapException can be created with message."""
+        message = "Bootstrap failed"
+        error = BootstrapException(message)
         
         assert str(error) == message
         assert isinstance(error, ApplicationException)
 
-    def test_initialization_error_inheritance(self):
-        """Test InitializationError inherits from ApplicationException."""
-        error = InitializationError("test")
+    def test_bootstrap_exception_inheritance(self):
+        """Test BootstrapException inherits from ApplicationException."""
+        error = BootstrapException("test")
         assert isinstance(error, ApplicationException)
         assert isinstance(error, Exception)
 
 
-class TestServiceUnavailableError:
-    """Test cases for ServiceUnavailableError."""
+class TestControllerException:
+    """Test cases for ControllerException."""
 
-    def test_service_unavailable_error_creation(self):
-        """Test ServiceUnavailableError can be created with message."""
-        message = "Service is unavailable"
-        error = ServiceUnavailableError(message)
+    def test_controller_exception_creation(self):
+        """Test ControllerException can be created with message."""
+        message = "Controller operation failed"
+        error = ControllerException(message)
         
         assert str(error) == message
         assert isinstance(error, ApplicationException)
 
-    def test_service_unavailable_error_inheritance(self):
-        """Test ServiceUnavailableError inherits from ApplicationException."""
-        error = ServiceUnavailableError("test")
+    def test_controller_exception_inheritance(self):
+        """Test ControllerException inherits from ApplicationException."""
+        error = ControllerException("test")
         assert isinstance(error, ApplicationException)
         assert isinstance(error, Exception)

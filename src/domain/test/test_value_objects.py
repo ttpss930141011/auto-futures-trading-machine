@@ -1,211 +1,179 @@
 """Tests for domain value objects."""
 
 import pytest
-from datetime import datetime
-from decimal import Decimal
+import uuid
 
 from src.domain.value_objects import (
-    Price,
-    Quantity,
-    OrderId,
-    ItemCode,
+    OrderOperation,
+    OrderTypeEnum,
+    TimeInForce,
+    OpenClose,
+    DayTrade,
+    ConditionId,
 )
 
 
-class TestPrice:
-    """Test cases for Price value object."""
+class TestOrderOperation:
+    """Test cases for OrderOperation enum."""
 
-    def test_price_creation_with_decimal(self):
-        """Test Price can be created with Decimal value."""
-        price_value = Decimal("100.50")
-        price = Price(price_value)
+    def test_order_operation_values(self):
+        """Test OrderOperation enum values."""
+        assert OrderOperation.BUY.value == "buy"
+        assert OrderOperation.SELL.value == "sell"
+
+    def test_order_operation_string_representation(self):
+        """Test OrderOperation string representation."""
+        assert str(OrderOperation.BUY) == "buy"
+        assert str(OrderOperation.SELL) == "sell"
+
+    def test_order_operation_equality(self):
+        """Test OrderOperation equality."""
+        assert OrderOperation.BUY == OrderOperation.BUY
+        assert OrderOperation.SELL == OrderOperation.SELL
+        assert OrderOperation.BUY != OrderOperation.SELL
+
+    def test_order_operation_unique_values(self):
+        """Test that all OrderOperation values are unique."""
+        values = [op.value for op in OrderOperation]
+        assert len(values) == len(set(values))
+
+
+class TestOrderTypeEnum:
+    """Test cases for OrderTypeEnum."""
+
+    def test_order_type_values(self):
+        """Test OrderTypeEnum values."""
+        assert OrderTypeEnum.Limit.value == "Limit"
+        assert OrderTypeEnum.Market.value == "Market"
+        assert OrderTypeEnum.MarketPrice.value == "MarketPrice"
+
+    def test_order_type_string_representation(self):
+        """Test OrderTypeEnum string representation."""
+        assert str(OrderTypeEnum.Limit) == "Limit"
+        assert str(OrderTypeEnum.Market) == "Market"
+        assert str(OrderTypeEnum.MarketPrice) == "MarketPrice"
+
+    def test_order_type_equality(self):
+        """Test OrderTypeEnum equality."""
+        assert OrderTypeEnum.Limit == OrderTypeEnum.Limit
+        assert OrderTypeEnum.Market == OrderTypeEnum.Market
+        assert OrderTypeEnum.Limit != OrderTypeEnum.Market
+
+    def test_order_type_unique_values(self):
+        """Test that all OrderTypeEnum values are unique."""
+        values = [ot.value for ot in OrderTypeEnum]
+        assert len(values) == len(set(values))
+
+
+class TestTimeInForce:
+    """Test cases for TimeInForce enum."""
+
+    def test_time_in_force_values(self):
+        """Test TimeInForce enum values."""
+        assert TimeInForce.ROD.value == "ROD"
+        assert TimeInForce.IOC.value == "IOC"
+        assert TimeInForce.FOK.value == "FOK"
+
+    def test_time_in_force_string_representation(self):
+        """Test TimeInForce string representation."""
+        assert str(TimeInForce.ROD) == "ROD"
+        assert str(TimeInForce.IOC) == "IOC"
+        assert str(TimeInForce.FOK) == "FOK"
+
+    def test_time_in_force_equality(self):
+        """Test TimeInForce equality."""
+        assert TimeInForce.ROD == TimeInForce.ROD
+        assert TimeInForce.IOC == TimeInForce.IOC
+        assert TimeInForce.ROD != TimeInForce.IOC
+
+    def test_time_in_force_unique_values(self):
+        """Test that all TimeInForce values are unique."""
+        values = [tif.value for tif in TimeInForce]
+        assert len(values) == len(set(values))
+
+
+class TestOpenClose:
+    """Test cases for OpenClose enum."""
+
+    def test_open_close_values(self):
+        """Test OpenClose enum values."""
+        assert OpenClose.OPEN.value == "Y"
+        assert OpenClose.CLOSE.value == "N"
+        assert OpenClose.AUTO.value == "AUTO"
+
+    def test_open_close_string_representation(self):
+        """Test OpenClose string representation."""
+        assert str(OpenClose.OPEN) == "Y"
+        assert str(OpenClose.CLOSE) == "N"
+        assert str(OpenClose.AUTO) == "AUTO"
+
+    def test_open_close_equality(self):
+        """Test OpenClose equality."""
+        assert OpenClose.OPEN == OpenClose.OPEN
+        assert OpenClose.CLOSE == OpenClose.CLOSE
+        assert OpenClose.OPEN != OpenClose.CLOSE
+
+    def test_open_close_unique_values(self):
+        """Test that all OpenClose values are unique."""
+        values = [oc.value for oc in OpenClose]
+        assert len(values) == len(set(values))
+
+
+class TestDayTrade:
+    """Test cases for DayTrade enum."""
+
+    def test_day_trade_values(self):
+        """Test DayTrade enum values."""
+        assert DayTrade.Yes.value == "Y"
+        assert DayTrade.No.value == "N"
+
+    def test_day_trade_string_representation(self):
+        """Test DayTrade string representation."""
+        assert str(DayTrade.Yes) == "Y"
+        assert str(DayTrade.No) == "N"
+
+    def test_day_trade_equality(self):
+        """Test DayTrade equality."""
+        assert DayTrade.Yes == DayTrade.Yes
+        assert DayTrade.No == DayTrade.No
+        assert DayTrade.Yes != DayTrade.No
+
+    def test_day_trade_unique_values(self):
+        """Test that all DayTrade values are unique."""
+        values = [dt.value for dt in DayTrade]
+        assert len(values) == len(set(values))
+
+
+class TestConditionId:
+    """Test cases for ConditionId (UUID alias)."""
+
+    def test_condition_id_is_uuid_type(self):
+        """Test that ConditionId is a UUID type."""
+        assert ConditionId == uuid.UUID
+
+    def test_condition_id_creation(self):
+        """Test ConditionId creation from string."""
+        uuid_str = "123e4567-e89b-12d3-a456-426614174000"
+        condition_id = ConditionId(uuid_str)
         
-        assert price.value == price_value
-        assert isinstance(price.value, Decimal)
+        assert isinstance(condition_id, uuid.UUID)
+        assert str(condition_id) == uuid_str
 
-    def test_price_creation_with_float(self):
-        """Test Price can be created with float value."""
-        price_value = 100.50
-        price = Price(price_value)
+    def test_condition_id_random_generation(self):
+        """Test ConditionId can be generated randomly."""
+        condition_id1 = uuid.uuid4()
+        condition_id2 = uuid.uuid4()
         
-        assert price.value == Decimal("100.50")
-        assert isinstance(price.value, Decimal)
+        assert isinstance(condition_id1, ConditionId)
+        assert isinstance(condition_id2, ConditionId)
+        assert condition_id1 != condition_id2
 
-    def test_price_creation_with_int(self):
-        """Test Price can be created with int value."""
-        price_value = 100
-        price = Price(price_value)
+    def test_condition_id_equality(self):
+        """Test ConditionId equality."""
+        uuid_str = "123e4567-e89b-12d3-a456-426614174000"
+        condition_id1 = ConditionId(uuid_str)
+        condition_id2 = ConditionId(uuid_str)
+        condition_id3 = uuid.uuid4()
         
-        assert price.value == Decimal("100")
-        assert isinstance(price.value, Decimal)
-
-    def test_price_creation_with_string(self):
-        """Test Price can be created with string value."""
-        price_value = "100.50"
-        price = Price(price_value)
-        
-        assert price.value == Decimal("100.50")
-        assert isinstance(price.value, Decimal)
-
-    def test_price_equality(self):
-        """Test Price equality comparison."""
-        price1 = Price(Decimal("100.50"))
-        price2 = Price(Decimal("100.50"))
-        price3 = Price(Decimal("200.00"))
-        
-        assert price1 == price2
-        assert price1 != price3
-
-    def test_price_str_representation(self):
-        """Test Price string representation."""
-        price = Price(Decimal("100.50"))
-        assert str(price) == "100.50"
-
-    def test_price_repr_representation(self):
-        """Test Price repr representation."""
-        price = Price(Decimal("100.50"))
-        assert repr(price) == "Price(100.50)"
-
-    def test_price_validation_negative_value(self):
-        """Test Price raises error for negative values."""
-        with pytest.raises(ValueError, match="Price cannot be negative"):
-            Price(Decimal("-10.00"))
-
-    def test_price_validation_zero_value(self):
-        """Test Price allows zero value."""
-        price = Price(Decimal("0.00"))
-        assert price.value == Decimal("0.00")
-
-
-class TestQuantity:
-    """Test cases for Quantity value object."""
-
-    def test_quantity_creation_with_int(self):
-        """Test Quantity can be created with int value."""
-        quantity = Quantity(10)
-        
-        assert quantity.value == 10
-        assert isinstance(quantity.value, int)
-
-    def test_quantity_creation_with_string(self):
-        """Test Quantity can be created with string value."""
-        quantity = Quantity("10")
-        
-        assert quantity.value == 10
-        assert isinstance(quantity.value, int)
-
-    def test_quantity_equality(self):
-        """Test Quantity equality comparison."""
-        quantity1 = Quantity(10)
-        quantity2 = Quantity(10)
-        quantity3 = Quantity(20)
-        
-        assert quantity1 == quantity2
-        assert quantity1 != quantity3
-
-    def test_quantity_str_representation(self):
-        """Test Quantity string representation."""
-        quantity = Quantity(10)
-        assert str(quantity) == "10"
-
-    def test_quantity_repr_representation(self):
-        """Test Quantity repr representation."""
-        quantity = Quantity(10)
-        assert repr(quantity) == "Quantity(10)"
-
-    def test_quantity_validation_negative_value(self):
-        """Test Quantity raises error for negative values."""
-        with pytest.raises(ValueError, match="Quantity cannot be negative"):
-            Quantity(-10)
-
-    def test_quantity_validation_zero_value(self):
-        """Test Quantity allows zero value."""
-        quantity = Quantity(0)
-        assert quantity.value == 0
-
-
-class TestOrderId:
-    """Test cases for OrderId value object."""
-
-    def test_order_id_creation(self):
-        """Test OrderId can be created with string value."""
-        order_id = OrderId("ORD123")
-        
-        assert order_id.value == "ORD123"
-        assert isinstance(order_id.value, str)
-
-    def test_order_id_equality(self):
-        """Test OrderId equality comparison."""
-        order_id1 = OrderId("ORD123")
-        order_id2 = OrderId("ORD123")
-        order_id3 = OrderId("ORD456")
-        
-        assert order_id1 == order_id2
-        assert order_id1 != order_id3
-
-    def test_order_id_str_representation(self):
-        """Test OrderId string representation."""
-        order_id = OrderId("ORD123")
-        assert str(order_id) == "ORD123"
-
-    def test_order_id_repr_representation(self):
-        """Test OrderId repr representation."""
-        order_id = OrderId("ORD123")
-        assert repr(order_id) == "OrderId(ORD123)"
-
-    def test_order_id_validation_empty_value(self):
-        """Test OrderId raises error for empty values."""
-        with pytest.raises(ValueError, match="OrderId cannot be empty"):
-            OrderId("")
-
-    def test_order_id_validation_none_value(self):
-        """Test OrderId raises error for None values."""
-        with pytest.raises(ValueError, match="OrderId cannot be empty"):
-            OrderId(None)
-
-
-class TestItemCode:
-    """Test cases for ItemCode value object."""
-
-    def test_item_code_creation(self):
-        """Test ItemCode can be created with string value."""
-        item_code = ItemCode("MXFL2")
-        
-        assert item_code.value == "MXFL2"
-        assert isinstance(item_code.value, str)
-
-    def test_item_code_equality(self):
-        """Test ItemCode equality comparison."""
-        item_code1 = ItemCode("MXFL2")
-        item_code2 = ItemCode("MXFL2")
-        item_code3 = ItemCode("TXFL2")
-        
-        assert item_code1 == item_code2
-        assert item_code1 != item_code3
-
-    def test_item_code_str_representation(self):
-        """Test ItemCode string representation."""
-        item_code = ItemCode("MXFL2")
-        assert str(item_code) == "MXFL2"
-
-    def test_item_code_repr_representation(self):
-        """Test ItemCode repr representation."""
-        item_code = ItemCode("MXFL2")
-        assert repr(item_code) == "ItemCode(MXFL2)"
-
-    def test_item_code_validation_empty_value(self):
-        """Test ItemCode raises error for empty values."""
-        with pytest.raises(ValueError, match="ItemCode cannot be empty"):
-            ItemCode("")
-
-    def test_item_code_validation_none_value(self):
-        """Test ItemCode raises error for None values."""
-        with pytest.raises(ValueError, match="ItemCode cannot be empty"):
-            ItemCode(None)
-
-    def test_item_code_case_sensitivity(self):
-        """Test ItemCode is case sensitive."""
-        item_code1 = ItemCode("mxfl2")
-        item_code2 = ItemCode("MXFL2")
-        
-        assert item_code1 != item_code2
+        assert condition_id1 == condition_id2
+        assert condition_id1 != condition_id3

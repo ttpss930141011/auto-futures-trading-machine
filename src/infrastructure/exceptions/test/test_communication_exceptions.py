@@ -4,9 +4,9 @@ import pytest
 
 from src.infrastructure.exceptions.communication_exceptions import (
     CommunicationException,
-    ConnectionError,
-    MessageSerializationError,
-    TimeoutError,
+    ZMQConnectionException,
+    ZMQMessageException,
+    SocketCleanupException,
 )
 
 
@@ -27,55 +27,55 @@ class TestCommunicationException:
         assert isinstance(exception, Exception)
 
 
-class TestConnectionError:
-    """Test cases for ConnectionError."""
+class TestZMQConnectionException:
+    """Test cases for ZMQConnectionException."""
 
-    def test_connection_error_creation(self):
-        """Test ConnectionError can be created with message."""
-        message = "Connection failed"
-        error = ConnectionError(message)
+    def test_zmq_connection_exception_creation(self):
+        """Test ZMQConnectionException can be created with message."""
+        message = "ZMQ connection failed"
+        error = ZMQConnectionException(message)
         
         assert str(error) == message
         assert isinstance(error, CommunicationException)
 
-    def test_connection_error_inheritance(self):
-        """Test ConnectionError inherits from CommunicationException."""
-        error = ConnectionError("test")
+    def test_zmq_connection_exception_inheritance(self):
+        """Test ZMQConnectionException inherits from CommunicationException."""
+        error = ZMQConnectionException("test")
         assert isinstance(error, CommunicationException)
         assert isinstance(error, Exception)
 
 
-class TestMessageSerializationError:
-    """Test cases for MessageSerializationError."""
+class TestZMQMessageException:
+    """Test cases for ZMQMessageException."""
 
-    def test_message_serialization_error_creation(self):
-        """Test MessageSerializationError can be created with message."""
-        message = "Serialization failed"
-        error = MessageSerializationError(message)
+    def test_zmq_message_exception_creation(self):
+        """Test ZMQMessageException can be created with message."""
+        message = "ZMQ message processing failed"
+        error = ZMQMessageException(message)
         
         assert str(error) == message
         assert isinstance(error, CommunicationException)
 
-    def test_message_serialization_error_inheritance(self):
-        """Test MessageSerializationError inherits from CommunicationException."""
-        error = MessageSerializationError("test")
+    def test_zmq_message_exception_inheritance(self):
+        """Test ZMQMessageException inherits from CommunicationException."""
+        error = ZMQMessageException("test")
         assert isinstance(error, CommunicationException)
         assert isinstance(error, Exception)
 
 
-class TestTimeoutError:
-    """Test cases for TimeoutError."""
+class TestSocketCleanupException:
+    """Test cases for SocketCleanupException."""
 
-    def test_timeout_error_creation(self):
-        """Test TimeoutError can be created with message."""
-        message = "Operation timed out"
-        error = TimeoutError(message)
+    def test_socket_cleanup_exception_creation(self):
+        """Test SocketCleanupException can be created with message."""
+        message = "Socket cleanup failed"
+        error = SocketCleanupException(message)
         
         assert str(error) == message
         assert isinstance(error, CommunicationException)
 
-    def test_timeout_error_inheritance(self):
-        """Test TimeoutError inherits from CommunicationException."""
-        error = TimeoutError("test")
+    def test_socket_cleanup_exception_inheritance(self):
+        """Test SocketCleanupException inherits from CommunicationException."""
+        error = SocketCleanupException("test")
         assert isinstance(error, CommunicationException)
         assert isinstance(error, Exception)

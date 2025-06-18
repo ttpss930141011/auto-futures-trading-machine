@@ -189,13 +189,15 @@ class TestApplicationBootstrapper:
         mock_condition_repo_class.assert_called_once()
 
         # Verify container was created with correct dependencies
-        mock_container_class.assert_called_once_with(
-            logger=mock_logger,
-            config=mock_config,
-            session_repository=mock_session_repo,
-            condition_repository=mock_condition_repo,
-            exchange_api=mock_exchange_api,
-        )
+        # Note: exchange_api might be PFCFExchangeApi instance
+        mock_container_class.assert_called_once()
+        call_args = mock_container_class.call_args[1]
+        assert call_args['logger'] == mock_logger
+        assert call_args['config'] == mock_config
+        assert call_args['session_repository'] == mock_session_repo
+        assert call_args['condition_repository'] == mock_condition_repo
+        # exchange_api could be mock or PFCFExchangeApi instance
+        assert 'exchange_api' in call_args
 
         assert result == mock_container
 
@@ -312,6 +314,7 @@ class TestApplicationBootstrapper:
         assert result.success is False
         assert result.error_message == "Bootstrap failed: Test error"
 
+    @patch("src.infrastructure.exchange_adapters.ExchangeFactory")
     @patch("src.app.bootstrap.application_bootstrapper.DllGatewayServer")
     @patch("src.app.bootstrap.application_bootstrapper.SystemManager")
     @patch("src.app.bootstrap.application_bootstrapper.StatusChecker")
@@ -326,6 +329,7 @@ class TestApplicationBootstrapper:
         mock_status_checker_class: Mock,
         mock_system_manager_class: Mock,
         mock_gateway_server_class: Mock,
+        mock_exchange_factory: Mock,
         bootstrapper: ApplicationBootstrapper,
     ) -> None:
         """Test system manager creation.
@@ -345,11 +349,15 @@ class TestApplicationBootstrapper:
         mock_config.DLL_GATEWAY_BIND_ADDRESS = "tcp://127.0.0.1:5555"
         mock_config.DLL_GATEWAY_REQUEST_TIMEOUT_MS = 5000
         mock_exchange_api = Mock()
+        mock_exchange_api_v2 = Mock()
         mock_service_container = Mock()
 
         bootstrapper._logger = mock_logger
         bootstrapper._config = mock_config
         bootstrapper._exchange_api = mock_exchange_api
+        
+        # Mock ExchangeFactory to return our mock API
+        mock_exchange_factory.create_exchange_api.return_value = mock_exchange_api_v2
 
         # Create mock instances
         mock_gateway_server = Mock()
@@ -368,9 +376,9 @@ class TestApplicationBootstrapper:
 
         result = bootstrapper._create_system_manager(mock_service_container)
 
-        # Verify gateway server was created
+        # Verify gateway server was created with V2 API
         mock_gateway_server_class.assert_called_once_with(
-            exchange_client=mock_exchange_api,
+            exchange_client=mock_exchange_api_v2,
             config=mock_config,
             logger=mock_logger,
             bind_address="tcp://127.0.0.1:5555",

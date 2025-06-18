@@ -5,7 +5,6 @@ import logging
 from typing import List
 
 from src.infrastructure.exchange_adapters import ExchangeFactory, ExchangeProvider
-from src.infrastructure.services.service_container import ServiceContainer
 from src.domain.interfaces.exchange_api_interface import (
     LoginCredentials,
     OrderRequest
@@ -27,16 +26,12 @@ class TestExchangeSwitching:
     @pytest.fixture
     def service_container(self):
         """Create a mock service container."""
-        # Create a minimal service container for testing
-        container = ServiceContainer()
-        return container
+        # ServiceContainer is not needed for these tests
+        return None
     
-    @pytest.fixture
-    def exchange_factory(self, service_container):
-        """Create exchange factory."""
-        return ExchangeFactory(service_container)
+    # No need for exchange_factory fixture - ExchangeFactory is static
     
-    def test_switch_between_exchanges(self, exchange_factory):
+    def test_switch_between_exchanges(self):
         """Test switching between simulator and PFCF exchanges."""
         logger.info("=== Testing Exchange Switching ===")
         
@@ -59,7 +54,10 @@ class TestExchangeSwitching:
             logger.info(f"\n--- Testing {provider.value} Exchange ---")
             
             # Create exchange instance
-            exchange = exchange_factory.create_exchange(provider)
+            exchange = ExchangeFactory.create_exchange_api(
+                provider=provider.value,
+                service_container=None
+            )
             assert exchange is not None
             
             # Connect to exchange
@@ -90,28 +88,28 @@ class TestExchangeSwitching:
             logger.info(f"✅ Order sent: {order_result.order_serial}")
             
             # Test getting positions
-            position_dto = GetPositionInputDto(account_id="TEST001")
+            position_dto = GetPositionInputDto(order_account="TEST001")
             position_result = get_positions_use_case.execute(position_dto)
-            assert position_result.success
-            logger.info(f"✅ Retrieved {len(position_result.positions)} positions")
+            assert not position_result.has_error
+            logger.info(f"✅ Retrieved {position_result.total_positions} positions")
             
             # Disconnect
             assert exchange.disconnect()
             logger.info(f"✅ Disconnected from {exchange.get_exchange_name()}")
     
-    def test_concurrent_multiple_exchanges(self, exchange_factory):
+    def test_concurrent_multiple_exchanges(self):
         """Test using multiple exchanges concurrently."""
         logger.info("\n=== Testing Concurrent Multiple Exchanges ===")
         
         # Create multiple exchange instances
-        sim1 = exchange_factory.create_exchange(ExchangeProvider.SIMULATOR)
-        sim2 = exchange_factory.create_exchange(ExchangeProvider.SIMULATOR)
+        sim1 = ExchangeFactory.create_exchange_api("SIMULATOR", None)
+        sim2 = ExchangeFactory.create_exchange_api("SIMULATOR", None)
         
-        # Connect both
-        creds = LoginCredentials("user1", "pass1", "http://sim1.com", "test")
+        # Connect both with test credentials (simulator only accepts test/test)
+        creds = LoginCredentials("test", "test", "http://sim1.com", "test")
         assert sim1.connect(creds).success
         
-        creds2 = LoginCredentials("user2", "pass2", "http://sim2.com", "test")
+        creds2 = LoginCredentials("test", "test", "http://sim2.com", "test")
         assert sim2.connect(creds2).success
         
         logger.info("✅ Connected to multiple exchanges concurrently")
@@ -140,12 +138,12 @@ class TestExchangeSwitching:
         sim1.disconnect()
         sim2.disconnect()
     
-    def test_exchange_specific_features(self, exchange_factory):
+    def test_exchange_specific_features(self):
         """Test that exchange-specific features are preserved."""
         logger.info("\n=== Testing Exchange-Specific Features ===")
         
         # Create simulator exchange
-        exchange = exchange_factory.create_exchange(ExchangeProvider.SIMULATOR)
+        exchange = ExchangeFactory.create_exchange_api("SIMULATOR", None)
         
         # Test that event manager is available
         event_manager = exchange.get_event_manager()
@@ -154,10 +152,12 @@ class TestExchangeSwitching:
         # Subscribe to events
         events_received = []
         
-        def on_event(event_type: str, data: dict):
-            events_received.append((event_type, data))
+        from src.domain.interfaces.exchange_event_interface import EventType, Event
         
-        event_manager.subscribe("order_filled", on_event)
+        def on_event(event: Event):
+            events_received.append(event)
+        
+        event_manager.subscribe(EventType.ORDER_FILLED, on_event)
         
         # Connect and send order
         creds = LoginCredentials("test", "test", "http://test.com", "test")
@@ -181,23 +181,3 @@ class TestExchangeSwitching:
         logger.info(f"✅ Received {len(events_received)} events")
         
         exchange.disconnect()
-
-
-if __name__ == "__main__":
-    # Run tests directly
-    test = TestExchangeSwitching()
-    
-    # Create mock service container
-    container = ServiceContainer()
-    factory = ExchangeFactory(container)
-    
-    try:
-        test.test_switch_between_exchanges(factory)
-        test.test_concurrent_multiple_exchanges(factory)
-        test.test_exchange_specific_features(factory)
-        
-        logger.info("\n✅ All exchange switching tests passed!")
-        
-    except Exception as e:
-        logger.error(f"❌ Test failed: {e}")
-        raise

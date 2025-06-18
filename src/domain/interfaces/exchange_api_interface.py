@@ -50,17 +50,8 @@ class OrderResult:
     timestamp: Optional[str] = None
 
 
-@dataclass
-class Position:
-    """Broker-neutral position."""
-    
-    account: str
-    symbol: str
-    quantity: int
-    side: str  # 'LONG' or 'SHORT'
-    average_price: float
-    unrealized_pnl: float
-    realized_pnl: float
+# Position data structure is broker-specific and should be handled by DTOs
+# Each broker has different position fields, so we use Dict[str, Any] instead
 
 
 class ExchangeApiInterface(ABC):
@@ -92,8 +83,12 @@ class ExchangeApiInterface(ABC):
         pass
     
     @abstractmethod
-    def get_positions(self, account: str) -> List[Position]:
-        """Get current positions for an account."""
+    def get_positions(self, account: str) -> List[Dict[str, Any]]:
+        """Get current positions for an account.
+        
+        Returns raw position data as dictionaries.
+        Use broker-specific DTOs for type safety.
+        """
         pass
     
     @abstractmethod

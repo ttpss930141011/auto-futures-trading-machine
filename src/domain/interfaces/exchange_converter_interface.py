@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict
 from enum import Enum
 
-from src.domain.enums import OrderOperation, OrderTypeEnum, OpenClose, DayTrade, TimeInForce
+from src.domain.value_objects import OrderOperation, OrderTypeEnum, OpenClose, DayTrade, TimeInForce
 
 
 class ExchangeConverterInterface(ABC):

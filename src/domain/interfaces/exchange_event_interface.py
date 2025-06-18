@@ -49,13 +49,13 @@ class Event:
 class TickEvent(Event):
     """Market tick data event."""
     
-    symbol: str
-    price: float
-    volume: int
-    bid: float
-    ask: float
-    bid_volume: int
-    ask_volume: int
+    symbol: str = ""
+    price: float = 0.0
+    volume: int = 0
+    bid: float = 0.0
+    ask: float = 0.0
+    bid_volume: int = 0
+    ask_volume: int = 0
     
     def __post_init__(self):
         self.event_type = EventType.TICK_DATA
@@ -65,13 +65,13 @@ class TickEvent(Event):
 class OrderEvent(Event):
     """Order-related event."""
     
-    order_id: str
-    account: str
-    symbol: str
-    side: str
-    quantity: int
-    price: float
-    status: str
+    order_id: str = ""
+    account: str = ""
+    symbol: str = ""
+    side: str = ""
+    quantity: int = 0
+    price: float = 0.0
+    status: str = ""
     
     def __post_init__(self):
         # Set event_type based on status
@@ -88,13 +88,13 @@ class OrderEvent(Event):
 class PositionEvent(Event):
     """Position update event."""
     
-    account: str
-    symbol: str
-    quantity: int
-    side: str
-    average_price: float
-    unrealized_pnl: float
-    realized_pnl: float
+    account: str = ""
+    symbol: str = ""
+    quantity: int = 0
+    side: str = ""
+    average_price: float = 0.0
+    unrealized_pnl: float = 0.0
+    realized_pnl: float = 0.0
     
     def __post_init__(self):
         self.event_type = EventType.POSITION_UPDATE

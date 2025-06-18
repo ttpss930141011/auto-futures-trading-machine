@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
 
-from src.domain.entities.position import Position
+from src.interactor.dtos.get_position_dtos import PositionDto
 
 
 class PositionRepositoryInterface(ABC):
@@ -14,7 +14,7 @@ class PositionRepositoryInterface(ABC):
     """
     
     @abstractmethod
-    def get_all_positions(self, account_id: str) -> List[Position]:
+    def get_all_positions(self, account_id: str) -> List[PositionDto]:
         """Get all positions for an account.
         
         Args:
@@ -26,7 +26,7 @@ class PositionRepositoryInterface(ABC):
         pass
     
     @abstractmethod
-    def get_position_by_symbol(self, account_id: str, symbol: str) -> Optional[Position]:
+    def get_position_by_symbol(self, account_id: str, symbol: str) -> Optional[PositionDto]:
         """Get position for a specific symbol.
         
         Args:

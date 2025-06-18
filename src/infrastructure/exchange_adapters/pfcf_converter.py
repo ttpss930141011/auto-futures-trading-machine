@@ -4,7 +4,7 @@ from decimal import Decimal
 from typing import Any
 
 from src.domain.interfaces.exchange_converter_interface import ExchangeConverterInterface
-from src.domain.enums import OrderOperation, OrderTypeEnum, OpenClose, DayTrade, TimeInForce
+from src.domain.value_objects import OrderOperation, OrderTypeEnum, OpenClose, DayTrade, TimeInForce
 
 
 class PFCFConverter(ExchangeConverterInterface):

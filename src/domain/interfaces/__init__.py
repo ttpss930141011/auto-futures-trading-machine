@@ -5,8 +5,7 @@ from .exchange_api_interface import (
     LoginCredentials,
     LoginResult,
     OrderRequest,
-    OrderResult,
-    Position
+    OrderResult
 )
 from .exchange_converter_interface import ExchangeConverterInterface
 
@@ -16,6 +15,5 @@ __all__ = [
     'LoginCredentials',
     'LoginResult',
     'OrderRequest',
-    'OrderResult',
-    'Position'
+    'OrderResult'
 ]

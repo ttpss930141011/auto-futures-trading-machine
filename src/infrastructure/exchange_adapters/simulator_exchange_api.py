@@ -10,8 +10,7 @@ from src.domain.interfaces.exchange_api_interface import (
     LoginCredentials,
     LoginResult,
     OrderRequest,
-    OrderResult,
-    Position
+    OrderResult
 )
 from src.domain.interfaces.exchange_event_interface import (
     ExchangeEventManagerInterface,
@@ -30,7 +29,7 @@ class SimulatorExchangeApi(ExchangeApiInterface):
         """Initialize simulator."""
         self._logger = logging.getLogger(__name__)
         self._connected = False
-        self._positions: Dict[str, Position] = {}
+        self._positions: Dict[str, Dict[str, Any]] = {}
         self._orders: Dict[str, OrderRequest] = {}
         self._balances: Dict[str, float] = {
             "cash": 1000000.0,
@@ -147,7 +146,7 @@ class SimulatorExchangeApi(ExchangeApiInterface):
             return True
         return False
     
-    def get_positions(self, account: str) -> List[Position]:
+    def get_positions(self, account: str) -> List[Dict[str, Any]]:
         """Get simulated positions."""
         return list(self._positions.values())
     
@@ -185,21 +184,21 @@ class SimulatorExchangeApi(ExchangeApiInterface):
         if key in self._positions:
             pos = self._positions[key]
             if order.side == 'BUY':
-                pos.quantity += order.quantity
+                pos['quantity'] += order.quantity
             else:
-                pos.quantity -= order.quantity
+                pos['quantity'] -= order.quantity
                 
             # Remove position if quantity is 0
-            if pos.quantity == 0:
+            if pos['quantity'] == 0:
                 del self._positions[key]
         else:
             # Create new position
-            self._positions[key] = Position(
-                account=order.account,
-                symbol=order.symbol,
-                quantity=order.quantity if order.side == 'BUY' else -order.quantity,
-                side='LONG' if order.side == 'BUY' else 'SHORT',
-                average_price=order.price,
-                unrealized_pnl=0.0,
-                realized_pnl=0.0
-            )
+            self._positions[key] = {
+                'account': order.account,
+                'symbol': order.symbol,
+                'quantity': order.quantity if order.side == 'BUY' else -order.quantity,
+                'side': 'LONG' if order.side == 'BUY' else 'SHORT',
+                'average_price': order.price,
+                'unrealized_pnl': 0.0,
+                'realized_pnl': 0.0
+            }

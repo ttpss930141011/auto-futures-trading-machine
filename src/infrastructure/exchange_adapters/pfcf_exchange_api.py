@@ -8,8 +8,7 @@ from src.domain.interfaces.exchange_api_interface import (
     LoginCredentials,
     LoginResult,
     OrderRequest,
-    OrderResult,
-    Position
+    OrderResult
 )
 from src.infrastructure.pfcf_client.api import PFCFApi
 from src.infrastructure.exchange_adapters.pfcf_converter import PFCFConverter
@@ -121,7 +120,7 @@ class PFCFExchangeApi(ExchangeApiInterface):
             self._logger.error(f"PFCF cancel order error: {e}")
             return False
     
-    def get_positions(self, account: str) -> List[Position]:
+    def get_positions(self, account: str) -> List[Dict[str, Any]]:
         """Get positions from PFCF exchange."""
         try:
             # Use existing position repository
@@ -129,8 +128,13 @@ class PFCFExchangeApi(ExchangeApiInterface):
                 self._pfcf_api.user_id
             )
             
-            # Convert to standard Position format
-            return [self._convert_pfcf_position(pos) for pos in pfcf_positions]
+            # Convert PFCF positions to dictionaries
+            positions = []
+            for pos in pfcf_positions:
+                # pos is PositionDto from PFCF
+                position_dict = pos.to_dict() if hasattr(pos, 'to_dict') else vars(pos)
+                positions.append(position_dict)
+            return positions
             
         except Exception as e:
             self._logger.error(f"PFCF get positions error: {e}")
@@ -213,15 +217,3 @@ class PFCFExchangeApi(ExchangeApiInterface):
                 message="Invalid PFCF result"
             )
     
-    def _convert_pfcf_position(self, pfcf_pos: Any) -> Position:
-        """Convert PFCF position to standard Position."""
-        # This is a simplified conversion - adjust based on actual PFCF position structure
-        return Position(
-            account=pfcf_pos.account_id,
-            symbol=pfcf_pos.symbol,
-            quantity=abs(pfcf_pos.quantity),
-            side='LONG' if pfcf_pos.quantity > 0 else 'SHORT',
-            average_price=pfcf_pos.average_price,
-            unrealized_pnl=0.0,  # Need to calculate
-            realized_pnl=0.0     # Need to calculate
-        )

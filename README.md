@@ -89,54 +89,91 @@ python app.py
 
 ## 🏛️ System Architecture at a Glance
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           Main Process (app.py)                            │
-│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────────────┐  │
-│  │ ApplicationBootstrapper                 │  │      SystemManager       │  │
-│  │ ├─ ServiceContainer (DI)                │  │  ├─ Component Status     │  │
-│  │ ├─ Config Validation                    │  │  ├─ Health Monitoring     │  │
-│  │ └─ Directory Creation                   │  │  └─ Lifecycle Management  │  │
-│  └──────────────────┘  └──────────────────┘  └──────────────────────────┘  │
-│          │                      │                          │                │
-│          │              ┌───────┴────────┐                │                │
-│          │              │ Gateway Services│                │                │
-│          │              │ ├─ PortChecker  │                │                │
-│          │              │ ├─ MarketDataGW │────────────────┘                │
-│          │              │ └─ ProcessMgr   │                                 │
-│          │              └────────────────┘                                 │
-│          │                                                                  │  
-│          └─────────┬─────────────────┬──────────────────────────────────────┘
-│                    │                 │
-│  ┌─────────────────▼───┐  ┌──────────▼─────────┐  ┌─────────────────────┐
-│  │     CLI Interface   │  │ DLL Gateway Server │  │  Market Data        │
-│  │   (User Commands)   │  │    Port : 5557     │  │   Publisher         │
-│  │                     │  │  (Order Execution) │  │   Port : 5555       │
-│  └─────────────────────┘  └────────────────────┘  └─────────────────────┘
-└─────────────────────────────────────────────────────────────────────────────┘
-                                   ▲                         │
-                                   │ ZMQ REQ/REP             │ ZMQ PUB  
-                                   │ (Orders)                │ (Market Data)
-                                   │                         ▼
-                   ┌───────────────┴────────┐         ┌─────────────────┐
-                   │   Order Executor       │         │    Strategy     │
-                   │     Process            │         │    Process      │
-                   │  (PID: order_exec.pid) │         │ (PID: strat.pid)│
-                   │                        │         │                 │
-                   │ ┌──────────────────┐   │         │ ┌─────────────┐ │
-                   │ │   Signal Queue   │   │◄────────┤ │    Tick     │ │
-                   │ │   (ZMQ PULL)     │   │  Signals│ │ Subscriber  │ │
-                   │ │   Port : 5556    │   │         │ └─────────────┘ │
-                   │ └──────────────────┘   │         │                 │
-                   │                        │         │  ┌────────────┐ │
-                   │ ┌──────────────────┐   │         │  │ Support/   │ │
-                   │ │ DLL Gateway      │   │         │  │ Resistance │ │
-                   │ │ Client           │   │         │  │ Strategy   │ │
-                   │ └──────────────────┘   │         │  └────────────┘ │
-                   └────────────────────────┘         └─────────────────┘
-                                                         │
-                                                         ▼ ZMQ PUSH
-                                                   (Trading Signals)
+```mermaid
+graph TB
+    %% Main Process Components
+    subgraph MainProcess["🏠 Main Process (app.py)"]
+        direction TB
+        
+        subgraph Bootstrap["🚀 Initialization"]
+            AB[ApplicationBootstrapper<br/>• ServiceContainer DI<br/>• Config Validation<br/>• Directory Creation]
+            SM[SystemManager<br/>• Component Lifecycle<br/>• Health Monitoring<br/>• Status Management]
+        end
+        
+        subgraph Infrastructure["🏗️ Infrastructure Layer"]
+            CLI[CLI Interface<br/>User Commands]
+            
+            subgraph DLLGateway["🔐 DLL Gateway"]
+                DGS[DLL Gateway Server<br/>ZMQ REP Port: 5557<br/>• Order Execution<br/>• Position Query]
+                PFCFAPI[PFCF API<br/>• Login/Auth<br/>• Trading Functions<br/>• Market Data Callbacks]
+            end
+            
+            subgraph MarketData["📊 Market Data"]
+                MDP[Market Data Publisher<br/>ZMQ PUB Port: 5555<br/>• Tick Broadcasting]
+                MDG[MarketDataGateway<br/>• Tick Processing<br/>• Event Handling]
+            end
+        end
+        
+        subgraph Services["🛠️ Gateway Services"]
+            PC[PortCheckerService<br/>• Port Validation]
+            PM[ProcessManagerService<br/>• PID Management<br/>• Process Control]
+            SC[StatusChecker<br/>• Health Checks]
+        end
+        
+        AB --> SM
+        SM --> Services
+        SM --> Infrastructure
+        PFCFAPI --> MDG
+        MDG --> MDP
+        CLI --> DGS
+    end
+    
+    %% Strategy Process
+    subgraph StrategyProcess["📈 Strategy Process"]
+        direction LR
+        TS[Tick Subscriber<br/>ZMQ SUB :5555]
+        SRS[Support/Resistance<br/>Strategy Engine<br/>• Entry/Exit Logic<br/>• Signal Generation]
+        SP[Signal Publisher<br/>ZMQ PUSH :5556]
+        
+        TS --> SRS
+        SRS --> SP
+    end
+    
+    %% Order Executor Process
+    subgraph OrderExecutor["⚡ Order Executor Process"]
+        direction LR
+        SR[Signal Receiver<br/>ZMQ PULL :5556]
+        OEG[OrderExecutorGateway<br/>• Signal Processing<br/>• Order Creation]
+        DGC[DLL Gateway Client<br/>ZMQ REQ :5557]
+        
+        SR --> OEG
+        OEG --> DGC
+    end
+    
+    %% Data Flow Connections
+    MDP ===>|"📊 Market Ticks<br/>(Broadcast)"| TS
+    SP ===>|"📨 Trading Signals<br/>(Push/Pull)"| SR
+    DGC -.->|"📝 Order Requests<br/>(Req/Reply)"| DGS
+    
+    %% Process Management
+    PM -.->|"🔧 Manages"| StrategyProcess
+    PM -.->|"🔧 Manages"| OrderExecutor
+    
+    %% Styling
+    classDef mainBox fill:#e3f2fd,stroke:#1976d2,stroke-width:3px
+    classDef bootstrap fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef infrastructure fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef services fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
+    classDef strategy fill:#fff8e1,stroke:#fbc02d,stroke-width:2px
+    classDef executor fill:#ffebee,stroke:#d32f2f,stroke-width:2px
+    classDef dataflow stroke:#0288d1,stroke-width:3px,stroke-dasharray: 5 5
+    
+    class MainProcess mainBox
+    class AB,SM bootstrap
+    class CLI,DGS,PFCFAPI,MDP,MDG infrastructure
+    class PC,PM,SC services
+    class TS,SRS,SP strategy
+    class SR,OEG,DGC executor
 ```
 
 ### 📊 **Key Architectural Improvements**

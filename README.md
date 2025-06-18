@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License">
 </p>
 
-> **Taiwan Futures Automated Trading System - Designed for PFCF (Polaris Futures Capital Future)**  
+> **Taiwan Futures Automated Trading System - Designed for PFCF (統一期貨)**
 > A distributed, event-driven futures trading platform built with Python and ZeroMQ
 
 ## 📖 Table of Contents

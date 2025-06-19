@@ -159,14 +159,14 @@ graph TB
     PM -.->|"🔧 Manages"| StrategyProcess
     PM -.->|"🔧 Manages"| OrderExecutor
     
-    %% Styling
-    classDef mainBox fill:#e3f2fd,stroke:#1976d2,stroke-width:3px
-    classDef bootstrap fill:#fff3e0,stroke:#f57c00,stroke-width:2px
-    classDef infrastructure fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
-    classDef services fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
-    classDef strategy fill:#fff8e1,stroke:#fbc02d,stroke-width:2px
-    classDef executor fill:#ffebee,stroke:#d32f2f,stroke-width:2px
-    classDef dataflow stroke:#0288d1,stroke-width:3px,stroke-dasharray: 5 5
+    %% Styling - 改善配色方案
+    classDef mainBox fill:#2c3e50,stroke:#34495e,stroke-width:3px,color:#fff
+    classDef bootstrap fill:#3498db,stroke:#2980b9,stroke-width:2px,color:#fff
+    classDef infrastructure fill:#8e44ad,stroke:#662d91,stroke-width:2px,color:#fff
+    classDef services fill:#27ae60,stroke:#229954,stroke-width:2px,color:#fff
+    classDef strategy fill:#f39c12,stroke:#d68910,stroke-width:2px,color:#fff
+    classDef executor fill:#e74c3c,stroke:#c0392b,stroke-width:2px,color:#fff
+    classDef dataflow stroke:#3498db,stroke-width:3px,stroke-dasharray: 5 5
     
     class MainProcess mainBox
     class AB,SM bootstrap

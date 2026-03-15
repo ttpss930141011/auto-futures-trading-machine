@@ -57,9 +57,17 @@ jobs:
       if: github.ref == 'refs/heads/main'
     
     - name: Generate Coverage Badge
-      uses: tj-actions/coverage-badge-py@v1.8
-      with:
-        output: badges/coverage.svg
+      run: |
+        poetry run coverage xml || true
+        COVERAGE=$(poetry run coverage report --format=total 2>/dev/null || echo "0")
+        echo "Coverage: ${COVERAGE}%"
+        if (( $(echo "$COVERAGE >= 90" | bc -l) )); then COLOR="brightgreen"
+        elif (( $(echo "$COVERAGE >= 80" | bc -l) )); then COLOR="green"
+        elif (( $(echo "$COVERAGE >= 70" | bc -l) )); then COLOR="yellowgreen"
+        elif (( $(echo "$COVERAGE >= 60" | bc -l) )); then COLOR="yellow"
+        else COLOR="red"; fi
+        curl -s "https://img.shields.io/badge/coverage-${COVERAGE}%25-${COLOR}" > badges/coverage.svg
+        echo "Generated coverage badge: ${COVERAGE}% (${COLOR})"
       if: github.ref == 'refs/heads/main'
     
     - name: Generate Pylint Badge

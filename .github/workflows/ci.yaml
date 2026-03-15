@@ -47,10 +47,16 @@ jobs:
         run: |
           mkdir -p coverage
 
-      - name: Coverage Bagdge
-        uses: tj-actions/coverage-badge-py@v1.8
-        with:
-          output: coverage/coverage.svg
+      - name: Coverage Badge
+        run: |
+          COVERAGE=$(poetry run coverage report --format=total 2>/dev/null || echo "0")
+          echo "Coverage: ${COVERAGE}%"
+          if (( $(echo "$COVERAGE >= 90" | bc -l) )); then COLOR="brightgreen"
+          elif (( $(echo "$COVERAGE >= 80" | bc -l) )); then COLOR="green"
+          elif (( $(echo "$COVERAGE >= 70" | bc -l) )); then COLOR="yellowgreen"
+          elif (( $(echo "$COVERAGE >= 60" | bc -l) )); then COLOR="yellow"
+          else COLOR="red"; fi
+          curl -s "https://img.shields.io/badge/coverage-${COVERAGE}%25-${COLOR}" > coverage/coverage.svg
 
       - name: Publish coverage report to coverage-badge branch
         uses: JamesIves/github-pages-deploy-action@v4

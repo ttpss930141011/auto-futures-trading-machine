@@ -1,12 +1,13 @@
 """Market Data Gateway Service Interface.
 
 This module defines the interface for the market data gateway service.
+
+Note: This interface intentionally avoids importing infrastructure types
+(e.g., ZmqPublisher, TickProducer) to respect the Dependency Rule in
+Clean Architecture — inner layers must not depend on outer layers.
 """
 
-from typing import Protocol, Optional, Tuple, runtime_checkable
-
-from src.infrastructure.messaging import ZmqPublisher
-from src.infrastructure.pfcf_client.tick_producer import TickProducer
+from typing import Protocol, Tuple, runtime_checkable
 
 
 @runtime_checkable
@@ -18,14 +19,6 @@ class MarketDataGatewayServiceInterface(Protocol):
 
         Returns:
             bool: True if initialization was successful, False otherwise
-        """
-        ...
-
-    def get_components(self) -> Tuple[Optional[ZmqPublisher], Optional[TickProducer]]:
-        """Get the initialized ZMQ components.
-
-        Returns:
-            Tuple containing the tick publisher and tick producer
         """
         ...
 

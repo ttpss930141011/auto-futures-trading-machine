@@ -9,7 +9,7 @@ from typing import Optional, Tuple
 import zmq
 
 from src.app.cli_pfcf.config import Config
-from src.infrastructure.pfcf_client.api import PFCFApi
+from src.domain.interfaces.exchange_api import ExchangeApiInterface
 from src.interactor.interfaces.logger.logger import LoggerInterface
 from src.interactor.interfaces.services.market_data_gateway_service_interface import (
     MarketDataGatewayServiceInterface,
@@ -21,13 +21,13 @@ from src.infrastructure.pfcf_client.tick_producer import TickProducer
 class MarketDataGatewayService(MarketDataGatewayServiceInterface):
     """Service for managing market data infrastructure and ZMQ components."""
 
-    def __init__(self, config: Config, logger: LoggerInterface, exchange_api: PFCFApi) -> None:
+    def __init__(self, config: Config, logger: LoggerInterface, exchange_api: ExchangeApiInterface) -> None:
         """Initialize the market data gateway service.
 
         Args:
             config: Application configuration with ZMQ settings
             logger: Logger for recording events
-            exchange_api: PFCF API instance for exchange operations
+            exchange_api: Exchange API interface for exchange operations
         """
         self.config = config
         self.logger = logger
@@ -86,7 +86,7 @@ class MarketDataGatewayService(MarketDataGatewayServiceInterface):
         return self._tick_publisher, self._tick_producer
 
     def connect_exchange_callbacks(self) -> bool:
-        """Connect PFCF exchange API callbacks to the tick producer.
+        """Connect exchange API callbacks to the tick producer.
 
         Returns:
             bool: True if callbacks were successfully connected, False otherwise
@@ -98,8 +98,8 @@ class MarketDataGatewayService(MarketDataGatewayServiceInterface):
                 )
                 return False
 
-            # Get the API client from exchange API
-            exchange_client = self.exchange_api.client
+            # Get the API client from exchange API interface
+            exchange_client = self.exchange_api.get_client()
             if not exchange_client or not hasattr(exchange_client, "DQuoteLib"):
                 self.logger.log_error("Exchange client or DQuoteLib not available")
                 return False

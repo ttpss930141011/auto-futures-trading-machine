@@ -46,14 +46,14 @@ class TestApplicationBootstrapper:
         # Verify mkdir was called for each required directory
         assert mock_mkdir.call_count >= 3  # pid_dir, logs_dir, data_dir
 
-    @patch("src.app.bootstrap.application_bootstrapper.PFCFApi")
+    @patch("src.app.bootstrap.application_bootstrapper.PfcfExchangeAdapter")
     @patch("src.app.bootstrap.application_bootstrapper.LoggerDefault")
     @patch("src.app.bootstrap.application_bootstrapper.Config")
     def test_initialize_core_components(
         self,
         mock_config_class: Mock,
         mock_logger_class: Mock,
-        mock_api_class: Mock,
+        mock_adapter_class: Mock,
         bootstrapper: ApplicationBootstrapper,
     ) -> None:
         """Test initialization of core components.
@@ -61,22 +61,22 @@ class TestApplicationBootstrapper:
         Args:
             mock_config_class: Mocked Config class
             mock_logger_class: Mocked LoggerDefault class
-            mock_api_class: Mocked PFCFApi class
+            mock_adapter_class: Mocked PfcfExchangeAdapter class
             bootstrapper: ApplicationBootstrapper instance
         """
         # Setup mocks
-        mock_api = Mock()
+        mock_adapter = Mock()
         mock_logger = Mock()
         mock_config = Mock()
 
-        mock_api_class.return_value = mock_api
+        mock_adapter_class.return_value = mock_adapter
         mock_logger_class.return_value = mock_logger
         mock_config_class.return_value = mock_config
 
         bootstrapper._initialize_core_components()
 
         # Verify components were created
-        assert bootstrapper._exchange_api == mock_api
+        assert bootstrapper._exchange_api == mock_adapter
         assert bootstrapper._logger == mock_logger
         assert bootstrapper._config == mock_config
 

@@ -24,7 +24,7 @@ class TestDllGatewayServer:
     def mock_exchange_client(self):
         """Create mock exchange client."""
         mock_client = Mock(spec=ExchangeApiInterface)
-        
+
         # Mock the get_client method
         mock_pfcf_client = Mock()
         mock_pfcf_client.DTradeLib = Mock()
@@ -356,7 +356,7 @@ class TestDllGatewayServerIntegration:
     def mock_exchange_client(self):
         """Create mock exchange client."""
         mock_client = Mock(spec=ExchangeApiInterface)
-        
+
         # Mock the get_client method
         mock_pfcf_client = Mock()
         mock_pfcf_client.DTradeLib = Mock()

@@ -25,7 +25,7 @@ from src.interactor.errors.dll_gateway_errors import ExchangeApiError
 
 class PfcfExchangeAdapter(ExchangeApiInterface):
     """Adapter implementing ExchangeApiInterface for PFCF exchange.
-    
+
     This adapter wraps the PFCF API client and provides a clean interface
     to the rest of the application, hiding PFCF-specific implementation details.
     """
@@ -36,10 +36,10 @@ class PfcfExchangeAdapter(ExchangeApiInterface):
 
     def connect(self, **credentials) -> bool:
         """Connect to the PFCF exchange.
-        
+
         Args:
             **credentials: PFCF-specific connection credentials.
-            
+
         Returns:
             True if connection successful, False otherwise.
         """
@@ -61,7 +61,7 @@ class PfcfExchangeAdapter(ExchangeApiInterface):
         time_in_force: TimeInForce,
     ) -> SendMarketOrderOutputDto:
         """Send an order to the PFCF exchange.
-        
+
         Args:
             order_account: Trading account identifier.
             item_code: Product/commodity code.
@@ -73,7 +73,7 @@ class PfcfExchangeAdapter(ExchangeApiInterface):
             note: Order note/reference.
             day_trade: Day trade flag.
             time_in_force: Time in force setting.
-            
+
         Returns:
             SendMarketOrderOutputDto with execution result.
         """
@@ -125,11 +125,11 @@ class PfcfExchangeAdapter(ExchangeApiInterface):
 
     def get_positions(self, account: str, product_id: str = "") -> List[PositionDto]:
         """Get positions from PFCF exchange.
-        
+
         Args:
             account: Trading account identifier.
             product_id: Optional product filter, empty string for all.
-            
+
         Returns:
             List of position DTOs.
         """
@@ -140,11 +140,11 @@ class PfcfExchangeAdapter(ExchangeApiInterface):
 
     def subscribe_market_data(self, commodity_id: str, callback: Callable) -> bool:
         """Subscribe to market data from PFCF exchange.
-        
+
         Args:
             commodity_id: Commodity/product identifier.
             callback: Callback function for market data events.
-            
+
         Returns:
             True if subscription successful, False otherwise.
         """
@@ -159,10 +159,10 @@ class PfcfExchangeAdapter(ExchangeApiInterface):
 
     def convert_enum(self, domain_enum: Any) -> Any:
         """Convert domain enum to PFCF-specific enum.
-        
+
         Args:
             domain_enum: Domain layer enumeration value.
-            
+
         Returns:
             PFCF-specific enum value.
         """
@@ -180,10 +180,10 @@ class PfcfExchangeAdapter(ExchangeApiInterface):
 
     def parse_decimal(self, value: float) -> Any:
         """Parse float value to PFCF decimal format.
-        
+
         Args:
             value: Float value to convert.
-            
+
         Returns:
             PFCF decimal representation.
         """
@@ -191,7 +191,7 @@ class PfcfExchangeAdapter(ExchangeApiInterface):
 
     def get_client(self) -> Any:
         """Get the underlying PFCF client object.
-        
+
         Returns:
             PFCF client implementation.
         """
@@ -199,7 +199,7 @@ class PfcfExchangeAdapter(ExchangeApiInterface):
 
     def register_callback(self, event_type: str, callback: Callable) -> None:
         """Register a callback for PFCF exchange events.
-        
+
         Args:
             event_type: Type of event to subscribe to.
             callback: Callback function to register.

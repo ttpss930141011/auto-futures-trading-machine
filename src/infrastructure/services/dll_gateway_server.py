@@ -11,7 +11,7 @@ import zmq
 from typing import Any, Dict, Optional, List
 from dataclasses import asdict
 
-from src.infrastructure.pfcf_client.api import PFCFApi
+from src.domain.interfaces.exchange_api import ExchangeApiInterface
 from src.interactor.interfaces.logger.logger import LoggerInterface
 from src.app.cli_pfcf.config import Config
 from src.interactor.dtos.send_market_order_dtos import (
@@ -36,7 +36,7 @@ class DllGatewayServer:
 
     def __init__(
         self,
-        exchange_client: PFCFApi,
+        exchange_client: ExchangeApiInterface,
         config: Config,
         logger: LoggerInterface,
         bind_address: str = "tcp://*:5557",
@@ -45,7 +45,7 @@ class DllGatewayServer:
         """Initialize DLL Gateway Server.
 
         Args:
-            exchange_client: The exchange API client instance.
+            exchange_client: The exchange API interface instance.
             config: Configuration object for enum conversion.
             logger: Logger for recording events.
             bind_address: ZeroMQ bind address for the server.
@@ -266,7 +266,7 @@ class DllGatewayServer:
             }
 
     def _execute_order(self, input_dto: SendMarketOrderInputDto) -> SendMarketOrderOutputDto:
-        """Execute order using exchange DLL.
+        """Execute order using exchange API interface.
 
         Args:
             input_dto: The order input DTO to execute.
@@ -275,45 +275,18 @@ class DllGatewayServer:
             SendMarketOrderOutputDto with execution result.
         """
         try:
-            # Convert to PFCF format using the exchange API
-            # Create a temporary service container-like object for enum conversion
-            from types import SimpleNamespace
-            temp_service_container = SimpleNamespace()
-            temp_service_container.exchange_api = self._exchange_client
-            pfcf_input = input_dto.to_pfcf_dict(temp_service_container)
-
-            # Use the correct DLL API pattern matching send_market_order.py
-            order = self._exchange_client.trade.OrderObject()
-            order.ACTNO = pfcf_input.get("ACTNO")
-            order.PRODUCTID = pfcf_input.get("PRODUCTID")
-            order.BS = pfcf_input.get("BS")
-            order.ORDERTYPE = pfcf_input.get("ORDERTYPE")
-            order.PRICE = pfcf_input.get("PRICE")
-            order.ORDERQTY = pfcf_input.get("ORDERQTY")
-            order.TIMEINFORCE = pfcf_input.get("TIMEINFORCE")
-            order.OPENCLOSE = pfcf_input.get("OPENCLOSE")
-            order.DTRADE = pfcf_input.get("DTRADE")
-            order.NOTE = pfcf_input.get("NOTE")
-
-            # Execute order using the correct API (same as send_market_order.py)
-            order_result = self._exchange_client.client.DTradeLib.Order(order)
-
-            if order_result is None:
-                return SendMarketOrderOutputDto(
-                    is_send_order=False,
-                    note="",
-                    order_serial="",
-                    error_code="NULL_RESULT",
-                    error_message="Order execution returned None"
-                )
-
-            # Return the result in the same format as send_market_order.py
-            return SendMarketOrderOutputDto(
-                is_send_order=order_result.ISSEND,
-                note=order_result.NOTE,
-                order_serial=order_result.SEQ,
-                error_code=str(order_result.ERRORCODE),
-                error_message=order_result.ERRORMSG,
+            # Use the exchange API interface's send_order method
+            return self._exchange_client.send_order(
+                order_account=input_dto.order_account,
+                item_code=input_dto.item_code,
+                side=input_dto.side,
+                order_type=input_dto.order_type,
+                price=input_dto.price,
+                quantity=input_dto.quantity,
+                open_close=input_dto.open_close,
+                note=input_dto.note,
+                day_trade=input_dto.day_trade,
+                time_in_force=input_dto.time_in_force,
             )
 
         except Exception as e:
@@ -385,8 +358,8 @@ class DllGatewayServer:
             Health status dictionary.
         """
         try:
-            # Check exchange client connectivity
-            is_connected = self._exchange_client.client is not None
+            # Check exchange client connectivity using the interface
+            is_connected = self._exchange_client.get_client() is not None
 
             return {
                 "success": True,

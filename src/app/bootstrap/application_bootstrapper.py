@@ -10,7 +10,7 @@ from typing import Optional
 
 from src.app.cli_pfcf.config import Config
 from src.infrastructure.loggers.logger_default import LoggerDefault
-from src.infrastructure.pfcf_client.api import PFCFApi
+from src.infrastructure.exchange_adapters.pfcf_adapter import PfcfExchangeAdapter
 from src.infrastructure.repositories.condition_json_file_repository import (
     ConditionJsonFileRepository,
 )
@@ -55,7 +55,7 @@ class ApplicationBootstrapper:
         """Initialize the ApplicationBootstrapper."""
         self._logger: Optional[LoggerDefault] = None
         self._config: Optional[Config] = None
-        self._exchange_api: Optional[PFCFApi] = None
+        self._exchange_api: Optional[PfcfExchangeAdapter] = None
 
     def bootstrap(self) -> BootstrapResult:
         """Bootstrap the application with all dependencies.
@@ -166,8 +166,8 @@ class ApplicationBootstrapper:
 
     def _initialize_core_components(self) -> None:
         """Initialize core components needed for bootstrap."""
-        # Initialize exchange API
-        self._exchange_api = PFCFApi()
+        # Initialize exchange API adapter
+        self._exchange_api = PfcfExchangeAdapter()
 
         # Initialize logger
         self._logger = LoggerDefault()

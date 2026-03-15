@@ -10,7 +10,7 @@ from unittest.mock import Mock, patch
 
 from src.infrastructure.services.dll_gateway_server import DllGatewayServer
 from src.interactor.interfaces.logger.logger import LoggerInterface
-from src.infrastructure.pfcf_client.api import PFCFApi
+from src.domain.interfaces.exchange_api import ExchangeApiInterface
 
 
 class TestDllGatewayServer:
@@ -23,18 +23,27 @@ class TestDllGatewayServer:
     @pytest.fixture
     def mock_exchange_client(self):
         """Create mock exchange client."""
-        mock_client = Mock(spec=PFCFApi)
-        mock_client.client = Mock()
-        mock_client.client.DTradeLib = Mock()
-        mock_client.client.DAccountLib = Mock()
+        mock_client = Mock(spec=ExchangeApiInterface)
+        
+        # Mock the get_client method
+        mock_pfcf_client = Mock()
+        mock_pfcf_client.DTradeLib = Mock()
+        mock_pfcf_client.DAccountLib = Mock()
+        mock_client.get_client.return_value = mock_pfcf_client
 
-        # Add trade attribute for OrderObject
-        mock_client.trade = Mock()
-        mock_client.trade.OrderObject = Mock()
+        # Mock the send_order method
+        from src.interactor.dtos.send_market_order_dtos import SendMarketOrderOutputDto
+        mock_client.send_order.return_value = SendMarketOrderOutputDto(
+            is_send_order=True,
+            note="TEST",
+            order_serial="12345",
+            error_code="0",
+            error_message=""
+        )
 
-        # Add decimal attribute for EnumConverter
-        mock_client.decimal = Mock()
-        mock_client.decimal.Parse.return_value = 0.0
+        # Mock convert_enum and parse_decimal methods
+        mock_client.convert_enum.return_value = Mock()
+        mock_client.parse_decimal.return_value = 0.0
 
         return mock_client
 
@@ -120,30 +129,16 @@ class TestDllGatewayServer:
 
     def test_send_order_request_processing(self, gateway_server, mock_exchange_client, mock_config):  # pylint: disable=unused-argument
         """Test processing of send order requests."""
-        # Setup mock order result
-        mock_order_result = Mock()
-        mock_order_result.ISSEND = True
-        mock_order_result.NOTE = "Test order"
-        mock_order_result.SEQ = "ORDER123"
-        mock_order_result.ERRORCODE = 0
-        mock_order_result.ERRORMSG = ""
+        from src.interactor.dtos.send_market_order_dtos import SendMarketOrderOutputDto
 
-        mock_exchange_client.client.DTradeLib.Order.return_value = mock_order_result
-
-        # Setup mock config for to_pfcf_dict
-        mock_config_instance = Mock()
-        mock_config_instance.to_pfcf_dict.return_value = {
-            "ACTNO": "TEST001",
-            "PRODUCTID": "TXFF4",
-            "BS": "Buy",
-            "ORDERTYPE": "Market",
-            "PRICE": 0.0,
-            "ORDERQTY": 1,
-            "TIMEINFORCE": "IOC",
-            "OPENCLOSE": "AUTO",
-            "DTRADE": "No",
-            "NOTE": "Test order"
-        }
+        # Setup mock send_order to return expected result
+        mock_exchange_client.send_order.return_value = SendMarketOrderOutputDto(
+            is_send_order=True,
+            note="Test order",
+            order_serial="ORDER123",
+            error_code="0",
+            error_message=""
+        )
 
         # Create request
         request_data = {
@@ -151,13 +146,13 @@ class TestDllGatewayServer:
             "parameters": {
                 "order_account": "TEST001",
                 "item_code": "TXFF4",
-                "side": "buy",  # Use correct OrderOperation value
+                "side": "buy",
                 "order_type": "Market",
                 "price": 0.0,
                 "quantity": 1,
                 "open_close": "AUTO",
                 "note": "Test order",
-                "day_trade": "N",  # Use correct DayTrade value
+                "day_trade": "N",
                 "time_in_force": "IOC",
             }
         }
@@ -173,8 +168,8 @@ class TestDllGatewayServer:
         assert response["data"]["error_code"] == "0"
         assert response["data"]["error_message"] == ""
 
-        # Verify DLL was called
-        mock_exchange_client.client.DTradeLib.Order.assert_called_once()
+        # Verify exchange API was called
+        mock_exchange_client.send_order.assert_called_once()
 
     def test_send_order_missing_parameters(self, gateway_server):
         """Test send order request with missing parameters."""
@@ -195,7 +190,7 @@ class TestDllGatewayServer:
     def test_send_order_exchange_error(self, gateway_server, mock_exchange_client):
         """Test send order when exchange API raises error."""
         # Setup mock to raise exception
-        mock_exchange_client.client.DTradeLib.Order.side_effect = Exception("Exchange API error")
+        mock_exchange_client.send_order.side_effect = Exception("Exchange API error")
 
         request_data = {
             "operation": "send_order",
@@ -288,18 +283,17 @@ class TestDllGatewayServer:
 
     def test_execute_order_success(self, gateway_server, mock_exchange_client, mock_config):  # pylint: disable=unused-argument
         """Test successful order execution."""
-        from src.interactor.dtos.send_market_order_dtos import SendMarketOrderInputDto
+        from src.interactor.dtos.send_market_order_dtos import SendMarketOrderInputDto, SendMarketOrderOutputDto
         from src.domain.value_objects import OrderOperation, OrderTypeEnum, OpenClose, DayTrade, TimeInForce
 
-        # Setup mock order result
-        mock_order_result = Mock()
-        mock_order_result.ISSEND = True
-        mock_order_result.NOTE = "Test"
-        mock_order_result.SEQ = "ORDER123"
-        mock_order_result.ERRORCODE = 0
-        mock_order_result.ERRORMSG = ""
-
-        mock_exchange_client.client.DTradeLib.Order.return_value = mock_order_result
+        # Setup mock send_order to return expected result
+        mock_exchange_client.send_order.return_value = SendMarketOrderOutputDto(
+            is_send_order=True,
+            note="Test",
+            order_serial="ORDER123",
+            error_code="0",
+            error_message=""
+        )
 
         input_dto = SendMarketOrderInputDto(
             order_account="TEST001",
@@ -321,10 +315,17 @@ class TestDllGatewayServer:
 
     def test_execute_order_failure(self, gateway_server, mock_exchange_client, mock_config):  # pylint: disable=unused-argument
         """Test order execution failure."""
-        from src.interactor.dtos.send_market_order_dtos import SendMarketOrderInputDto
+        from src.interactor.dtos.send_market_order_dtos import SendMarketOrderInputDto, SendMarketOrderOutputDto
         from src.domain.value_objects import OrderOperation, OrderTypeEnum, OpenClose, DayTrade, TimeInForce
 
-        mock_exchange_client.client.DTradeLib.Order.return_value = None
+        # Mock send_order returning a failure result
+        mock_exchange_client.send_order.return_value = SendMarketOrderOutputDto(
+            is_send_order=False,
+            note="",
+            order_serial="",
+            error_code="NULL_RESULT",
+            error_message="Order execution returned None"
+        )
 
         input_dto = SendMarketOrderInputDto(
             order_account="TEST001",
@@ -354,18 +355,27 @@ class TestDllGatewayServerIntegration:
     @pytest.fixture
     def mock_exchange_client(self):
         """Create mock exchange client."""
-        mock_client = Mock(spec=PFCFApi)
-        mock_client.client = Mock()
-        mock_client.client.DTradeLib = Mock()
-        mock_client.client.DAccountLib = Mock()
+        mock_client = Mock(spec=ExchangeApiInterface)
+        
+        # Mock the get_client method
+        mock_pfcf_client = Mock()
+        mock_pfcf_client.DTradeLib = Mock()
+        mock_pfcf_client.DAccountLib = Mock()
+        mock_client.get_client.return_value = mock_pfcf_client
 
-        # Add trade attribute for OrderObject
-        mock_client.trade = Mock()
-        mock_client.trade.OrderObject = Mock()
+        # Mock the send_order method
+        from src.interactor.dtos.send_market_order_dtos import SendMarketOrderOutputDto
+        mock_client.send_order.return_value = SendMarketOrderOutputDto(
+            is_send_order=True,
+            note="TEST",
+            order_serial="12345",
+            error_code="0",
+            error_message=""
+        )
 
-        # Add decimal attribute for EnumConverter
-        mock_client.decimal = Mock()
-        mock_client.decimal.Parse.return_value = 0.0
+        # Mock convert_enum and parse_decimal methods
+        mock_client.convert_enum.return_value = Mock()
+        mock_client.parse_decimal.return_value = 0.0
 
         return mock_client
 

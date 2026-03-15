@@ -6,47 +6,47 @@ from src.infrastructure.services.enum_converter import EnumConverter
 
 def test_enum_converter_to_pfcf_enum():
     mock_exchange_api = MagicMock()
-    # side enum
-    mock_exchange_api.trade.SideEnum.Buy = "buy"
-    mock_exchange_api.trade.SideEnum.Sell = "sell"
-    # time in force enum
-    mock_exchange_api.trade.TimeInForceEnum.ROD = "ROD"
-    mock_exchange_api.trade.TimeInForceEnum.IOC = "IOC"
-    mock_exchange_api.trade.TimeInForceEnum.FOK = "FOK"
-    # open close enum
-    mock_exchange_api.trade.OpenCloseEnum.Y = "Y"
-    mock_exchange_api.trade.OpenCloseEnum.N = "N"
-    mock_exchange_api.trade.OpenCloseEnum.AUTO = "AUTO"
-    # day trade enum
-    mock_exchange_api.trade.DayTradeEnum.Y = "Y"
-    mock_exchange_api.trade.DayTradeEnum.N = "N"
+
+    # Setup convert_enum to return predictable values based on input
+    enum_map = {
+        OrderOperation.BUY: "buy",
+        OrderOperation.SELL: "sell",
+        TimeInForce.ROD: "ROD",
+        TimeInForce.IOC: "IOC",
+        TimeInForce.FOK: "FOK",
+        OpenClose.OPEN: "Y",
+        OpenClose.CLOSE: "N",
+        OpenClose.AUTO: "AUTO",
+        DayTrade.Yes: "Y",
+        DayTrade.No: "N",
+    }
+    mock_exchange_api.convert_enum.side_effect = lambda e: enum_map.get(e, None)
 
     enum_converter = EnumConverter(mock_exchange_api)
 
     # side enum test
-    assert enum_converter.to_pfcf_enum(OrderOperation.BUY) == mock_exchange_api.trade.SideEnum.Buy
-    assert enum_converter.to_pfcf_enum(OrderOperation.SELL) == mock_exchange_api.trade.SideEnum.Sell
+    assert enum_converter.to_pfcf_enum(OrderOperation.BUY) == "buy"
+    assert enum_converter.to_pfcf_enum(OrderOperation.SELL) == "sell"
     # time in force enum test
-    assert enum_converter.to_pfcf_enum(TimeInForce.ROD) == mock_exchange_api.trade.TimeInForceEnum.ROD
-    assert enum_converter.to_pfcf_enum(TimeInForce.IOC) == mock_exchange_api.trade.TimeInForceEnum.IOC
-    assert enum_converter.to_pfcf_enum(TimeInForce.FOK) == mock_exchange_api.trade.TimeInForceEnum.FOK
+    assert enum_converter.to_pfcf_enum(TimeInForce.ROD) == "ROD"
+    assert enum_converter.to_pfcf_enum(TimeInForce.IOC) == "IOC"
+    assert enum_converter.to_pfcf_enum(TimeInForce.FOK) == "FOK"
     # open close enum test
-    assert enum_converter.to_pfcf_enum(OpenClose.OPEN) == mock_exchange_api.trade.OpenCloseEnum.Y
-    assert enum_converter.to_pfcf_enum(OpenClose.CLOSE) == mock_exchange_api.trade.OpenCloseEnum.N
-    assert enum_converter.to_pfcf_enum(OpenClose.AUTO) == mock_exchange_api.trade.OpenCloseEnum.AUTO
+    assert enum_converter.to_pfcf_enum(OpenClose.OPEN) == "Y"
+    assert enum_converter.to_pfcf_enum(OpenClose.CLOSE) == "N"
+    assert enum_converter.to_pfcf_enum(OpenClose.AUTO) == "AUTO"
     # day trade enum test
-    assert enum_converter.to_pfcf_enum(DayTrade.Yes) == mock_exchange_api.trade.DayTradeEnum.Y
-    assert enum_converter.to_pfcf_enum(DayTrade.No) == mock_exchange_api.trade.DayTradeEnum.N
+    assert enum_converter.to_pfcf_enum(DayTrade.Yes) == "Y"
+    assert enum_converter.to_pfcf_enum(DayTrade.No) == "N"
     # invalid enum test
     assert enum_converter.to_pfcf_enum("test") is None
 
 
 def test_enum_converter_to_pfcf_decimal():
     mock_exchange_api = MagicMock()
-    mock_exchange_api.decimal.Parse = MagicMock()
-    mock_exchange_api.decimal.Parse.return_value = 100
+    mock_exchange_api.parse_decimal.return_value = 100
 
     enum_converter = EnumConverter(mock_exchange_api)
 
     assert enum_converter.to_pfcf_decimal(100) == 100
-    mock_exchange_api.decimal.Parse.assert_called_once_with("100")
+    mock_exchange_api.parse_decimal.assert_called_once_with(100)

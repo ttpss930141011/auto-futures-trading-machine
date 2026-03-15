@@ -1,5 +1,5 @@
 """
-Infrastructure repository using the PFCF COM client to fetch positions.
+Infrastructure repository using the exchange API to fetch positions.
 """
 
 import threading
@@ -9,16 +9,16 @@ from src.interactor.dtos.get_position_dtos import PositionDto
 from src.interactor.interfaces.repositories.position_repository_interface import (
     PositionRepositoryInterface,
 )
-from src.infrastructure.pfcf_client.api import PFCFApi
+from src.domain.interfaces.exchange_api import ExchangeApiInterface
 
 
 class PFCFPositionRepository(PositionRepositoryInterface):
-    """Wraps PFCF COM callbacks into a blocking call."""
+    """Wraps exchange API COM callbacks into a blocking call."""
 
-    def __init__(self, client: PFCFApi, timeout_sec: float = 5.0):
+    def __init__(self, client: ExchangeApiInterface, timeout_sec: float = 5.0):
         """
         Args:
-            client: The PFCF API client instance.
+            client: The exchange API interface instance.
             timeout_sec: Maximum seconds to wait for callbacks.
         """
         self._client = client
@@ -130,14 +130,18 @@ class PFCFPositionRepository(PositionRepositoryInterface):
             print(error_message)
             event.set()
 
+        # Get the underlying client for PFCF-specific operations
+        # This is acceptable in the infrastructure layer
+        account_lib = self._client.DAccountLib
+
         # Register callback functions
-        self._client.DAccountLib.OnPositionData += on_data
-        self._client.DAccountLib.OnPositionError += on_error
+        account_lib.OnPositionData += on_data
+        account_lib.OnPositionError += on_error
 
         try:
             # Send request
             print(f"GetPosition: {order_account}, {product_id}")
-            self._client.DAccountLib.GetPosition(order_account, product_id)
+            account_lib.GetPosition(order_account, product_id)
 
             # Wait for callbacks to complete
             if not event.wait(timeout=self._timeout):
@@ -151,5 +155,5 @@ class PFCFPositionRepository(PositionRepositoryInterface):
 
         finally:
             # Ensure callback functions are removed
-            self._client.DAccountLib.OnPositionData -= on_data
-            self._client.DAccountLib.OnPositionError -= on_error
+            account_lib.OnPositionData -= on_data
+            account_lib.OnPositionError -= on_error

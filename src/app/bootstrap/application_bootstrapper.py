@@ -36,14 +36,6 @@ class BootstrapResult:
     error_message: Optional[str] = None
 
 
-@dataclass
-class ValidationResult:
-    """Result of configuration validation."""
-
-    is_valid: bool
-    error_messages: list[str]
-
-
 class ApplicationBootstrapper:
     """Handles dependency injection and initialization sequence.
 
@@ -67,21 +59,13 @@ class ApplicationBootstrapper:
             # Step 1: Create directories
             self._create_required_directories()
 
-            # Step 2: Initialize core components
+            # Step 2: Initialize core components (Config raises on invalid env)
             self._initialize_core_components()
 
-            # Step 3: Validate configuration
-            validation_result = self.validate_configuration()
-            if not validation_result.is_valid:
-                return BootstrapResult(
-                    success=False,
-                    error_message="; ".join(validation_result.error_messages),
-                )
-
-            # Step 4: Create service container
+            # Step 3: Create service container
             service_container = self.create_service_container()
 
-            # Step 5: Create system manager
+            # Step 4: Create system manager
             system_manager = self._create_system_manager(service_container)
 
             return BootstrapResult(
@@ -122,33 +106,6 @@ class ApplicationBootstrapper:
         )
 
         return service_container
-
-    def validate_configuration(self) -> ValidationResult:
-        """Validate the application configuration.
-
-        Returns:
-            ValidationResult with validation status
-        """
-        errors = []
-
-        if not self._config:
-            errors.append("Configuration not initialized")
-            return ValidationResult(is_valid=False, error_messages=errors)
-
-        # Validate DLL Gateway configuration
-        if not self._config.DLL_GATEWAY_BIND_ADDRESS:
-            errors.append("DLL Gateway bind address not configured")
-
-        if not self._config.DLL_GATEWAY_CONNECT_ADDRESS:
-            errors.append("DLL Gateway connect address not configured")
-
-        if self._config.DLL_GATEWAY_REQUEST_TIMEOUT_MS <= 0:
-            errors.append("Invalid DLL Gateway request timeout")
-
-        return ValidationResult(
-            is_valid=len(errors) == 0,
-            error_messages=errors,
-        )
 
     def _create_required_directories(self) -> None:
         """Create required directories for the application."""

@@ -37,13 +37,12 @@ def test_config_with_valid_env_vars(monkeypatch):
 
 def test_config_missing_env_vars(monkeypatch):
     """Test config fails when required environment variables are missing."""
-    # Remove URLs
     monkeypatch.delenv('DEALER_TEST_URL', raising=False)
     monkeypatch.delenv('DEALER_PROD_URL', raising=False)
     # Missing test URL first
-    with pytest.raises(SystemExit):
+    with pytest.raises(ValueError, match="DEALER_TEST_URL"):
         Config()
     # Set test URL only
     monkeypatch.setenv('DEALER_TEST_URL', 'test')
-    with pytest.raises(SystemExit):
+    with pytest.raises(ValueError, match="DEALER_PROD_URL"):
         Config()

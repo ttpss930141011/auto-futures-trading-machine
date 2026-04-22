@@ -71,22 +71,18 @@ class Config(object):
     def __init__(self) -> None:
         """Initialize the configuration.
 
-        Validates that required environment variables are set.
-
         Raises:
-            SystemExit: If required environment variables are missing.
+            ValueError: If required environment variables are missing or invalid.
         """
-        # Load environment variables
         self.EXCHANGE_TEST_URL = os.getenv("DEALER_TEST_URL", "")
         self.EXCHANGE_PROD_URL = os.getenv("DEALER_PROD_URL", "")
 
-        # Validate required environment variables
         if not self.EXCHANGE_TEST_URL:
-            print("Specify DEALER_TEST_URL as environment variable.")
-            exit(1)
+            raise ValueError("DEALER_TEST_URL environment variable is required")
         if not self.EXCHANGE_PROD_URL:
-            print("Specify DEALER_PROD_URL as environment variable.")
-            exit(1)
+            raise ValueError("DEALER_PROD_URL environment variable is required")
+        if self.DLL_GATEWAY_REQUEST_TIMEOUT_MS <= 0:
+            raise ValueError("DLL_GATEWAY_REQUEST_TIMEOUT_MS must be positive")
 
     def __setitem__(self, key, item):
         self.__dict__[key] = item

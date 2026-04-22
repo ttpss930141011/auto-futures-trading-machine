@@ -116,8 +116,10 @@ class SystemManager:
                     error_message="Failed to start Gateway",
                 )
 
-            # Wait for Gateway initialization
-            time.sleep(3)
+            # No sleep needed between gateway and subprocesses: zmq.bind() for
+            # the PUB and REP sockets is synchronous and complete before
+            # _start_gateway returns, and ZMQ transparently handles late
+            # connect() from the strategy/order-executor subprocesses.
 
             # Start Strategy
             self._component_status["strategy"] = ComponentStatus.STARTING

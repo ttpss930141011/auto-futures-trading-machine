@@ -4,9 +4,8 @@ This module provides the ApplicationBootstrapper class which handles
 the initialization sequence and dependency injection for the application.
 """
 
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import NamedTuple, Optional
 
 from src.app.cli_pfcf.config import Config
 from src.domain.interfaces.exchange_api import ExchangeApiInterface
@@ -28,14 +27,11 @@ from src.infrastructure.services.status_checker import StatusChecker
 from src.infrastructure.services.system_manager import SystemManager
 
 
-@dataclass
-class BootstrapResult:
-    """Result of the bootstrap operation."""
+class BootstrappedApp(NamedTuple):
+    """Wired application components returned by a successful bootstrap."""
 
-    success: bool
-    system_manager: Optional[SystemManager] = None
-    service_container: Optional[ServiceContainer] = None
-    error_message: Optional[str] = None
+    system_manager: SystemManager
+    service_container: ServiceContainer
 
 
 class ApplicationBootstrapper:
@@ -51,39 +47,21 @@ class ApplicationBootstrapper:
         self._config: Optional[Config] = None
         self._exchange_api: Optional[ExchangeApiInterface] = None
 
-    def bootstrap(self) -> BootstrapResult:
+    def bootstrap(self) -> BootstrappedApp:
         """Bootstrap the application with all dependencies.
 
+        Raises:
+            Exception: Any error during directory creation, config loading,
+                or component wiring propagates to the caller.
+
         Returns:
-            BootstrapResult with system manager and service container
+            BootstrappedApp with the wired SystemManager and ServiceContainer.
         """
-        try:
-            # Step 1: Create directories
-            self._create_required_directories()
-
-            # Step 2: Initialize core components (Config raises on invalid env)
-            self._initialize_core_components()
-
-            # Step 3: Create service container
-            service_container = self.create_service_container()
-
-            # Step 4: Create system manager
-            system_manager = self._create_system_manager(service_container)
-
-            return BootstrapResult(
-                success=True,
-                system_manager=system_manager,
-                service_container=service_container,
-            )
-
-        except (RuntimeError, OSError, ValueError, Exception) as e:
-            error_msg = f"Bootstrap failed: {str(e)}"
-            if self._logger:
-                self._logger.log_error(error_msg)
-            return BootstrapResult(
-                success=False,
-                error_message=error_msg,
-            )
+        self._create_required_directories()
+        self._initialize_core_components()
+        service_container = self.create_service_container()
+        system_manager = self._create_system_manager(service_container)
+        return BootstrappedApp(system_manager=system_manager, service_container=service_container)
 
     def create_service_container(self) -> ServiceContainer:
         """Create and configure the service container.

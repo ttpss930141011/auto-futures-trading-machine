@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 from src.app.bootstrap.application_bootstrapper import (
     ApplicationBootstrapper,
-    BootstrapResult,
+    BootstrappedApp,
 )
 
 
@@ -182,7 +182,7 @@ class TestApplicationBootstrapper:
         mock_create_manager: Mock,
         bootstrapper: ApplicationBootstrapper,
     ) -> None:
-        """Test successful bootstrap process."""
+        """bootstrap() returns a BootstrappedApp on success."""
         mock_container = Mock()
         mock_create_container.return_value = mock_container
         mock_manager = Mock()
@@ -195,51 +195,37 @@ class TestApplicationBootstrapper:
         mock_create_container.assert_called_once()
         mock_create_manager.assert_called_once_with(mock_container)
 
-        assert result.success is True
-        assert result.system_manager == mock_manager
-        assert result.service_container == mock_container
-        assert result.error_message is None
+        assert isinstance(result, BootstrappedApp)
+        assert result.system_manager is mock_manager
+        assert result.service_container is mock_container
 
     @patch.object(ApplicationBootstrapper, "_initialize_core_components")
     @patch.object(ApplicationBootstrapper, "_create_required_directories")
-    def test_bootstrap_config_error(
+    def test_bootstrap_propagates_config_error(
         self,
         mock_create_dirs: Mock,
         mock_init_components: Mock,
         bootstrapper: ApplicationBootstrapper,
     ) -> None:
-        """Test bootstrap when Config raises due to invalid env."""
+        """Config errors propagate to the caller instead of being swallowed."""
         mock_init_components.side_effect = ValueError(
             "DEALER_TEST_URL environment variable is required"
         )
 
-        result = bootstrapper.bootstrap()
-
-        assert result.success is False
-        assert result.system_manager is None
-        assert result.service_container is None
-        assert "DEALER_TEST_URL" in result.error_message
+        with pytest.raises(ValueError, match="DEALER_TEST_URL"):
+            bootstrapper.bootstrap()
 
     @patch.object(ApplicationBootstrapper, "_create_required_directories")
-    def test_bootstrap_exception_handling(
+    def test_bootstrap_propagates_unexpected_error(
         self,
         mock_create_dirs: Mock,
         bootstrapper: ApplicationBootstrapper,
     ) -> None:
-        """Test bootstrap exception handling.
+        """Unexpected errors (e.g. mkdir failure) propagate to the caller."""
+        mock_create_dirs.side_effect = OSError("permission denied")
 
-        Args:
-            mock_create_dirs: Mocked _create_required_directories method
-            bootstrapper: ApplicationBootstrapper instance
-        """
-        # Setup exception
-        mock_create_dirs.side_effect = Exception("Test error")
-
-        result = bootstrapper.bootstrap()
-
-        # Verify result
-        assert result.success is False
-        assert result.error_message == "Bootstrap failed: Test error"
+        with pytest.raises(OSError, match="permission denied"):
+            bootstrapper.bootstrap()
 
     @patch("src.app.bootstrap.application_bootstrapper.DllGatewayServer")
     @patch("src.app.bootstrap.application_bootstrapper.SystemManager")

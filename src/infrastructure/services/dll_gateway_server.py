@@ -62,6 +62,11 @@ class DllGatewayServer:
         self._running = False
         self._server_thread: Optional[threading.Thread] = None
 
+    @property
+    def is_running(self) -> bool:
+        """True while the server loop is active."""
+        return self._running and self._server_thread is not None and self._server_thread.is_alive()
+
     def start(self) -> bool:
         """Start the DLL Gateway Server in a background thread.
 

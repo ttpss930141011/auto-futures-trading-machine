@@ -45,42 +45,62 @@ class TestApplicationBootstrapper:
         # Verify mkdir was called for each required directory
         assert mock_mkdir.call_count >= 3  # pid_dir, logs_dir, data_dir
 
+    @patch("src.app.bootstrap.application_bootstrapper.SimulatorExchangeAdapter")
     @patch("src.app.bootstrap.application_bootstrapper.PfcfExchangeAdapter")
     @patch("src.app.bootstrap.application_bootstrapper.LoggerDefault")
     @patch("src.app.bootstrap.application_bootstrapper.Config")
-    def test_initialize_core_components(
+    def test_initialize_core_components_pfcf_mode(
         self,
         mock_config_class: Mock,
         mock_logger_class: Mock,
-        mock_adapter_class: Mock,
+        mock_pfcf_class: Mock,
+        mock_sim_class: Mock,
         bootstrapper: ApplicationBootstrapper,
     ) -> None:
-        """Test initialization of core components.
-
-        Args:
-            mock_config_class: Mocked Config class
-            mock_logger_class: Mocked LoggerDefault class
-            mock_adapter_class: Mocked PfcfExchangeAdapter class
-            bootstrapper: ApplicationBootstrapper instance
-        """
-        # Setup mocks
+        """EXCHANGE_MODE=pfcf selects PfcfExchangeAdapter."""
         mock_adapter = Mock()
         mock_logger = Mock()
         mock_config = Mock()
+        mock_config.EXCHANGE_MODE = "pfcf"
 
-        mock_adapter_class.return_value = mock_adapter
+        mock_pfcf_class.return_value = mock_adapter
         mock_logger_class.return_value = mock_logger
         mock_config_class.return_value = mock_config
 
         bootstrapper._initialize_core_components()
 
-        # Verify components were created
         assert bootstrapper._exchange_api == mock_adapter
         assert bootstrapper._logger == mock_logger
         assert bootstrapper._config == mock_config
+        mock_pfcf_class.assert_called_once_with()
+        mock_sim_class.assert_not_called()
 
-        # Verify logger was used
-        mock_logger.log_info.assert_called_with("Core components initialized successfully")
+    @patch("src.app.bootstrap.application_bootstrapper.SimulatorExchangeAdapter")
+    @patch("src.app.bootstrap.application_bootstrapper.PfcfExchangeAdapter")
+    @patch("src.app.bootstrap.application_bootstrapper.LoggerDefault")
+    @patch("src.app.bootstrap.application_bootstrapper.Config")
+    def test_initialize_core_components_simulator_mode(
+        self,
+        mock_config_class: Mock,
+        mock_logger_class: Mock,
+        mock_pfcf_class: Mock,
+        mock_sim_class: Mock,
+        bootstrapper: ApplicationBootstrapper,
+    ) -> None:
+        """EXCHANGE_MODE=simulator selects SimulatorExchangeAdapter."""
+        mock_adapter = Mock()
+        mock_config = Mock()
+        mock_config.EXCHANGE_MODE = "simulator"
+
+        mock_sim_class.return_value = mock_adapter
+        mock_logger_class.return_value = Mock()
+        mock_config_class.return_value = mock_config
+
+        bootstrapper._initialize_core_components()
+
+        assert bootstrapper._exchange_api == mock_adapter
+        mock_sim_class.assert_called_once_with()
+        mock_pfcf_class.assert_not_called()
 
     @patch("src.app.bootstrap.application_bootstrapper.SessionJsonFileRepository")
     @patch("src.app.bootstrap.application_bootstrapper.ConditionJsonFileRepository")

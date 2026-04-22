@@ -38,6 +38,9 @@ class Config(object):
     DLL_GATEWAY_REQUEST_TIMEOUT_MS = int(os.getenv("DLL_GATEWAY_REQUEST_TIMEOUT_MS", "5000"))
     DLL_GATEWAY_RETRY_COUNT = int(os.getenv("DLL_GATEWAY_RETRY_COUNT", "3"))
 
+    # Exchange adapter selection: "pfcf" (real PFCF DLL) or "simulator" (in-memory)
+    EXCHANGE_MODE = os.getenv("EXCHANGE_MODE", "pfcf").lower()
+
     @property
     def ZMQ_TICK_PUB_ADDRESS(self) -> str:
         """Get the ZMQ tick publisher address."""
@@ -83,6 +86,10 @@ class Config(object):
             raise ValueError("DEALER_PROD_URL environment variable is required")
         if self.DLL_GATEWAY_REQUEST_TIMEOUT_MS <= 0:
             raise ValueError("DLL_GATEWAY_REQUEST_TIMEOUT_MS must be positive")
+        if self.EXCHANGE_MODE not in ("pfcf", "simulator"):
+            raise ValueError(
+                f"EXCHANGE_MODE must be 'pfcf' or 'simulator', got {self.EXCHANGE_MODE!r}"
+            )
 
     def __setitem__(self, key, item):
         self.__dict__[key] = item

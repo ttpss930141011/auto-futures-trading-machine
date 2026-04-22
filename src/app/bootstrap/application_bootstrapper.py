@@ -9,8 +9,10 @@ from pathlib import Path
 from typing import Optional
 
 from src.app.cli_pfcf.config import Config
+from src.domain.interfaces.exchange_api import ExchangeApiInterface
 from src.infrastructure.loggers.logger_default import LoggerDefault
 from src.infrastructure.exchange_adapters.pfcf_adapter import PfcfExchangeAdapter
+from src.infrastructure.exchange_adapters.simulator_adapter import SimulatorExchangeAdapter
 from src.infrastructure.repositories.condition_json_file_repository import (
     ConditionJsonFileRepository,
 )
@@ -47,7 +49,7 @@ class ApplicationBootstrapper:
         """Initialize the ApplicationBootstrapper."""
         self._logger: Optional[LoggerDefault] = None
         self._config: Optional[Config] = None
-        self._exchange_api: Optional[PfcfExchangeAdapter] = None
+        self._exchange_api: Optional[ExchangeApiInterface] = None
 
     def bootstrap(self) -> BootstrapResult:
         """Bootstrap the application with all dependencies.
@@ -123,16 +125,19 @@ class ApplicationBootstrapper:
 
     def _initialize_core_components(self) -> None:
         """Initialize core components needed for bootstrap."""
-        # Initialize exchange API adapter
-        self._exchange_api = PfcfExchangeAdapter()
-
-        # Initialize logger
         self._logger = LoggerDefault()
-
-        # Initialize configuration
         self._config = Config()
+        self._exchange_api = self._create_exchange_adapter(self._config)
+        self._logger.log_info(
+            f"Core components initialized successfully (exchange={self._config.EXCHANGE_MODE})"
+        )
 
-        self._logger.log_info("Core components initialized successfully")
+    @staticmethod
+    def _create_exchange_adapter(config: Config) -> ExchangeApiInterface:
+        """Create the exchange adapter selected by config.EXCHANGE_MODE."""
+        if config.EXCHANGE_MODE == "simulator":
+            return SimulatorExchangeAdapter()
+        return PfcfExchangeAdapter()
 
     def _create_system_manager(self, service_container: ServiceContainer) -> SystemManager:
         """Create the system manager with all dependencies.

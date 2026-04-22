@@ -17,10 +17,6 @@ from src.infrastructure.services.gateway.market_data_gateway_service import (
 from src.infrastructure.services.gateway.port_checker_service import PortCheckerService
 from src.infrastructure.services.process.process_manager_service import ProcessManagerService
 from src.infrastructure.services.status_checker import StatusChecker
-from src.interactor.use_cases.start_order_executor_use_case import (
-    StartOrderExecutorUseCase,
-)
-from src.interactor.use_cases.start_strategy_use_case import StartStrategyUseCase
 
 
 class ComponentStatus(Enum):
@@ -301,37 +297,17 @@ class SystemManager:
             return False
 
     def _start_strategy(self) -> bool:
-        """Start the Strategy component.
-
-        Returns:
-            True if successful, False otherwise
-        """
+        """Start the Strategy component."""
         try:
-            use_case = StartStrategyUseCase(
-                logger=self._logger,
-                process_manager_service=self._process_manager,
-            )
-
-            return use_case.execute()
-
+            return self._process_manager.start_strategy()
         except Exception as e:
             self._logger.log_error(f"Error starting Strategy: {e}")
             return False
 
     def _start_order_executor(self) -> bool:
-        """Start the Order Executor component.
-
-        Returns:
-            True if successful, False otherwise
-        """
+        """Start the Order Executor component."""
         try:
-            use_case = StartOrderExecutorUseCase(
-                logger=self._logger,
-                process_manager_service=self._process_manager,
-            )
-
-            return use_case.execute()
-
+            return self._process_manager.start_order_executor()
         except Exception as e:
             self._logger.log_error(f"Error starting Order Executor: {e}")
             return False

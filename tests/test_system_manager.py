@@ -325,50 +325,24 @@ class TestSystemManager:
         assert result is False
         mock_dependencies["logger"].log_error.assert_called_with("Failed to start Gateway server")
 
-    @patch("src.infrastructure.services.system_manager.StartStrategyUseCase")
     def test_start_strategy_success(
-        self, mock_use_case_class: Mock, system_manager: SystemManager, mock_dependencies: dict
+        self, system_manager: SystemManager, mock_dependencies: dict
     ) -> None:
-        """Test starting strategy successfully.
-
-        Args:
-            mock_use_case_class: Mocked StartStrategyUseCase class
-            system_manager: SystemManager instance
-            mock_dependencies: Dictionary of mocked dependencies
-        """
-        mock_use_case = Mock()
-        mock_use_case.execute.return_value = True
-        mock_use_case_class.return_value = mock_use_case
+        """Test starting strategy successfully."""
+        mock_dependencies["process_manager"].start_strategy.return_value = True
 
         result = system_manager._start_strategy()
 
         assert result is True
-        mock_use_case_class.assert_called_once_with(
-            logger=mock_dependencies["logger"],
-            process_manager_service=mock_dependencies["process_manager"],
-        )
-        mock_use_case.execute.assert_called_once()
+        mock_dependencies["process_manager"].start_strategy.assert_called_once()
 
-    @patch("src.infrastructure.services.system_manager.StartOrderExecutorUseCase")
     def test_start_order_executor_success(
-        self, mock_use_case_class: Mock, system_manager: SystemManager, mock_dependencies: dict
+        self, system_manager: SystemManager, mock_dependencies: dict
     ) -> None:
-        """Test starting order executor successfully.
-
-        Args:
-            mock_use_case_class: Mocked StartOrderExecutorUseCase class
-            system_manager: SystemManager instance
-            mock_dependencies: Dictionary of mocked dependencies
-        """
-        mock_use_case = Mock()
-        mock_use_case.execute.return_value = True
-        mock_use_case_class.return_value = mock_use_case
+        """Test starting order executor successfully."""
+        mock_dependencies["process_manager"].start_order_executor.return_value = True
 
         result = system_manager._start_order_executor()
 
         assert result is True
-        mock_use_case_class.assert_called_once_with(
-            logger=mock_dependencies["logger"],
-            process_manager_service=mock_dependencies["process_manager"],
-        )
-        mock_use_case.execute.assert_called_once()
+        mock_dependencies["process_manager"].start_order_executor.assert_called_once()

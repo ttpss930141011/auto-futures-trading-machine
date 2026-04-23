@@ -10,7 +10,7 @@ from enum import Enum
 from typing import Dict, Optional
 
 from src.infrastructure.loggers.logger_default import LoggerDefault
-from src.infrastructure.services.dll_gateway_server import DllGatewayServer
+from src.infrastructure.services.gateway.dll_gateway_server import DllGatewayServer
 from src.infrastructure.services.gateway.market_data_gateway_service import (
     MarketDataGatewayService,
 )

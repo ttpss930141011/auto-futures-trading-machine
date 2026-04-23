@@ -16,7 +16,7 @@ from src.infrastructure.repositories.condition_json_file_repository import (
     ConditionJsonFileRepository,
 )
 from src.infrastructure.repositories.session_json_file_repository import SessionJsonFileRepository
-from src.infrastructure.services.dll_gateway_server import DllGatewayServer
+from src.infrastructure.services.gateway.dll_gateway_server import DllGatewayServer
 from src.infrastructure.services.gateway.market_data_gateway_service import (
     MarketDataGatewayService,
 )

@@ -126,7 +126,8 @@ src/
 - **GatewayInitializerService**: `src/infrastructure/services/gateway/gateway_initializer_service.py` - ZMQ component initialization
 
 #### Core Services
-- **DllGatewayServer**: `src/infrastructure/services/dll_gateway_server.py` - Order execution server
+- **DllGatewayServer**: `src/infrastructure/services/gateway/dll_gateway_server.py` - Order execution server
+- **DllGatewayClient**: `src/infrastructure/services/gateway/dll_gateway_client.py` - Client used by the order-executor subprocess to reach the server
 - **ProcessManagerService**: `src/infrastructure/services/process/process_manager_service.py` - Process lifecycle with PID management
 - **StatusChecker**: `src/infrastructure/services/status_checker.py` - System health monitoring
 

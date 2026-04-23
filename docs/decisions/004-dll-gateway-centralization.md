@@ -377,4 +377,18 @@ The trade-offs in slight complexity increase are far outweighed by the massive i
 - [ZeroMQ Guide](https://zguide.zeromq.org/)
 - [Clean Architecture Principles](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
 - [SOLID Principles](https://en.wikipedia.org/wiki/SOLID)
+
+## Update (2026-04-21)
+
+The gateway files were relocated to co-locate all PFCF bridge components
+under a single package:
+
+- `src/infrastructure/services/dll_gateway_server.py`
+  → `src/infrastructure/services/gateway/dll_gateway_server.py`
+- `src/infrastructure/services/dll_gateway_client.py`
+  → `src/infrastructure/services/gateway/dll_gateway_client.py`
+
+The `MarketDataGatewayService` already lived under `services/gateway/`;
+this move completes the convention. See ADR-005 for the broader gateway
+naming consolidation.
 - [Event Storming Diagram](../static/imgs/EventStorming_20240328.png)

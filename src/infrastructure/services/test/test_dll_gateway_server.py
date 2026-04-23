@@ -8,7 +8,7 @@ import json
 import pytest
 from unittest.mock import Mock, patch
 
-from src.infrastructure.services.dll_gateway_server import DllGatewayServer
+from src.infrastructure.services.gateway.dll_gateway_server import DllGatewayServer
 from src.interactor.interfaces.logger.logger import LoggerInterface
 from src.domain.interfaces.exchange_api import ExchangeApiInterface
 

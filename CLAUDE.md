@@ -122,7 +122,7 @@ src/
 
 #### Gateway Services Layer
 - **MarketDataGatewayService**: `src/infrastructure/services/gateway/market_data_gateway_service.py` - Market data infrastructure
-- **PortCheckerService**: `src/infrastructure/services/gateway/port_checker_service.py` - Port availability validation
+- **PortCheckerService**: `src/infrastructure/services/port_checker_service.py` - Port availability validation
 - **GatewayInitializerService**: `src/infrastructure/services/gateway/gateway_initializer_service.py` - ZMQ component initialization
 
 #### Core Services

@@ -20,7 +20,7 @@ from src.infrastructure.services.dll_gateway_server import DllGatewayServer
 from src.infrastructure.services.gateway.market_data_gateway_service import (
     MarketDataGatewayService,
 )
-from src.infrastructure.services.gateway.port_checker_service import PortCheckerService
+from src.infrastructure.services.port_checker_service import PortCheckerService
 from src.infrastructure.services.process.process_manager_service import ProcessManagerService
 from src.infrastructure.services.service_container import ServiceContainer
 from src.infrastructure.services.status_checker import StatusChecker

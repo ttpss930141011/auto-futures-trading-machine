@@ -38,6 +38,9 @@ class Config(object):
     DLL_GATEWAY_REQUEST_TIMEOUT_MS = int(os.getenv("DLL_GATEWAY_REQUEST_TIMEOUT_MS", "5000"))
     DLL_GATEWAY_RETRY_COUNT = int(os.getenv("DLL_GATEWAY_RETRY_COUNT", "3"))
 
+    # Exchange adapter selection: "pfcf" (real PFCF DLL) or "simulator" (in-memory)
+    EXCHANGE_MODE = os.getenv("EXCHANGE_MODE", "pfcf").lower()
+
     @property
     def ZMQ_TICK_PUB_ADDRESS(self) -> str:
         """Get the ZMQ tick publisher address."""
@@ -71,22 +74,22 @@ class Config(object):
     def __init__(self) -> None:
         """Initialize the configuration.
 
-        Validates that required environment variables are set.
-
         Raises:
-            SystemExit: If required environment variables are missing.
+            ValueError: If required environment variables are missing or invalid.
         """
-        # Load environment variables
         self.EXCHANGE_TEST_URL = os.getenv("DEALER_TEST_URL", "")
         self.EXCHANGE_PROD_URL = os.getenv("DEALER_PROD_URL", "")
 
-        # Validate required environment variables
         if not self.EXCHANGE_TEST_URL:
-            print("Specify DEALER_TEST_URL as environment variable.")
-            exit(1)
+            raise ValueError("DEALER_TEST_URL environment variable is required")
         if not self.EXCHANGE_PROD_URL:
-            print("Specify DEALER_PROD_URL as environment variable.")
-            exit(1)
+            raise ValueError("DEALER_PROD_URL environment variable is required")
+        if self.DLL_GATEWAY_REQUEST_TIMEOUT_MS <= 0:
+            raise ValueError("DLL_GATEWAY_REQUEST_TIMEOUT_MS must be positive")
+        if self.EXCHANGE_MODE not in ("pfcf", "simulator"):
+            raise ValueError(
+                f"EXCHANGE_MODE must be 'pfcf' or 'simulator', got {self.EXCHANGE_MODE!r}"
+            )
 
     def __setitem__(self, key, item):
         self.__dict__[key] = item

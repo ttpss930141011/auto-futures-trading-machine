@@ -17,10 +17,6 @@ from src.infrastructure.services.gateway.market_data_gateway_service import (
 from src.infrastructure.services.gateway.port_checker_service import PortCheckerService
 from src.infrastructure.services.process.process_manager_service import ProcessManagerService
 from src.infrastructure.services.status_checker import StatusChecker
-from src.interactor.use_cases.start_order_executor_use_case import (
-    StartOrderExecutorUseCase,
-)
-from src.interactor.use_cases.start_strategy_use_case import StartStrategyUseCase
 
 
 class ComponentStatus(Enum):
@@ -120,8 +116,10 @@ class SystemManager:
                     error_message="Failed to start Gateway",
                 )
 
-            # Wait for Gateway initialization
-            time.sleep(3)
+            # No sleep needed between gateway and subprocesses: zmq.bind() for
+            # the PUB and REP sockets is synchronous and complete before
+            # _start_gateway returns, and ZMQ transparently handles late
+            # connect() from the strategy/order-executor subprocesses.
 
             # Start Strategy
             self._component_status["strategy"] = ComponentStatus.STARTING
@@ -191,11 +189,13 @@ class SystemManager:
             self._logger.log_error(f"Error stopping trading system: {e}")
 
     def get_system_health(self) -> SystemHealth:
-        """Get current health status of the system.
+        """Get current health status, verifying live subprocess/server state.
 
-        Returns:
-            SystemHealth object with current status
+        Any component currently marked RUNNING but whose underlying
+        subprocess/server is dead is downgraded to ERROR before reporting.
         """
+        self._refresh_component_status()
+
         uptime = 0.0
         if self._startup_time:
             uptime = time.time() - self._startup_time
@@ -211,52 +211,21 @@ class SystemManager:
             last_check_timestamp=time.time(),
         )
 
-    def restart_component(self, component: str) -> bool:
-        """Restart a specific component.
+    def _refresh_component_status(self) -> None:
+        """Downgrade RUNNING components to ERROR if the underlying process died."""
+        if self._component_status["gateway"] == ComponentStatus.RUNNING:
+            if not self._gateway_server.is_running:
+                self._component_status["gateway"] = ComponentStatus.ERROR
 
-        Args:
-            component: Name of component to restart
+        if self._component_status["strategy"] == ComponentStatus.RUNNING:
+            proc = self._process_manager.strategy_process
+            if proc is None or proc.poll() is not None:
+                self._component_status["strategy"] = ComponentStatus.ERROR
 
-        Returns:
-            True if restart successful, False otherwise
-        """
-        if component not in self._component_status:
-            self._logger.log_error(f"Unknown component: {component}")
-            return False
-
-        self._logger.log_info(f"Restarting component: {component}")
-
-        try:
-            # Stop component
-            if component == "gateway":
-                self._gateway_server.stop()
-                self._market_data_gateway.cleanup_zmq()
-            elif component in ["strategy", "order_executor"]:
-                # Process manager handles these
-                pass
-
-            self._component_status[component] = ComponentStatus.STOPPED
-
-            # Start component
-            if component == "gateway":
-                success = self._start_gateway()
-            elif component == "strategy":
-                success = self._start_strategy()
-            elif component == "order_executor":
-                success = self._start_order_executor()
-            else:
-                success = False
-
-            self._component_status[component] = (
-                ComponentStatus.RUNNING if success else ComponentStatus.ERROR
-            )
-
-            return success
-
-        except Exception as e:
-            self._logger.log_error(f"Error restarting component {component}: {e}")
-            self._component_status[component] = ComponentStatus.ERROR
-            return False
+        if self._component_status["order_executor"] == ComponentStatus.RUNNING:
+            proc = self._process_manager.order_executor_process
+            if proc is None or proc.poll() is not None:
+                self._component_status["order_executor"] = ComponentStatus.ERROR
 
     def _start_gateway(self) -> bool:
         """Start the Gateway component.
@@ -301,37 +270,17 @@ class SystemManager:
             return False
 
     def _start_strategy(self) -> bool:
-        """Start the Strategy component.
-
-        Returns:
-            True if successful, False otherwise
-        """
+        """Start the Strategy component."""
         try:
-            use_case = StartStrategyUseCase(
-                logger=self._logger,
-                process_manager_service=self._process_manager,
-            )
-
-            return use_case.execute()
-
+            return self._process_manager.start_strategy()
         except Exception as e:
             self._logger.log_error(f"Error starting Strategy: {e}")
             return False
 
     def _start_order_executor(self) -> bool:
-        """Start the Order Executor component.
-
-        Returns:
-            True if successful, False otherwise
-        """
+        """Start the Order Executor component."""
         try:
-            use_case = StartOrderExecutorUseCase(
-                logger=self._logger,
-                process_manager_service=self._process_manager,
-            )
-
-            return use_case.execute()
-
+            return self._process_manager.start_order_executor()
         except Exception as e:
             self._logger.log_error(f"Error starting Order Executor: {e}")
             return False

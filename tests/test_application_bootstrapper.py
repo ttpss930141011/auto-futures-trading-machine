@@ -14,8 +14,7 @@ if TYPE_CHECKING:
 
 from src.app.bootstrap.application_bootstrapper import (
     ApplicationBootstrapper,
-    BootstrapResult,
-    ValidationResult,
+    BootstrappedApp,
 )
 
 
@@ -46,105 +45,62 @@ class TestApplicationBootstrapper:
         # Verify mkdir was called for each required directory
         assert mock_mkdir.call_count >= 3  # pid_dir, logs_dir, data_dir
 
+    @patch("src.app.bootstrap.application_bootstrapper.SimulatorExchangeAdapter")
     @patch("src.app.bootstrap.application_bootstrapper.PfcfExchangeAdapter")
     @patch("src.app.bootstrap.application_bootstrapper.LoggerDefault")
     @patch("src.app.bootstrap.application_bootstrapper.Config")
-    def test_initialize_core_components(
+    def test_initialize_core_components_pfcf_mode(
         self,
         mock_config_class: Mock,
         mock_logger_class: Mock,
-        mock_adapter_class: Mock,
+        mock_pfcf_class: Mock,
+        mock_sim_class: Mock,
         bootstrapper: ApplicationBootstrapper,
     ) -> None:
-        """Test initialization of core components.
-
-        Args:
-            mock_config_class: Mocked Config class
-            mock_logger_class: Mocked LoggerDefault class
-            mock_adapter_class: Mocked PfcfExchangeAdapter class
-            bootstrapper: ApplicationBootstrapper instance
-        """
-        # Setup mocks
+        """EXCHANGE_MODE=pfcf selects PfcfExchangeAdapter."""
         mock_adapter = Mock()
         mock_logger = Mock()
         mock_config = Mock()
+        mock_config.EXCHANGE_MODE = "pfcf"
 
-        mock_adapter_class.return_value = mock_adapter
+        mock_pfcf_class.return_value = mock_adapter
         mock_logger_class.return_value = mock_logger
         mock_config_class.return_value = mock_config
 
         bootstrapper._initialize_core_components()
 
-        # Verify components were created
         assert bootstrapper._exchange_api == mock_adapter
         assert bootstrapper._logger == mock_logger
         assert bootstrapper._config == mock_config
+        mock_pfcf_class.assert_called_once_with()
+        mock_sim_class.assert_not_called()
 
-        # Verify logger was used
-        mock_logger.log_info.assert_called_with("Core components initialized successfully")
-
-    def test_validate_configuration_success(self, bootstrapper: ApplicationBootstrapper) -> None:
-        """Test successful configuration validation.
-
-        Args:
-            bootstrapper: ApplicationBootstrapper instance
-        """
-        # Setup mock config
-        mock_config = Mock()
-        mock_config.DLL_GATEWAY_BIND_ADDRESS = "tcp://127.0.0.1:5555"
-        mock_config.DLL_GATEWAY_CONNECT_ADDRESS = "tcp://127.0.0.1:5555"
-        mock_config.DLL_GATEWAY_REQUEST_TIMEOUT_MS = 5000
-        mock_config.DEFAULT_CONDITION_FILE_PATH = "/path/to/conditions"
-        mock_config.DEFAULT_SESSION_FILE_PATH = "/path/to/session"
-
-        bootstrapper._config = mock_config
-
-        result = bootstrapper.validate_configuration()
-
-        assert result.is_valid is True
-        assert len(result.error_messages) == 0
-
-    def test_validate_configuration_missing_config(
-        self, bootstrapper: ApplicationBootstrapper
+    @patch("src.app.bootstrap.application_bootstrapper.SimulatorExchangeAdapter")
+    @patch("src.app.bootstrap.application_bootstrapper.PfcfExchangeAdapter")
+    @patch("src.app.bootstrap.application_bootstrapper.LoggerDefault")
+    @patch("src.app.bootstrap.application_bootstrapper.Config")
+    def test_initialize_core_components_simulator_mode(
+        self,
+        mock_config_class: Mock,
+        mock_logger_class: Mock,
+        mock_pfcf_class: Mock,
+        mock_sim_class: Mock,
+        bootstrapper: ApplicationBootstrapper,
     ) -> None:
-        """Test configuration validation with missing config.
-
-        Args:
-            bootstrapper: ApplicationBootstrapper instance
-        """
-        bootstrapper._config = None
-
-        result = bootstrapper.validate_configuration()
-
-        assert result.is_valid is False
-        assert "Configuration not initialized" in result.error_messages
-
-    def test_validate_configuration_invalid_values(
-        self, bootstrapper: ApplicationBootstrapper
-    ) -> None:
-        """Test configuration validation with invalid values.
-
-        Args:
-            bootstrapper: ApplicationBootstrapper instance
-        """
-        # Setup mock config with invalid values
+        """EXCHANGE_MODE=simulator selects SimulatorExchangeAdapter."""
+        mock_adapter = Mock()
         mock_config = Mock()
-        mock_config.DLL_GATEWAY_BIND_ADDRESS = None
-        mock_config.DLL_GATEWAY_CONNECT_ADDRESS = ""
-        mock_config.DLL_GATEWAY_REQUEST_TIMEOUT_MS = -1
+        mock_config.EXCHANGE_MODE = "simulator"
 
-        # Missing required paths
-        del mock_config.DEFAULT_CONDITION_FILE_PATH
-        del mock_config.DEFAULT_SESSION_FILE_PATH
+        mock_sim_class.return_value = mock_adapter
+        mock_logger_class.return_value = Mock()
+        mock_config_class.return_value = mock_config
 
-        bootstrapper._config = mock_config
+        bootstrapper._initialize_core_components()
 
-        result = bootstrapper.validate_configuration()
-
-        assert result.is_valid is False
-        assert "DLL Gateway bind address not configured" in result.error_messages
-        assert "DLL Gateway connect address not configured" in result.error_messages
-        assert "Invalid DLL Gateway request timeout" in result.error_messages
+        assert bootstrapper._exchange_api == mock_adapter
+        mock_sim_class.assert_called_once_with()
+        mock_pfcf_class.assert_not_called()
 
     @patch("src.app.bootstrap.application_bootstrapper.SessionJsonFileRepository")
     @patch("src.app.bootstrap.application_bootstrapper.ConditionJsonFileRepository")
@@ -216,30 +172,17 @@ class TestApplicationBootstrapper:
 
     @patch.object(ApplicationBootstrapper, "_create_system_manager")
     @patch.object(ApplicationBootstrapper, "create_service_container")
-    @patch.object(ApplicationBootstrapper, "validate_configuration")
     @patch.object(ApplicationBootstrapper, "_initialize_core_components")
     @patch.object(ApplicationBootstrapper, "_create_required_directories")
     def test_bootstrap_success(
         self,
         mock_create_dirs: Mock,
         mock_init_components: Mock,
-        mock_validate: Mock,
         mock_create_container: Mock,
         mock_create_manager: Mock,
         bootstrapper: ApplicationBootstrapper,
     ) -> None:
-        """Test successful bootstrap process.
-
-        Args:
-            mock_create_dirs: Mocked _create_required_directories method
-            mock_init_components: Mocked _initialize_core_components method
-            mock_validate: Mocked validate_configuration method
-            mock_create_container: Mocked create_service_container method
-            mock_create_manager: Mocked _create_system_manager method
-            bootstrapper: ApplicationBootstrapper instance
-        """
-        # Setup mocks
-        mock_validate.return_value = ValidationResult(is_valid=True, error_messages=[])
+        """bootstrap() returns a BootstrappedApp on success."""
         mock_container = Mock()
         mock_create_container.return_value = mock_container
         mock_manager = Mock()
@@ -247,70 +190,42 @@ class TestApplicationBootstrapper:
 
         result = bootstrapper.bootstrap()
 
-        # Verify all steps were called in order
         mock_create_dirs.assert_called_once()
         mock_init_components.assert_called_once()
-        mock_validate.assert_called_once()
         mock_create_container.assert_called_once()
         mock_create_manager.assert_called_once_with(mock_container)
 
-        # Verify result
-        assert result.success is True
-        assert result.system_manager == mock_manager
-        assert result.service_container == mock_container
-        assert result.error_message is None
+        assert isinstance(result, BootstrappedApp)
+        assert result.system_manager is mock_manager
+        assert result.service_container is mock_container
 
-    @patch.object(ApplicationBootstrapper, "validate_configuration")
     @patch.object(ApplicationBootstrapper, "_initialize_core_components")
     @patch.object(ApplicationBootstrapper, "_create_required_directories")
-    def test_bootstrap_validation_failure(
+    def test_bootstrap_propagates_config_error(
         self,
         mock_create_dirs: Mock,
         mock_init_components: Mock,
-        mock_validate: Mock,
         bootstrapper: ApplicationBootstrapper,
     ) -> None:
-        """Test bootstrap with validation failure.
-
-        Args:
-            mock_create_dirs: Mocked _create_required_directories method
-            mock_init_components: Mocked _initialize_core_components method
-            mock_validate: Mocked validate_configuration method
-            bootstrapper: ApplicationBootstrapper instance
-        """
-        # Setup validation failure
-        mock_validate.return_value = ValidationResult(
-            is_valid=False, error_messages=["Error 1", "Error 2"]
+        """Config errors propagate to the caller instead of being swallowed."""
+        mock_init_components.side_effect = ValueError(
+            "DEALER_TEST_URL environment variable is required"
         )
 
-        result = bootstrapper.bootstrap()
-
-        # Verify result
-        assert result.success is False
-        assert result.system_manager is None
-        assert result.service_container is None
-        assert result.error_message == "Error 1; Error 2"
+        with pytest.raises(ValueError, match="DEALER_TEST_URL"):
+            bootstrapper.bootstrap()
 
     @patch.object(ApplicationBootstrapper, "_create_required_directories")
-    def test_bootstrap_exception_handling(
+    def test_bootstrap_propagates_unexpected_error(
         self,
         mock_create_dirs: Mock,
         bootstrapper: ApplicationBootstrapper,
     ) -> None:
-        """Test bootstrap exception handling.
+        """Unexpected errors (e.g. mkdir failure) propagate to the caller."""
+        mock_create_dirs.side_effect = OSError("permission denied")
 
-        Args:
-            mock_create_dirs: Mocked _create_required_directories method
-            bootstrapper: ApplicationBootstrapper instance
-        """
-        # Setup exception
-        mock_create_dirs.side_effect = Exception("Test error")
-
-        result = bootstrapper.bootstrap()
-
-        # Verify result
-        assert result.success is False
-        assert result.error_message == "Bootstrap failed: Test error"
+        with pytest.raises(OSError, match="permission denied"):
+            bootstrapper.bootstrap()
 
     @patch("src.app.bootstrap.application_bootstrapper.DllGatewayServer")
     @patch("src.app.bootstrap.application_bootstrapper.SystemManager")

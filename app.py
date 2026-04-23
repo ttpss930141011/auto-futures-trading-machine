@@ -9,18 +9,14 @@ from src.app.cli_application import CLIApplication
 
 def main() -> None:
     """Main application entry point."""
-    # Bootstrap the application
-    bootstrapper = ApplicationBootstrapper()
-    result = bootstrapper.bootstrap()
-
-    if not result.success:
-        print(f"ERROR: Failed to bootstrap application: {result.error_message}")
+    try:
+        app = ApplicationBootstrapper().bootstrap()
+    except Exception as exc:
+        print(f"ERROR: Failed to bootstrap application: {exc}")
         print("The application cannot run without proper initialization.")
         return
 
-    # Run the CLI application
-    cli_app = CLIApplication(result.system_manager, result.service_container)
-    cli_app.run()
+    CLIApplication(app.system_manager, app.service_container).run()
 
 
 if __name__ == "__main__":

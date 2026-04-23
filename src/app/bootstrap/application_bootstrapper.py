@@ -4,13 +4,14 @@ This module provides the ApplicationBootstrapper class which handles
 the initialization sequence and dependency injection for the application.
 """
 
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import NamedTuple, Optional
 
 from src.app.cli_pfcf.config import Config
+from src.domain.interfaces.exchange_api import ExchangeApiInterface
 from src.infrastructure.loggers.logger_default import LoggerDefault
 from src.infrastructure.exchange_adapters.pfcf_adapter import PfcfExchangeAdapter
+from src.infrastructure.exchange_adapters.simulator_adapter import SimulatorExchangeAdapter
 from src.infrastructure.repositories.condition_json_file_repository import (
     ConditionJsonFileRepository,
 )
@@ -26,22 +27,11 @@ from src.infrastructure.services.status_checker import StatusChecker
 from src.infrastructure.services.system_manager import SystemManager
 
 
-@dataclass
-class BootstrapResult:
-    """Result of the bootstrap operation."""
+class BootstrappedApp(NamedTuple):
+    """Wired application components returned by a successful bootstrap."""
 
-    success: bool
-    system_manager: Optional[SystemManager] = None
-    service_container: Optional[ServiceContainer] = None
-    error_message: Optional[str] = None
-
-
-@dataclass
-class ValidationResult:
-    """Result of configuration validation."""
-
-    is_valid: bool
-    error_messages: list[str]
+    system_manager: SystemManager
+    service_container: ServiceContainer
 
 
 class ApplicationBootstrapper:
@@ -55,49 +45,23 @@ class ApplicationBootstrapper:
         """Initialize the ApplicationBootstrapper."""
         self._logger: Optional[LoggerDefault] = None
         self._config: Optional[Config] = None
-        self._exchange_api: Optional[PfcfExchangeAdapter] = None
+        self._exchange_api: Optional[ExchangeApiInterface] = None
 
-    def bootstrap(self) -> BootstrapResult:
+    def bootstrap(self) -> BootstrappedApp:
         """Bootstrap the application with all dependencies.
 
+        Raises:
+            Exception: Any error during directory creation, config loading,
+                or component wiring propagates to the caller.
+
         Returns:
-            BootstrapResult with system manager and service container
+            BootstrappedApp with the wired SystemManager and ServiceContainer.
         """
-        try:
-            # Step 1: Create directories
-            self._create_required_directories()
-
-            # Step 2: Initialize core components
-            self._initialize_core_components()
-
-            # Step 3: Validate configuration
-            validation_result = self.validate_configuration()
-            if not validation_result.is_valid:
-                return BootstrapResult(
-                    success=False,
-                    error_message="; ".join(validation_result.error_messages),
-                )
-
-            # Step 4: Create service container
-            service_container = self.create_service_container()
-
-            # Step 5: Create system manager
-            system_manager = self._create_system_manager(service_container)
-
-            return BootstrapResult(
-                success=True,
-                system_manager=system_manager,
-                service_container=service_container,
-            )
-
-        except (RuntimeError, OSError, ValueError, Exception) as e:
-            error_msg = f"Bootstrap failed: {str(e)}"
-            if self._logger:
-                self._logger.log_error(error_msg)
-            return BootstrapResult(
-                success=False,
-                error_message=error_msg,
-            )
+        self._create_required_directories()
+        self._initialize_core_components()
+        service_container = self.create_service_container()
+        system_manager = self._create_system_manager(service_container)
+        return BootstrappedApp(system_manager=system_manager, service_container=service_container)
 
     def create_service_container(self) -> ServiceContainer:
         """Create and configure the service container.
@@ -123,33 +87,6 @@ class ApplicationBootstrapper:
 
         return service_container
 
-    def validate_configuration(self) -> ValidationResult:
-        """Validate the application configuration.
-
-        Returns:
-            ValidationResult with validation status
-        """
-        errors = []
-
-        if not self._config:
-            errors.append("Configuration not initialized")
-            return ValidationResult(is_valid=False, error_messages=errors)
-
-        # Validate DLL Gateway configuration
-        if not self._config.DLL_GATEWAY_BIND_ADDRESS:
-            errors.append("DLL Gateway bind address not configured")
-
-        if not self._config.DLL_GATEWAY_CONNECT_ADDRESS:
-            errors.append("DLL Gateway connect address not configured")
-
-        if self._config.DLL_GATEWAY_REQUEST_TIMEOUT_MS <= 0:
-            errors.append("Invalid DLL Gateway request timeout")
-
-        return ValidationResult(
-            is_valid=len(errors) == 0,
-            error_messages=errors,
-        )
-
     def _create_required_directories(self) -> None:
         """Create required directories for the application."""
         # Create PID directory
@@ -166,16 +103,18 @@ class ApplicationBootstrapper:
 
     def _initialize_core_components(self) -> None:
         """Initialize core components needed for bootstrap."""
-        # Initialize exchange API adapter
-        self._exchange_api = PfcfExchangeAdapter()
-
-        # Initialize logger
         self._logger = LoggerDefault()
-
-        # Initialize configuration
         self._config = Config()
+        self._exchange_api = self._create_exchange_adapter()
+        self._logger.log_info(
+            f"Core components initialized successfully (exchange={self._config.EXCHANGE_MODE})"
+        )
 
-        self._logger.log_info("Core components initialized successfully")
+    def _create_exchange_adapter(self) -> ExchangeApiInterface:
+        """Create the exchange adapter selected by config.EXCHANGE_MODE."""
+        if self._config.EXCHANGE_MODE == "simulator":
+            return SimulatorExchangeAdapter()
+        return PfcfExchangeAdapter()
 
     def _create_system_manager(self, service_container: ServiceContainer) -> SystemManager:
         """Create the system manager with all dependencies.

@@ -188,19 +188,21 @@ class TestSystemManager:
             "Trading system stopped successfully"
         )
 
-    def test_get_system_health_all_running(self, system_manager: SystemManager) -> None:
-        """Test getting system health when all components are running.
-
-        Args:
-            system_manager: SystemManager instance
-        """
-        # Set components as running
+    def test_get_system_health_all_running(
+        self, system_manager: SystemManager, mock_dependencies: dict
+    ) -> None:
+        """Test getting system health when all components are running."""
         system_manager._component_status = {
             "gateway": ComponentStatus.RUNNING,
             "strategy": ComponentStatus.RUNNING,
             "order_executor": ComponentStatus.RUNNING,
         }
         system_manager._startup_time = 1234567890
+        mock_dependencies["gateway_server"].is_running = True
+        live_proc = Mock()
+        live_proc.poll.return_value = None
+        mock_dependencies["process_manager"].strategy_process = live_proc
+        mock_dependencies["process_manager"].order_executor_process = live_proc
 
         with patch("time.time", return_value=1234567900):  # 10 seconds later
             health = system_manager.get_system_health()
@@ -210,18 +212,16 @@ class TestSystemManager:
         assert health.uptime_seconds == 10.0
         assert health.last_check_timestamp == 1234567900
 
-    def test_get_system_health_partial_running(self, system_manager: SystemManager) -> None:
-        """Test getting system health when some components are not running.
-
-        Args:
-            system_manager: SystemManager instance
-        """
-        # Set mixed component status
+    def test_get_system_health_partial_running(
+        self, system_manager: SystemManager, mock_dependencies: dict
+    ) -> None:
+        """Test getting system health when some components are not running."""
         system_manager._component_status = {
             "gateway": ComponentStatus.RUNNING,
             "strategy": ComponentStatus.ERROR,
             "order_executor": ComponentStatus.STOPPED,
         }
+        mock_dependencies["gateway_server"].is_running = True
 
         with patch("time.time", return_value=1234567890):
             health = system_manager.get_system_health()
@@ -231,64 +231,45 @@ class TestSystemManager:
         assert health.uptime_seconds == 0.0  # No startup time set
         assert health.last_check_timestamp == 1234567890
 
-    def test_restart_component_gateway(
+    def test_get_system_health_downgrades_dead_subprocess(
         self, system_manager: SystemManager, mock_dependencies: dict
     ) -> None:
-        """Test restarting the gateway component.
+        """RUNNING strategy whose process has exited is downgraded to ERROR."""
+        system_manager._component_status = {
+            "gateway": ComponentStatus.RUNNING,
+            "strategy": ComponentStatus.RUNNING,
+            "order_executor": ComponentStatus.RUNNING,
+        }
+        mock_dependencies["gateway_server"].is_running = True
+        dead_proc = Mock()
+        dead_proc.poll.return_value = 1  # exited
+        live_proc = Mock()
+        live_proc.poll.return_value = None
+        mock_dependencies["process_manager"].strategy_process = dead_proc
+        mock_dependencies["process_manager"].order_executor_process = live_proc
 
-        Args:
-            system_manager: SystemManager instance
-            mock_dependencies: Dictionary of mocked dependencies
-        """
-        # Setup initial state
-        system_manager._component_status["gateway"] = ComponentStatus.RUNNING
+        health = system_manager.get_system_health()
 
-        # Setup mocks
-        mock_dependencies["port_checker"].check_port_availability.return_value = {5555: True, 5556: True}
-        mock_dependencies["market_data_gateway"].initialize_market_data_publisher.return_value = True
-        mock_dependencies["market_data_gateway"].connect_exchange_callbacks.return_value = True
-        mock_dependencies["gateway_server"].start.return_value = True
+        assert health.components["strategy"] == ComponentStatus.ERROR
+        assert health.components["order_executor"] == ComponentStatus.RUNNING
+        assert health.components["gateway"] == ComponentStatus.RUNNING
+        assert health.is_healthy is False
 
-        result = system_manager.restart_component("gateway")
-
-        assert result is True
-        assert system_manager._component_status["gateway"] == ComponentStatus.RUNNING
-
-        # Verify stop and start were called
-        mock_dependencies["gateway_server"].stop.assert_called_once()
-        mock_dependencies["market_data_gateway"].cleanup_zmq.assert_called_once()
-        mock_dependencies["gateway_server"].start.assert_called_once()
-
-    def test_restart_component_unknown(
+    def test_get_system_health_downgrades_dead_gateway(
         self, system_manager: SystemManager, mock_dependencies: dict
     ) -> None:
-        """Test restarting an unknown component.
+        """RUNNING gateway whose server loop has stopped is downgraded to ERROR."""
+        system_manager._component_status = {
+            "gateway": ComponentStatus.RUNNING,
+            "strategy": ComponentStatus.STOPPED,
+            "order_executor": ComponentStatus.STOPPED,
+        }
+        mock_dependencies["gateway_server"].is_running = False
 
-        Args:
-            system_manager: SystemManager instance
-            mock_dependencies: Dictionary of mocked dependencies
-        """
-        result = system_manager.restart_component("unknown")
+        health = system_manager.get_system_health()
 
-        assert result is False
-        mock_dependencies["logger"].log_error.assert_called_with("Unknown component: unknown")
-
-    def test_restart_component_failure(
-        self, system_manager: SystemManager, mock_dependencies: dict
-    ) -> None:
-        """Test restarting a component that fails to start.
-
-        Args:
-            system_manager: SystemManager instance
-            mock_dependencies: Dictionary of mocked dependencies
-        """
-        # Setup mocks - gateway fails to restart
-        mock_dependencies["port_checker"].check_port_availability.return_value = False
-
-        result = system_manager.restart_component("gateway")
-
-        assert result is False
-        assert system_manager._component_status["gateway"] == ComponentStatus.ERROR
+        assert health.components["gateway"] == ComponentStatus.ERROR
+        assert health.is_healthy is False
 
     def test_start_gateway_port_unavailable(
         self, system_manager: SystemManager, mock_dependencies: dict
@@ -325,50 +306,24 @@ class TestSystemManager:
         assert result is False
         mock_dependencies["logger"].log_error.assert_called_with("Failed to start Gateway server")
 
-    @patch("src.infrastructure.services.system_manager.StartStrategyUseCase")
     def test_start_strategy_success(
-        self, mock_use_case_class: Mock, system_manager: SystemManager, mock_dependencies: dict
+        self, system_manager: SystemManager, mock_dependencies: dict
     ) -> None:
-        """Test starting strategy successfully.
-
-        Args:
-            mock_use_case_class: Mocked StartStrategyUseCase class
-            system_manager: SystemManager instance
-            mock_dependencies: Dictionary of mocked dependencies
-        """
-        mock_use_case = Mock()
-        mock_use_case.execute.return_value = True
-        mock_use_case_class.return_value = mock_use_case
+        """Test starting strategy successfully."""
+        mock_dependencies["process_manager"].start_strategy.return_value = True
 
         result = system_manager._start_strategy()
 
         assert result is True
-        mock_use_case_class.assert_called_once_with(
-            logger=mock_dependencies["logger"],
-            process_manager_service=mock_dependencies["process_manager"],
-        )
-        mock_use_case.execute.assert_called_once()
+        mock_dependencies["process_manager"].start_strategy.assert_called_once()
 
-    @patch("src.infrastructure.services.system_manager.StartOrderExecutorUseCase")
     def test_start_order_executor_success(
-        self, mock_use_case_class: Mock, system_manager: SystemManager, mock_dependencies: dict
+        self, system_manager: SystemManager, mock_dependencies: dict
     ) -> None:
-        """Test starting order executor successfully.
-
-        Args:
-            mock_use_case_class: Mocked StartOrderExecutorUseCase class
-            system_manager: SystemManager instance
-            mock_dependencies: Dictionary of mocked dependencies
-        """
-        mock_use_case = Mock()
-        mock_use_case.execute.return_value = True
-        mock_use_case_class.return_value = mock_use_case
+        """Test starting order executor successfully."""
+        mock_dependencies["process_manager"].start_order_executor.return_value = True
 
         result = system_manager._start_order_executor()
 
         assert result is True
-        mock_use_case_class.assert_called_once_with(
-            logger=mock_dependencies["logger"],
-            process_manager_service=mock_dependencies["process_manager"],
-        )
-        mock_use_case.execute.assert_called_once()
+        mock_dependencies["process_manager"].start_order_executor.assert_called_once()

@@ -38,8 +38,7 @@ class UserLoginController(CliMemoryControllerInterface):
         repository = UserInMemoryRepository()
         presenter = UserLoginPresenter()
         input_dto = self._get_user_info()
-        use_case = UserLoginUseCase(
-            presenter, repository, self.service_container, self.logger, self.session_repository)
+        use_case = UserLoginUseCase(presenter, repository, self.service_container)
         result = use_case.execute(input_dto)
         view = UserLoginView()
         view.show(result)

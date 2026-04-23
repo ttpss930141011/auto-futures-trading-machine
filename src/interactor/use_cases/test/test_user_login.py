@@ -1,17 +1,10 @@
-# pylint: disable=missing-module-docstring
-# pylint: disable=missing-class-docstring
-# pylint: disable=missing-function-docstring
-
-
 import pytest
 from unittest.mock import MagicMock, patch
 
 from src.domain.entities.user import User
 from src.interactor.dtos.user_login_dtos import UserLoginInputDto, UserLoginOutputDto
 from src.interactor.errors.error_classes import ItemNotCreatedException
-from src.interactor.interfaces.logger.logger import LoggerInterface
 from src.interactor.interfaces.presenters.user_login_presenter import UserLoginPresenterInterface
-from src.interactor.interfaces.repositories.session_repository import SessionRepositoryInterface
 from src.interactor.interfaces.repositories.user_repository import UserRepositoryInterface
 from src.interactor.use_cases import user_login
 
@@ -23,27 +16,15 @@ def test_user_login(fixture_user):
         fixture_user["ip_address"],
         fixture_user["client"]
     )
-    # Create mocks
     presenter_mock = MagicMock(spec=UserLoginPresenterInterface)
     repository_mock = MagicMock(spec=UserRepositoryInterface)
-    logger_mock = MagicMock(spec=LoggerInterface)
-    session_manager_mock = MagicMock(spec=SessionRepositoryInterface)
-
-    # Create service container mock
     service_container_mock = MagicMock()
-    service_container_mock.exchange_api.client.PFCLogin = MagicMock()
 
     repository_mock.get.return_value = None
     repository_mock.create.return_value = user
     presenter_mock.present.return_value = "Test output"
 
-    use_case = user_login.UserLoginUseCase(
-        presenter_mock,
-        repository_mock,
-        service_container_mock,
-        logger_mock,
-        session_manager_mock
-    )
+    use_case = user_login.UserLoginUseCase(presenter_mock, repository_mock, service_container_mock)
     input_dto = UserLoginInputDto(
         account=fixture_user["account"],
         password=fixture_user["password"],
@@ -53,8 +34,7 @@ def test_user_login(fixture_user):
     with patch("src.interactor.use_cases.user_login.UserLoginInputDtoValidator") as input_dto_validator_mock:
         result = use_case.execute(input_dto)
         input_dto_validator_mock.assert_called_once_with(input_dto.to_dict())
-        input_dto_validator_instance = input_dto_validator_mock.return_value
-        input_dto_validator_instance.validate.assert_called_once_with()
+        input_dto_validator_mock.return_value.validate.assert_called_once_with()
 
     service_container_mock.exchange_api.client.PFCLogin.assert_called_once_with(
         fixture_user["account"],
@@ -62,10 +42,11 @@ def test_user_login(fixture_user):
         fixture_user["ip_address"]
     )
     repository_mock.get.assert_called_once()
-    session_manager_mock.create_session.assert_called_once_with(account=fixture_user["account"])
-    logger_mock.log_info.assert_called_once_with("User login successfully")
-    output_dto = UserLoginOutputDto(user)
-    presenter_mock.present.assert_called_once_with(output_dto)
+    service_container_mock.session_repository.create_session.assert_called_once_with(
+        account=fixture_user["account"]
+    )
+    service_container_mock.logger.log_info.assert_called_once_with("User login successfully")
+    presenter_mock.present.assert_called_once_with(UserLoginOutputDto(user))
     assert result == "Test output"
 
     # Testing None return value from repository
@@ -77,20 +58,11 @@ def test_user_login(fixture_user):
 
 
 def test_user_login_empty_field(fixture_user):
-    # Create mocks
     presenter_mock = MagicMock(spec=UserLoginPresenterInterface)
     repository_mock = MagicMock(spec=UserRepositoryInterface)
-    logger_mock = MagicMock(spec=LoggerInterface)
-    session_manager_mock = MagicMock(spec=SessionRepositoryInterface)
     service_container_mock = MagicMock()
 
-    use_case = user_login.UserLoginUseCase(
-        presenter_mock,
-        repository_mock,
-        service_container_mock,
-        logger_mock,
-        session_manager_mock
-    )
+    use_case = user_login.UserLoginUseCase(presenter_mock, repository_mock, service_container_mock)
     input_dto = UserLoginInputDto(
         account="",
         password=fixture_user["password"],

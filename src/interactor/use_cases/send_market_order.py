@@ -1,5 +1,4 @@
-""" This module is responsible for creating a new profession.
-"""
+"""Use case for sending a market order."""
 
 from typing import Dict
 
@@ -13,52 +12,28 @@ from src.interactor.errors.error_classes import (
     ItemNotCreatedException,
     SendMarketOrderFailedException,
 )
-from src.interactor.interfaces.logger.logger import LoggerInterface
 from src.interactor.interfaces.presenters.send_market_order_presenter import (
     SendMarketOrderPresenterInterface,
 )
-from src.interactor.interfaces.repositories.session_repository import SessionRepositoryInterface
 from src.interactor.validations.send_market_order_validator import SendMarketOrderInputDtoValidator
 
 
 class SendMarketOrderUseCase:
-    """Handles sending market orders to the exchange.
-
-    This class follows the Single Responsibility Principle by focusing
-    solely on market order execution.
-    """
+    """Handles sending market orders to the exchange."""
 
     def __init__(
         self,
         presenter: SendMarketOrderPresenterInterface,
         service_container: ServiceContainer,
-        logger: LoggerInterface,
-        session_repository: SessionRepositoryInterface,
     ) -> None:
-        """Initialize the send market order use case.
-
-        Args:
-            presenter: Presenter for formatting output.
-            service_container: Container with all application services.
-            logger: Logger for application logging.
-            session_repository: Repository for session management.
-        """
         self.presenter = presenter
         self.service_container = service_container
-        self.logger = logger
-        self.session_repository = session_repository
 
     def execute(self, input_dto: SendMarketOrderInputDto) -> Dict:
-        """This method is responsible for sending a market order.
-        :param input_dto: The input data transfer object.
-        :type input_dto: SendMarketOrderInputDto
-        :return: Dict
-        """
-        validator = SendMarketOrderInputDtoValidator(input_dto.to_dict())
-        validator.validate()
+        SendMarketOrderInputDtoValidator(input_dto.to_dict()).validate()
 
-        user = self.session_repository.get_current_user()
-
+        session_repository = self.service_container.session_repository
+        user = session_repository.get_current_user()
         if user is None:
             raise LoginFailedException("User not logged in")
 
@@ -107,5 +82,5 @@ class SendMarketOrderUseCase:
         )
 
         presenter_response = self.presenter.present(output_dto)
-        self.logger.log_info("Order sent successfully")
+        self.service_container.logger.log_info("Order sent successfully")
         return presenter_response

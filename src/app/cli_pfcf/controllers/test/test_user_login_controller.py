@@ -62,8 +62,6 @@ def test_user_login(monkeypatch, mocker, fixture_user):
         mock_presenter.return_value,
         mock_repository.return_value,
         service_container_mock,
-        logger_mock,
-        session_repository_mock
     )
     input_dto = UserLoginInputDto(account, password, ip_address)
     mock_use_case_instance.execute.assert_called_once_with(input_dto)

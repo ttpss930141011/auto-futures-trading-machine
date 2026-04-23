@@ -57,7 +57,7 @@ class SendMarketOrderController(CliMemoryControllerInterface):
             return
         presenter = SendMarketOrderPresenter()
         input_dto = self._get_user_input()
-        use_case = SendMarketOrderUseCase(presenter, self.service_container, self.logger, self.session_repository)
+        use_case = SendMarketOrderUseCase(presenter, self.service_container)
         result = use_case.execute(input_dto)
         view = SendMarketOrderView()
         view.show(result)

@@ -71,12 +71,7 @@ def test_execute(mocker, fixture_send_market_order):
     controller.execute()
 
     mock_presenter.assert_called_once_with()
-    mock_use_case.assert_called_once_with(
-        mock_presenter.return_value,
-        service_container_mock,
-        service_container_mock.logger,
-        service_container_mock.session_repository
-    )
+    mock_use_case.assert_called_once_with(mock_presenter.return_value, service_container_mock)
 
     mock_use_case_instance.execute.assert_called_once_with(input_dto)
     mock_view_instance.show.assert_called_once_with(result_use_case)

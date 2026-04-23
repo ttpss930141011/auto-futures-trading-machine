@@ -41,7 +41,7 @@ class GetPositionController(CliMemoryControllerInterface):
             return
 
         # Prepare infrastructure and use case
-        repository = PFCFPositionRepository(client=self.service_container.exchange_client)
+        repository = PFCFPositionRepository(client=self.service_container.exchange_api.client)
         presenter = GetPositionPresenter()
         use_case = GetPositionUseCase(repository, presenter, self.logger)
 

@@ -11,7 +11,7 @@ def test_select_order_account(fixture_select_order_account):
     # mock all dependencies in the use case
     mock_presenter = MagicMock(spec=SelectOrderAccountPresenterInterface)
     mock_service_container = MagicMock()
-    mock_service_container.exchange_client.UserOrderSet = ["12345678900", "12345678901"]
+    mock_service_container.exchange_api.client.UserOrderSet = ["12345678900", "12345678901"]
     mock_service_container.session_repository.get_current_user.return_value = "Test user"
     mock_service_container.session_repository.set_order_account_set.return_value = "Test order account set"
     mock_service_container.session_repository.set_order_account.return_value = "Test order account"
@@ -39,7 +39,7 @@ def test_select_order_account(fixture_select_order_account):
 
     mock_service_container.session_repository.get_current_user.assert_called_once()
 
-    mock_service_container.session_repository.set_order_account_set.assert_called_once_with(mock_service_container.exchange_client.UserOrderSet)
+    mock_service_container.session_repository.set_order_account_set.assert_called_once_with(mock_service_container.exchange_api.client.UserOrderSet)
     mock_service_container.session_repository.set_order_account.assert_called_once_with(fixture_select_order_account["order_account"])
 
     output_dto = SelectOrderAccountOutputDto(
@@ -57,7 +57,7 @@ def test_select_order_account_if_user_is_none(fixture_select_order_account):
     # mock all dependencies in the use case
     mock_presenter = MagicMock(spec=SelectOrderAccountPresenterInterface)
     mock_service_container = MagicMock()
-    mock_service_container.exchange_client.UserOrderSet = ["12345678900", "12345678901"]
+    mock_service_container.exchange_api.client.UserOrderSet = ["12345678900", "12345678901"]
     mock_service_container.session_repository.get_current_user.return_value = None
     mock_service_container.session_repository.set_order_account_set.return_value = "Test order account set"
     mock_service_container.session_repository.set_order_account.return_value = "Test order account"

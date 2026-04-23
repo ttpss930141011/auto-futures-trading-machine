@@ -17,7 +17,7 @@ def test_get_user_input(monkeypatch, fixture_select_order_account):
     # Create service container mock
     service_container_mock = MagicMock()
     service_container_mock.logger = MagicMock(spec=LoggerInterface)
-    service_container_mock.exchange_client.UserOrderSet = ["12345678900", "12345678901"]
+    service_container_mock.exchange_api.client.UserOrderSet = ["12345678900", "12345678901"]
     service_container_mock.session_repository = MagicMock(spec=SessionRepositoryInterface)
 
     input_dto = SelectOrderAccountController(service_container_mock)._get_user_input()

@@ -42,7 +42,7 @@ class UserLogoutUseCase:
         validator = UserLogoutInputDtoValidator(input_dto.to_dict())
         validator.validate()
 
-        self.service_container.exchange_client.PFCLogout()
+        self.service_container.exchange_api.client.PFCLogout()
 
         self.session_manager.destroy_session()
 

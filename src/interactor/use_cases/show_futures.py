@@ -40,7 +40,7 @@ class ShowFuturesUseCase:
                 return self.presenter.present_error("User not logged in")
 
             # Get futures data using PFC API
-            api = self.service_container.exchange_client
+            api = self.service_container.exchange_api.client
 
             # If futures_code is specified, use it; otherwise, get all futures data
             futures_code = input_dto.futures_code if input_dto.futures_code else "ALL"

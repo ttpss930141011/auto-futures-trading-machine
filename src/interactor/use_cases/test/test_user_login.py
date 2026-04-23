@@ -31,7 +31,7 @@ def test_user_login(fixture_user):
 
     # Create service container mock
     service_container_mock = MagicMock()
-    service_container_mock.exchange_client.PFCLogin = MagicMock()
+    service_container_mock.exchange_api.client.PFCLogin = MagicMock()
 
     repository_mock.get.return_value = None
     repository_mock.create.return_value = user
@@ -56,7 +56,7 @@ def test_user_login(fixture_user):
         input_dto_validator_instance = input_dto_validator_mock.return_value
         input_dto_validator_instance.validate.assert_called_once_with()
 
-    service_container_mock.exchange_client.PFCLogin.assert_called_once_with(
+    service_container_mock.exchange_api.client.PFCLogin.assert_called_once_with(
         fixture_user["account"],
         fixture_user["password"],
         fixture_user["ip_address"]

@@ -15,7 +15,7 @@ def test_user_logout():
 
     # Create service container mock
     service_container_mock = MagicMock()
-    service_container_mock.exchange_client.PFCLogout = MagicMock()
+    service_container_mock.exchange_api.client.PFCLogout = MagicMock()
 
     use_case = UserLogoutUseCase(
         presenter_mock,
@@ -32,7 +32,7 @@ def test_user_logout():
         validator_instance = validator_mock.return_value
         validator_instance.validate.assert_called_once_with()
 
-    service_container_mock.exchange_client.PFCLogout.assert_called_once()
+    service_container_mock.exchange_api.client.PFCLogout.assert_called_once()
     session_manager_mock.destroy_session.assert_called_once()
     logger_mock.log_info.assert_called_once_with("User logout successfully")
     presenter_mock.present.assert_called_once()

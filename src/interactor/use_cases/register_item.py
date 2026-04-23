@@ -58,13 +58,13 @@ class RegisterItemUseCase:
         if user is None:
             raise LoginFailedException(f"Account {input_dto.account} not login")
 
-        items_object_list = self.service_container.exchange_client.PFCGetFutureData("")
+        items_object_list = self.service_container.exchange_api.client.PFCGetFutureData("")
         items_list = [items_object_list[i].COMMODITYID for i in range(len(items_object_list))]
 
         if input_dto.item_code not in items_list:
             raise NotFountItemException(f"{input_dto.item_code} is not found")
 
-        self.service_container.exchange_client.DQuoteLib.RegItem(input_dto.item_code)  # Register item
+        self.service_container.exchange_api.client.DQuoteLib.RegItem(input_dto.item_code)  # Register item
         self.service_container.session_repository.set_item_code(input_dto.item_code)
 
         output_dto = RegisterItemOutputDto(account=input_dto.account, item_code=input_dto.item_code, is_registered=True)

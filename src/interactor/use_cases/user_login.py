@@ -56,7 +56,7 @@ class UserLoginUseCase:
 
         # Login to the dealer client
         try:
-            self.service_container.exchange_client.PFCLogin(
+            self.service_container.exchange_api.client.PFCLogin(
                 input_dto.account, input_dto.password, input_dto.ip_address
             )
         except LoginFailedException as e:
@@ -72,7 +72,7 @@ class UserLoginUseCase:
                 account=input_dto.account,
                 password=input_dto.password,
                 ip_address=input_dto.ip_address,
-                client=self.service_container.exchange_client,
+                client=self.service_container.exchange_api.client,
             )
             if not user:
                 self.logger.log_error(f"User {input_dto.account} not created")

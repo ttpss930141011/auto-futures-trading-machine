@@ -57,7 +57,7 @@ class SelectOrderAccountUseCase:
         if user is None:
             raise LoginFailedException("User not logged in")
 
-        order_account_set = self.service_container.exchange_client.UserOrderSet
+        order_account_set = self.service_container.exchange_api.client.UserOrderSet
 
         if input_dto.index >= len(order_account_set) or input_dto.order_account not in order_account_set or \
                 order_account_set[input_dto.index] != input_dto.order_account:

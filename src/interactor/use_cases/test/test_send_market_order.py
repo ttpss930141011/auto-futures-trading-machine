@@ -34,7 +34,7 @@ def test_send_market_order(fixture_send_market_order):
     # mock all dependencies in the use case
     mock_presenter = MagicMock(spec=SendMarketOrderPresenterInterface)
     mock_service_container = MagicMock()
-    mock_service_container.exchange_client.DTradeLib.Order = MagicMock()
+    mock_service_container.exchange_api.client.DTradeLib.Order = MagicMock()
 
     mock_order_result = MagicMock()
     mock_order_result.SEQ = "Test order serial"
@@ -43,7 +43,7 @@ def test_send_market_order(fixture_send_market_order):
     mock_order_result.ISSEND = True
     mock_order_result.NOTE = fixture_send_market_order["note"]
 
-    mock_service_container.exchange_client.DTradeLib.Order.return_value = mock_order_result
+    mock_service_container.exchange_api.client.DTradeLib.Order.return_value = mock_order_result
 
     mock_order_obejct = MagicMock()
     mock_order_obejct.ACTNO = ""
@@ -57,8 +57,8 @@ def test_send_market_order(fixture_send_market_order):
     mock_order_obejct.DTRADE = ""
     mock_order_obejct.NOTE = ""
 
-    mock_service_container.exchange_trade.OrderObject = MagicMock()
-    mock_service_container.exchange_trade.OrderObject.return_value = mock_order_obejct
+    mock_service_container.exchange_api.trade.OrderObject = MagicMock()
+    mock_service_container.exchange_api.trade.OrderObject.return_value = mock_order_obejct
     mock_logger = MagicMock(spec=LoggerInterface)
     mock_session_repository = MagicMock()
     mock_session_repository.get_current_user.return_value = "Test user"
@@ -88,8 +88,8 @@ def test_send_market_order(fixture_send_market_order):
 
     mock_session_repository.get_current_user.assert_called_once()
 
-    mock_service_container.exchange_trade.OrderObject.assert_called_once()
-    mock_service_container.exchange_client.DTradeLib.Order.assert_called_once()
+    mock_service_container.exchange_api.trade.OrderObject.assert_called_once()
+    mock_service_container.exchange_api.client.DTradeLib.Order.assert_called_once()
 
     output_dto = SendMarketOrderOutputDto(
         is_send_order=True,
@@ -159,11 +159,11 @@ def test_send_market_order_if_order_result_is_none(fixture_send_market_order):
     # mock all dependencies in the use case
     mock_presenter = MagicMock(spec=SendMarketOrderPresenterInterface)
     mock_service_container = MagicMock()
-    mock_service_container.exchange_client.DTradeLib.Order = MagicMock()
+    mock_service_container.exchange_api.client.DTradeLib.Order = MagicMock()
 
     mock_order_result = None
 
-    mock_service_container.exchange_client.DTradeLib.Order.return_value = mock_order_result
+    mock_service_container.exchange_api.client.DTradeLib.Order.return_value = mock_order_result
 
     mock_order_obejct = MagicMock()
     mock_order_obejct.ACTNO = ""
@@ -177,8 +177,8 @@ def test_send_market_order_if_order_result_is_none(fixture_send_market_order):
     mock_order_obejct.DTRADE = ""
     mock_order_obejct.NOTE = ""
 
-    mock_service_container.exchange_trade.OrderObject = MagicMock()
-    mock_service_container.exchange_trade.OrderObject.return_value = mock_order_obejct
+    mock_service_container.exchange_api.trade.OrderObject = MagicMock()
+    mock_service_container.exchange_api.trade.OrderObject.return_value = mock_order_obejct
     mock_logger = MagicMock(spec=LoggerInterface)
     mock_session_repository = MagicMock()
     mock_session_repository.get_current_user.return_value = "Test user"
@@ -209,8 +209,8 @@ def test_send_market_order_if_order_result_is_none(fixture_send_market_order):
 
     mock_session_repository.get_current_user.assert_called_once()
 
-    mock_service_container.exchange_trade.OrderObject.assert_called_once()
-    mock_service_container.exchange_client.DTradeLib.Order.assert_called_once()
+    mock_service_container.exchange_api.trade.OrderObject.assert_called_once()
+    mock_service_container.exchange_api.client.DTradeLib.Order.assert_called_once()
 
     mock_presenter.present.assert_not_called()
     mock_logger.log_info.assert_not_called()
@@ -235,7 +235,7 @@ def test_send_market_order_if_order_result_has_error(fixture_send_market_order):
     # mock all dependencies in the use case
     mock_presenter = MagicMock(spec=SendMarketOrderPresenterInterface)
     mock_service_container = MagicMock()
-    mock_service_container.exchange_client.DTradeLib.Order = MagicMock()
+    mock_service_container.exchange_api.client.DTradeLib.Order = MagicMock()
 
     mock_order_result = MagicMock()
     mock_order_result.SEQ = ""
@@ -244,7 +244,7 @@ def test_send_market_order_if_order_result_has_error(fixture_send_market_order):
     mock_order_result.ISSEND = True
     mock_order_result.NOTE = fixture_send_market_order["note"]
 
-    mock_service_container.exchange_client.DTradeLib.Order.return_value = mock_order_result
+    mock_service_container.exchange_api.client.DTradeLib.Order.return_value = mock_order_result
 
     mock_order_obejct = MagicMock()
     mock_order_obejct.ACTNO = ""
@@ -258,8 +258,8 @@ def test_send_market_order_if_order_result_has_error(fixture_send_market_order):
     mock_order_obejct.DTRADE = ""
     mock_order_obejct.NOTE = ""
 
-    mock_service_container.exchange_trade.OrderObject = MagicMock()
-    mock_service_container.exchange_trade.OrderObject.return_value = mock_order_obejct
+    mock_service_container.exchange_api.trade.OrderObject = MagicMock()
+    mock_service_container.exchange_api.trade.OrderObject.return_value = mock_order_obejct
     mock_logger = MagicMock(spec=LoggerInterface)
     mock_session_repository = MagicMock()
     mock_session_repository.get_current_user.return_value = "Test user"
@@ -290,8 +290,8 @@ def test_send_market_order_if_order_result_has_error(fixture_send_market_order):
 
     mock_session_repository.get_current_user.assert_called_once()
 
-    mock_service_container.exchange_trade.OrderObject.assert_called_once()
-    mock_service_container.exchange_client.DTradeLib.Order.assert_called_once()
+    mock_service_container.exchange_api.trade.OrderObject.assert_called_once()
+    mock_service_container.exchange_api.client.DTradeLib.Order.assert_called_once()
 
     mock_presenter.present.assert_not_called()
     mock_logger.log_info.assert_not_called()

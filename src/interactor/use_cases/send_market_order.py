@@ -66,7 +66,7 @@ class SendMarketOrderUseCase:
 
         print(pfcf_input)
 
-        order = self.service_container.exchange_trade.OrderObject()
+        order = self.service_container.exchange_api.trade.OrderObject()
         order.ACTNO = pfcf_input.get("ACTNO")
         order.PRODUCTID = pfcf_input.get("PRODUCTID")
         order.BS = pfcf_input.get("BS")
@@ -78,7 +78,7 @@ class SendMarketOrderUseCase:
         order.DTRADE = pfcf_input.get("DTRADE")
         order.NOTE = pfcf_input.get("NOTE")
 
-        order_result = self.service_container.exchange_client.DTradeLib.Order(order)
+        order_result = self.service_container.exchange_api.client.DTradeLib.Order(order)
 
         if order_result is None:
             raise ItemNotCreatedException(input_dto.order_account, "Order")

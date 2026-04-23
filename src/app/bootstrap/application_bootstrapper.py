@@ -105,15 +105,14 @@ class ApplicationBootstrapper:
         """Initialize core components needed for bootstrap."""
         self._logger = LoggerDefault()
         self._config = Config()
-        self._exchange_api = self._create_exchange_adapter(self._config)
+        self._exchange_api = self._create_exchange_adapter()
         self._logger.log_info(
             f"Core components initialized successfully (exchange={self._config.EXCHANGE_MODE})"
         )
 
-    @staticmethod
-    def _create_exchange_adapter(config: Config) -> ExchangeApiInterface:
+    def _create_exchange_adapter(self) -> ExchangeApiInterface:
         """Create the exchange adapter selected by config.EXCHANGE_MODE."""
-        if config.EXCHANGE_MODE == "simulator":
+        if self._config.EXCHANGE_MODE == "simulator":
             return SimulatorExchangeAdapter()
         return PfcfExchangeAdapter()
 

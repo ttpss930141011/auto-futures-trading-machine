@@ -143,11 +143,11 @@ graph TB
     subgraph OrderExecutor["⚡ Order Executor Process"]
         direction LR
         SR[Signal Receiver<br/>ZMQ PULL :5556]
-        OEG[OrderExecutorGateway<br/>• Signal Processing<br/>• Order Creation]
+        OE[OrderExecutor<br/>• Signal Processing<br/>• Order Creation]
         DGC[DLL Gateway Client<br/>ZMQ REQ :5557]
         
-        SR --> OEG
-        OEG --> DGC
+        SR --> OE
+        OE --> DGC
     end
     
     %% Data Flow Connections
@@ -173,7 +173,7 @@ graph TB
     class CLI,DGS,PFCFAPI,MDP,MDG infrastructure
     class PC,PM,SC services
     class TS,SRS,SP strategy
-    class SR,OEG,DGC executor
+    class SR,OE,DGC executor
 ```
 
 ### 🧅 Clean Architecture — Dependency Rule

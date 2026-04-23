@@ -107,7 +107,7 @@ serialized_signal = serialize(signal)
 self.signal_pusher.send(serialized_signal)
 
 # Order Executor (PULL)
-# File: run_order_executor_gateway.py
+# File: run_order_executor.py
 self._signal_puller = ZmqPuller(
     address="tcp://127.0.0.1:5556",
     logger=self._logger,

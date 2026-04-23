@@ -380,15 +380,29 @@ The trade-offs in slight complexity increase are far outweighed by the massive i
 
 ## Update (2026-04-21)
 
-The gateway files were relocated to co-locate all PFCF bridge components
-under a single package:
+Two structural changes without altering the pattern:
 
-- `src/infrastructure/services/dll_gateway_server.py`
-  → `src/infrastructure/services/gateway/dll_gateway_server.py`
-- `src/infrastructure/services/dll_gateway_client.py`
-  → `src/infrastructure/services/gateway/dll_gateway_client.py`
+1. Gateway files relocated to co-locate all PFCF bridge components
+   under a single package:
 
-The `MarketDataGatewayService` already lived under `services/gateway/`;
-this move completes the convention. See ADR-005 for the broader gateway
-naming consolidation.
+   - `src/infrastructure/services/dll_gateway_server.py`
+     → `src/infrastructure/services/gateway/dll_gateway_server.py`
+   - `src/infrastructure/services/dll_gateway_client.py`
+     → `src/infrastructure/services/gateway/dll_gateway_client.py`
+
+   The `MarketDataGatewayService` already lived under `services/gateway/`;
+   this move completes the convention.
+
+2. `OrderExecutorGateway` was renamed to `OrderExecutor` (file:
+   `src/domain/order/order_executor_gateway.py`
+   → `src/domain/order/order_executor.py`; subprocess script:
+   `process/run_order_executor_gateway.py`
+   → `process/run_order_executor.py`). That class is a *consumer* of
+   the DLL gateway, not a gateway itself; the old name caused repeated
+   reader confusion. The PID file written by `ProcessManagerService`
+   changes from `tmp/pids/order_executor_gateway.pid` to
+   `tmp/pids/order_executor.pid`; stop any running subprocess before
+   upgrading.
+
+See ADR-005 for the full gateway naming consolidation.
 - [Event Storming Diagram](../static/imgs/EventStorming_20240328.png)

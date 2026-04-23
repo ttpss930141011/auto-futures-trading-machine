@@ -18,14 +18,14 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent))
 
 from src.infrastructure.messaging import ZmqPuller
-from src.domain.order.order_executor_gateway import OrderExecutorGateway
+from src.domain.order.order_executor import OrderExecutor
 from src.infrastructure.services.gateway.dll_gateway_client import DllGatewayClient
 from src.infrastructure.repositories.session_json_file_repository import SessionJsonFileRepository
 from src.infrastructure.loggers.logger_default import LoggerDefault
 from src.app.cli_pfcf.config import Config
 
 
-class OrderExecutorGatewayProcess:
+class OrderExecutorProcess:
     """Process running the order executor with DLL Gateway integration.
 
     This process eliminates the need for DLL initialization in child processes
@@ -69,7 +69,7 @@ class OrderExecutorGatewayProcess:
 
         # Initialize ZMQ components
         self._signal_puller: Optional[ZmqPuller] = None
-        self._order_executor: Optional[OrderExecutorGateway] = None
+        self._order_executor: Optional[OrderExecutor] = None
 
     def start(self) -> None:
         """Start the order executor gateway process."""
@@ -182,7 +182,7 @@ class OrderExecutorGatewayProcess:
         """Initialize the order executor with DLL Gateway integration."""
         try:
             # Create order executor with gateway client
-            self._order_executor = OrderExecutorGateway(
+            self._order_executor = OrderExecutor(
                 signal_puller=self._signal_puller,
                 dll_gateway_service=self._dll_gateway_client,
                 session_repository=self._session_repository,
@@ -199,7 +199,7 @@ class OrderExecutorGatewayProcess:
         """Run the main processing loop.
 
         Continuously polls for trading signals and delegates processing
-        to OrderExecutorGateway. Sleeps briefly when no message is received.
+        to OrderExecutor. Sleeps briefly when no message is received.
         """
         self._logger.log_info("Entering main processing loop with gateway integration")
         print("Order executor gateway process started. Waiting for trading signals...")
@@ -309,5 +309,5 @@ if __name__ == "__main__":
     }
 
     # Create and start order executor gateway process
-    process = OrderExecutorGatewayProcess(config)
+    process = OrderExecutorProcess(config)
     process.start()

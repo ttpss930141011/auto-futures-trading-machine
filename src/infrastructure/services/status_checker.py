@@ -5,11 +5,10 @@ This service provides functionality to check various system prerequisites.
 
 from typing import Dict
 
-from src.interactor.interfaces.services.status_checker import StatusCheckerInterface
 from src.infrastructure.services.service_container import ServiceContainer
 
 
-class StatusChecker(StatusCheckerInterface):
+class StatusChecker:
     """Implementation of status checker to verify preconditions."""
 
     def __init__(self, service_container: ServiceContainer):

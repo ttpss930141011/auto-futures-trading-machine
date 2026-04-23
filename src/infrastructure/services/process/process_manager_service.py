@@ -13,12 +13,9 @@ from typing import Optional
 
 from src.app.cli_pfcf.config import Config
 from src.interactor.interfaces.logger.logger import LoggerInterface
-from src.interactor.interfaces.services.process_manager_service_interface import (
-    ProcessManagerServiceInterface,
-)
 
 
-class ProcessManagerService(ProcessManagerServiceInterface):
+class ProcessManagerService:
     """Service for managing system processes including strategy and order executor."""
 
     def __init__(self, config: Config, logger: LoggerInterface):

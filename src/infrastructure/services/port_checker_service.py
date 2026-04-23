@@ -10,10 +10,9 @@ from typing import Dict
 
 from src.app.cli_pfcf.config import Config
 from src.interactor.interfaces.logger.logger import LoggerInterface
-from src.interactor.interfaces.services.port_checker_service_interface import PortCheckerServiceInterface
 
 
-class PortCheckerService(PortCheckerServiceInterface):
+class PortCheckerService:
     """Service for checking port availability for network components."""
 
     def __init__(self, config: Config, logger: LoggerInterface):

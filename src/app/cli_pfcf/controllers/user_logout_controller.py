@@ -29,7 +29,7 @@ class UserLogoutController(CliMemoryControllerInterface):
             return
         presenter = UserLogoutPresenter()
         input_dto = self._get_user_info()
-        use_case = UserLogoutUseCase(presenter, self.service_container, self.logger, self.session_repository)
+        use_case = UserLogoutUseCase(presenter, self.service_container)
         result = use_case.execute(input_dto)
         view = UserLogoutView()
         view.show(result)

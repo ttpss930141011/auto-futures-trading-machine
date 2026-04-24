@@ -1,6 +1,6 @@
-"""Tests for OrderExecutorGateway.
+"""Tests for OrderExecutor.
 
-This module contains comprehensive tests for the OrderExecutorGateway,
+This module contains comprehensive tests for the OrderExecutor,
 including signal processing, gateway integration, and error handling.
 """
 
@@ -8,7 +8,7 @@ import pytest
 from unittest.mock import Mock, MagicMock, call, patch
 from datetime import datetime
 
-from src.domain.order.order_executor_gateway import OrderExecutorGateway
+from src.domain.order.order_executor import OrderExecutor
 from src.infrastructure.messaging import ZmqPuller
 from src.infrastructure.events.trading_signal import TradingSignal
 from src.domain.value_objects import OrderOperation, OrderTypeEnum, OpenClose, DayTrade, TimeInForce
@@ -24,8 +24,8 @@ from src.interactor.dtos.send_market_order_dtos import (
 from src.interactor.errors.dll_gateway_errors import DllGatewayError
 
 
-class TestOrderExecutorGateway:
-    """Test suite for OrderExecutorGateway.
+class TestOrderExecutor:
+    """Test suite for OrderExecutor.
 
     Tests signal processing, order execution via gateway,
     error handling, and integration scenarios.
@@ -54,8 +54,8 @@ class TestOrderExecutorGateway:
     @pytest.fixture
     def order_executor(self, mock_signal_puller, mock_dll_gateway_service,
                       mock_session_repository, mock_logger):
-        """Create OrderExecutorGateway instance for testing."""
-        return OrderExecutorGateway(
+        """Create OrderExecutor instance for testing."""
+        return OrderExecutor(
             signal_puller=mock_signal_puller,
             dll_gateway_service=mock_dll_gateway_service,
             session_repository=mock_session_repository,
@@ -74,7 +74,7 @@ class TestOrderExecutorGateway:
 
     def test_initialization(self, order_executor, mock_signal_puller,
                            mock_dll_gateway_service, mock_session_repository, mock_logger):
-        """Test proper initialization of OrderExecutorGateway."""
+        """Test proper initialization of OrderExecutor."""
         assert order_executor._signal_puller == mock_signal_puller
         assert order_executor._dll_gateway_service == mock_dll_gateway_service
         assert order_executor._session_repository == mock_session_repository
@@ -108,7 +108,7 @@ class TestOrderExecutorGateway:
         )
 
         # Mock deserialize function
-        with patch('src.domain.order.order_executor_gateway.deserialize') as mock_deserialize:
+        with patch('src.domain.order.order_executor.deserialize') as mock_deserialize:
             mock_deserialize.return_value = sample_trading_signal
 
             result = order_executor.process_received_signal()
@@ -137,7 +137,7 @@ class TestOrderExecutorGateway:
         mock_signal_puller.receive.return_value = serialized_signal
 
         # Mock deserialize to return wrong type
-        with patch('src.domain.order.order_executor_gateway.deserialize') as mock_deserialize:
+        with patch('src.domain.order.order_executor.deserialize') as mock_deserialize:
             mock_deserialize.return_value = "not_a_trading_signal"
 
             result = order_executor.process_received_signal()
@@ -158,7 +158,7 @@ class TestOrderExecutorGateway:
         mock_signal_puller.receive.return_value = serialized_signal
 
         # Mock deserialize to raise exception
-        with patch('src.domain.order.order_executor_gateway.deserialize') as mock_deserialize:
+        with patch('src.domain.order.order_executor.deserialize') as mock_deserialize:
             mock_deserialize.side_effect = Exception("Deserialization error")
 
             result = order_executor.process_received_signal()
@@ -357,13 +357,13 @@ class TestOrderExecutorGateway:
         order_executor.close()
 
         # Verify cleanup logged
-        mock_logger.log_info.assert_called_with("Closing OrderExecutorGateway resources")
+        mock_logger.log_info.assert_called_with("Closing OrderExecutor resources")
 
         # Verify gateway close called
         mock_dll_gateway_service.close.assert_called_once()
 
     def test_context_manager(self, order_executor):
-        """Test OrderExecutorGateway as context manager."""
+        """Test OrderExecutor as context manager."""
         with order_executor as executor:
             assert executor is order_executor
         # close() should be called automatically
@@ -386,7 +386,7 @@ class TestOrderExecutorGateway:
         )
 
         # Mock deserialize
-        with patch('src.domain.order.order_executor_gateway.deserialize') as mock_deserialize:
+        with patch('src.domain.order.order_executor.deserialize') as mock_deserialize:
             mock_deserialize.return_value = sample_trading_signal
 
             # Execute the flow

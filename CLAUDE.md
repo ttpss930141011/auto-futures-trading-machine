@@ -65,7 +65,7 @@ python app.py
 python process/run_strategy.py
 
 # Order executor process (separate process)
-python process/run_order_executor_gateway.py
+python process/run_order_executor.py
 ```
 
 ## 🏛️ High-Level Architecture
@@ -85,7 +85,7 @@ The system uses a **DLL Gateway Architecture** with three main processes managed
    - Implements Support/Resistance trading strategy
    - Publishes trading signals (ZMQ PUSH to port 5556)
 
-3. **Order Executor Process** (`run_order_executor_gateway.py`)
+3. **Order Executor Process** (`run_order_executor.py`)
    - Receives trading signals (ZMQ PULL from port 5556)
    - Sends orders via DLL Gateway Client (ZMQ REQ to port 5557)
 
@@ -120,15 +120,17 @@ src/
 - **ServiceContainer**: `src/infrastructure/services/service_container.py` - Centralized dependency management
 - **SystemManager**: `src/infrastructure/services/system_manager.py` - Component lifecycle with status management
 
-#### Gateway Services Layer
-- **MarketDataGatewayService**: `src/infrastructure/services/gateway/market_data_gateway_service.py` - Market data infrastructure
-- **PortCheckerService**: `src/infrastructure/services/gateway/port_checker_service.py` - Port availability validation
-- **GatewayInitializerService**: `src/infrastructure/services/gateway/gateway_initializer_service.py` - ZMQ component initialization
+#### Gateway Services (PFCF cross-process bridge)
+Everything under `src/infrastructure/services/gateway/` is a gateway: a component that bridges PFCF functionality between the main process and a subprocess.
 
-#### Core Services
-- **DllGatewayServer**: `src/infrastructure/services/dll_gateway_server.py` - Order execution server
-- **ProcessManagerService**: `src/infrastructure/services/process/process_manager_service.py` - Process lifecycle with PID management
-- **StatusChecker**: `src/infrastructure/services/status_checker.py` - System health monitoring
+- **DllGatewayServer**: `src/infrastructure/services/gateway/dll_gateway_server.py` - REP :5557, accepts order / position requests from the order-executor subprocess
+- **DllGatewayClient**: `src/infrastructure/services/gateway/dll_gateway_client.py` - REQ client used by the order-executor subprocess
+- **MarketDataGatewayService**: `src/infrastructure/services/gateway/market_data_gateway_service.py` - PUB :5555, fans PFCF tick callbacks out to the strategy subprocess
+
+#### Other Services
+- **PortCheckerService**: `src/infrastructure/services/port_checker_service.py` - Port availability validation before ZMQ bind
+- **ProcessManagerService**: `src/infrastructure/services/process/process_manager_service.py` - Subprocess lifecycle with PID management
+- **StatusChecker**: `src/infrastructure/services/status_checker.py` - Precondition checks (logged in, item registered, etc.)
 
 #### Application Layer
 - **Controllers**: `src/app/cli_pfcf/controllers/` - Handle CLI user interactions

@@ -65,7 +65,7 @@ sequenceDiagram
     
     Note over SM: Order Executor Process Startup
     SM->>PM: start_order_executor_process()
-    Note right of PM: Execute run_order_executor_gateway.py<br/>Connect ZMQ PULL (5556)<br/>Connect ZMQ REQ (5557)
+    Note right of PM: Execute run_order_executor.py<br/>Connect ZMQ PULL (5556)<br/>Connect ZMQ REQ (5557)
     
     SM-->>AC: SystemStartupResult
     AC->>AC: _display_startup_results()
@@ -91,7 +91,7 @@ graph TB
         SP["SignalPublisher<br/>📤 ZMQ PUSH: 5556<br/>Process: Separate"]
     end
     
-    subgraph "Order Executor Process (run_order_executor_gateway.py)"
+    subgraph "Order Executor Process (run_order_executor.py)"
         SR["SignalReceiver<br/>📥 ZMQ PULL: 5556<br/>Process: Separate"]
         GC["DllGatewayClient<br/>📞 ZMQ REQ: 5557<br/>Process: Separate"]
     end
@@ -264,7 +264,7 @@ flowchart TD
 
 **Actually Used Methods**:
 - `start_strategy()`: Start `run_strategy.py` as independent process ✅ **In Use**
-- `start_order_executor()`: Start `run_order_executor_gateway.py` as independent process ✅ **In Use**
+- `start_order_executor()`: Start `run_order_executor.py` as independent process ✅ **In Use**
 - `cleanup_processes()`: Clean up all processes and threads ✅ **In Use**
 
 **Cleaned Dead Code**:

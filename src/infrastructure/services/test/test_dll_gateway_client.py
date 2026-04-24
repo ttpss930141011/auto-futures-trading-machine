@@ -8,7 +8,7 @@ import json
 import pytest
 from unittest.mock import Mock, patch
 
-from src.infrastructure.services.dll_gateway_client import DllGatewayClient
+from src.infrastructure.services.gateway.dll_gateway_client import DllGatewayClient
 from src.interactor.interfaces.logger.logger import LoggerInterface
 from src.interactor.dtos.send_market_order_dtos import SendMarketOrderInputDto, SendMarketOrderOutputDto
 from src.domain.value_objects import OrderOperation, OrderTypeEnum, TimeInForce, OpenClose, DayTrade
@@ -216,7 +216,7 @@ class TestDllGatewayClient:
     def test_connection_timeout(self, gateway_client, mock_socket):
         """Test connection timeout handling."""
         # Mock timeout by raising an exception that the client handles
-        with patch('src.infrastructure.services.dll_gateway_client.zmq') as mock_zmq:
+        with patch('src.infrastructure.services.gateway.dll_gateway_client.zmq') as mock_zmq:
             class MockAgain(Exception):
                 pass
             mock_zmq.Again = MockAgain

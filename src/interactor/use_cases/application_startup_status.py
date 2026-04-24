@@ -7,15 +7,14 @@ This use case handles the verification of prerequisites and preparation for appl
 from typing import Dict
 
 
-from src.interactor.interfaces.services.status_checker import StatusCheckerInterface
-
+from src.infrastructure.services.status_checker import StatusChecker
 from src.interactor.interfaces.logger.logger import LoggerInterface
 
 
 class ApplicationStartupStatusUseCase:
     """Use case for starting the application with all prerequisites checks."""
 
-    def __init__(self, logger: LoggerInterface, status_checker: StatusCheckerInterface):
+    def __init__(self, logger: LoggerInterface, status_checker: StatusChecker):
         """Initialize the use case.
 
 

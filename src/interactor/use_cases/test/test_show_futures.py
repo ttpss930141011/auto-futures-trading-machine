@@ -53,7 +53,7 @@ def mock_service_container() -> MagicMock:
     mock_api_client.PFCGetFutureData = MagicMock(name="PFCGetFutureData")
 
     mock_container = MagicMock()
-    mock_container.exchange_client = mock_api_client
+    mock_container.exchange_api.client = mock_api_client
     return mock_container
 
 
@@ -89,7 +89,7 @@ def test_show_futures_success_all(
         success=True, message="Success", futures_data=mock_api_data
     )
 
-    mock_service_container.exchange_client.PFCGetFutureData.return_value = mock_api_data
+    mock_service_container.exchange_api.client.PFCGetFutureData.return_value = mock_api_data
     mock_presenter.present_futures_data.return_value = expected_output
 
     # Act
@@ -99,7 +99,7 @@ def test_show_futures_success_all(
     assert result == expected_output
     mock_service_container.session_repository.is_user_logged_in.assert_called_once()
     mock_service_container.logger.log_info.assert_called_once_with("Getting futures data for code: ALL")
-    mock_service_container.exchange_client.PFCGetFutureData.assert_called_once_with(
+    mock_service_container.exchange_api.client.PFCGetFutureData.assert_called_once_with(
         ""
     )  # Called with empty string for ALL
     mock_presenter.present_futures_data.assert_called_once_with(mock_api_data)
@@ -122,7 +122,7 @@ def test_show_futures_success_specific(
         success=True, message="Success", futures_data=mock_api_data
     )
 
-    mock_service_container.exchange_client.PFCGetFutureData.return_value = mock_api_data
+    mock_service_container.exchange_api.client.PFCGetFutureData.return_value = mock_api_data
     mock_presenter.present_futures_data.return_value = expected_output
 
     # Act
@@ -132,7 +132,7 @@ def test_show_futures_success_specific(
     assert result == expected_output
     mock_service_container.session_repository.is_user_logged_in.assert_called_once()
     mock_service_container.logger.log_info.assert_called_once_with(f"Getting futures data for code: {specific_code}")
-    mock_service_container.exchange_client.PFCGetFutureData.assert_called_once_with(specific_code)
+    mock_service_container.exchange_api.client.PFCGetFutureData.assert_called_once_with(specific_code)
     mock_presenter.present_futures_data.assert_called_once_with(mock_api_data)
     mock_presenter.present_error.assert_not_called()
 
@@ -161,7 +161,7 @@ def test_show_futures_not_logged_in(
     mock_service_container.session_repository.is_user_logged_in.assert_called_once()
     mock_presenter.present_error.assert_called_once_with(error_message)
     mock_service_container.logger.log_info.assert_not_called()
-    mock_service_container.exchange_client.PFCGetFutureData.assert_not_called()
+    mock_service_container.exchange_api.client.PFCGetFutureData.assert_not_called()
     mock_presenter.present_futures_data.assert_not_called()
 
 
@@ -178,7 +178,7 @@ def test_show_futures_api_exception(
     api_error = Exception("Network timeout")
     expected_output = ShowFuturesOutputDto(success=False, message=str(api_error))
 
-    mock_service_container.exchange_client.PFCGetFutureData.side_effect = api_error
+    mock_service_container.exchange_api.client.PFCGetFutureData.side_effect = api_error
     mock_presenter.present_error.return_value = expected_output
 
     # Act
@@ -190,7 +190,7 @@ def test_show_futures_api_exception(
     mock_service_container.logger.log_info.assert_called_once_with(
         "Getting futures data for code: ALL"
     )  # Logging happens before call
-    mock_service_container.exchange_client.PFCGetFutureData.assert_called_once_with("")
+    mock_service_container.exchange_api.client.PFCGetFutureData.assert_called_once_with("")
     mock_service_container.logger.log_error.assert_called_once_with(f"Error in ShowFuturesUseCase: {str(api_error)}")
     mock_presenter.present_error.assert_called_once_with(str(api_error))
     mock_presenter.present_futures_data.assert_not_called()

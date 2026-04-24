@@ -11,14 +11,11 @@ import zmq
 from src.app.cli_pfcf.config import Config
 from src.domain.interfaces.exchange_api import ExchangeApiInterface
 from src.interactor.interfaces.logger.logger import LoggerInterface
-from src.interactor.interfaces.services.market_data_gateway_service_interface import (
-    MarketDataGatewayServiceInterface,
-)
 from src.infrastructure.messaging import ZmqPublisher
 from src.infrastructure.pfcf_client.tick_producer import TickProducer
 
 
-class MarketDataGatewayService(MarketDataGatewayServiceInterface):
+class MarketDataGatewayService:
     """Service for managing market data infrastructure and ZMQ components."""
 
     def __init__(self, config: Config, logger: LoggerInterface, exchange_api: ExchangeApiInterface) -> None:

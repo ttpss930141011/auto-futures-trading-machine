@@ -14,7 +14,7 @@ from pathlib import Path
 # Ensure the project root is in the path
 sys.path.append(str(Path(__file__).resolve().parent))
 
-from src.infrastructure.services.dll_gateway_client import DllGatewayClient
+from src.infrastructure.services.gateway.dll_gateway_client import DllGatewayClient
 from src.infrastructure.loggers.logger_default import LoggerDefault
 
 

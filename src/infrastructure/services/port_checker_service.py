@@ -10,10 +10,9 @@ from typing import Dict
 
 from src.app.cli_pfcf.config import Config
 from src.interactor.interfaces.logger.logger import LoggerInterface
-from src.interactor.interfaces.services.port_checker_service_interface import PortCheckerServiceInterface
 
 
-class PortCheckerService(PortCheckerServiceInterface):
+class PortCheckerService:
     """Service for checking port availability for network components."""
 
     def __init__(self, config: Config, logger: LoggerInterface):
@@ -33,8 +32,8 @@ class PortCheckerService(PortCheckerServiceInterface):
             Dict[str, bool]: Dictionary with port numbers as keys and availability as values
         """
         ports_to_check = {
-            self.config.ZMQ_TICK_PORT: "Publisher port",
-            self.config.ZMQ_SIGNAL_PORT: "Signal Puller port",
+            self.config.ZMQ_TICK_PORT: "Tick publisher port",
+            self.config.DLL_GATEWAY_PORT: "DLL Gateway server port",
         }
         results = {}
 

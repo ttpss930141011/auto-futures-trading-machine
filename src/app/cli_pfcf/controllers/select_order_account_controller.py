@@ -24,7 +24,7 @@ class SelectOrderAccountController(CliMemoryControllerInterface):
         self.session_repository = service_container.session_repository
 
     def _get_user_input(self) -> SelectOrderAccountInputDto:
-        account_set = self.service_container.exchange_client.UserOrderSet
+        account_set = self.service_container.exchange_api.client.UserOrderSet
         print("\nSelect the order account:")
         for account in account_set:
             print(f"{account_set.index(account) + 1}. {account}")

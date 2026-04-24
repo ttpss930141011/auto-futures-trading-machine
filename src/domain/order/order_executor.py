@@ -21,7 +21,7 @@ from src.interactor.dtos.send_market_order_dtos import SendMarketOrderInputDto
 from src.interactor.errors.dll_gateway_errors import DllGatewayError
 
 
-class OrderExecutorGateway:
+class OrderExecutor:
     """Executes orders using DLL Gateway Service.
 
     This class follows Single Responsibility Principle by focusing solely on
@@ -199,14 +199,14 @@ class OrderExecutorGateway:
     def close(self) -> None:
         """Close the order executor and cleanup resources."""
         try:
-            self._logger.log_info("Closing OrderExecutorGateway resources")
+            self._logger.log_info("Closing OrderExecutor resources")
 
             # Close DLL Gateway connection
             if hasattr(self._dll_gateway_service, 'close'):
                 self._dll_gateway_service.close()
 
         except Exception as e:
-            self._logger.log_error(f"Error during OrderExecutorGateway cleanup: {e}")
+            self._logger.log_error(f"Error during OrderExecutor cleanup: {e}")
 
     def __enter__(self):
         """Context manager entry."""

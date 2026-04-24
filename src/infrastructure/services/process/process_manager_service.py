@@ -13,12 +13,9 @@ from typing import Optional
 
 from src.app.cli_pfcf.config import Config
 from src.interactor.interfaces.logger.logger import LoggerInterface
-from src.interactor.interfaces.services.process_manager_service_interface import (
-    ProcessManagerServiceInterface,
-)
 
 
-class ProcessManagerService(ProcessManagerServiceInterface):
+class ProcessManagerService:
     """Service for managing system processes including strategy and order executor."""
 
     def __init__(self, config: Config, logger: LoggerInterface):
@@ -39,7 +36,7 @@ class ProcessManagerService(ProcessManagerServiceInterface):
 
         # Paths to standalone process scripts
         self.strategy_script_path: Path = self.project_root / "process" / "run_strategy.py"
-        self.order_executor_script_path: Path = self.project_root / "process" / "run_order_executor_gateway.py"
+        self.order_executor_script_path: Path = self.project_root / "process" / "run_order_executor.py"
 
         # Directory for PID files
         self.pid_dir: Path = self.project_root / "tmp" / "pids"
@@ -93,19 +90,18 @@ class ProcessManagerService(ProcessManagerServiceInterface):
             return False
 
     def start_order_executor(self) -> bool:
-        """Start the Order Executor process with Gateway integration.
+        """Start the Order Executor process (communicates with DLL gateway server).
 
         Returns:
             bool: True if started successfully, False otherwise
         """
         try:
-            self.logger.log_info("Starting Order Executor process with Gateway integration...")
+            self.logger.log_info("Starting Order Executor process...")
 
             # Get ZMQ addresses from config
             signal_pull_address = self.config.ZMQ_SIGNAL_PULL_ADDRESS
             dll_gateway_address = self.config.DLL_GATEWAY_CONNECT_ADDRESS
 
-            # Launch the Gateway-enabled process
             self._order_executor_process = subprocess.Popen(
                 [
                     sys.executable,
@@ -121,18 +117,18 @@ class ProcessManagerService(ProcessManagerServiceInterface):
             # Verify process started
             if self._order_executor_process.poll() is None:
                 self.logger.log_info(
-                    f"Order Executor Gateway process started with PID {self._order_executor_process.pid}"
+                    f"Order Executor process started with PID {self._order_executor_process.pid}"
                 )
 
                 # Save PID for future reference
-                self._save_pid("order_executor_gateway", self._order_executor_process.pid)
+                self._save_pid("order_executor", self._order_executor_process.pid)
                 return True
             else:
-                self.logger.log_error("Order Executor Gateway process failed to start")
+                self.logger.log_error("Order Executor process failed to start")
                 return False
 
         except Exception as e:
-            self.logger.log_error(f"Failed to start Order Executor Gateway process: {str(e)}")
+            self.logger.log_error(f"Failed to start Order Executor process: {str(e)}")
             return False
 
 

@@ -134,7 +134,7 @@ sequenceDiagram
     
     SM->>SM: _start_order_executor()
     SM->>PM: Start order executor process
-    Note right of PM: Execute run_order_executor_gateway.py
+    Note right of PM: Execute run_order_executor.py
     
     SM-->>Controller: SystemStartupResult(success=True)
     Controller-->>User: Display startup success message
@@ -441,7 +441,7 @@ graph TB
     subgraph "External Processes (Managed by SystemManager but not direct dependencies)"
         ExtProc[External Processes]
         Strategy[Strategy Process<br/>run_strategy.py]
-        OrderExec[Order Executor<br/>run_order_executor_gateway.py]
+        OrderExec[Order Executor<br/>run_order_executor.py]
     end
     
     PM -.-> Strategy

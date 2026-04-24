@@ -28,13 +28,13 @@ def test_register_item(fixture_register_item):
         validator_mock_instance = validator_mock.return_value
         presenter_mock.present.return_value = "Test output"
         session_manager_mock.get_current_user.return_value = "Test user"
-        service_container_mock.exchange_client.DQuoteLib.RegItem = MagicMock()
-        service_container_mock.exchange_client.DQuoteLib.OnTickDataTrade = MagicMock()
-        service_container_mock.exchange_client.PFCGetFutureData = MagicMock()
+        service_container_mock.exchange_api.client.DQuoteLib.RegItem = MagicMock()
+        service_container_mock.exchange_api.client.DQuoteLib.OnTickDataTrade = MagicMock()
+        service_container_mock.exchange_api.client.PFCGetFutureData = MagicMock()
 
         # Mock data for items_object_list
         items_object_list = [Item(fixture_register_item["item_code"]), Item("COM5678")]
-        service_container_mock.exchange_client.PFCGetFutureData.return_value = items_object_list
+        service_container_mock.exchange_api.client.PFCGetFutureData.return_value = items_object_list
 
         use_case = RegisterItemUseCase(
             presenter_mock,
@@ -51,7 +51,7 @@ def test_register_item(fixture_register_item):
 
         session_manager_mock.get_current_user.assert_called_once()
 
-        service_container_mock.exchange_client.DQuoteLib.RegItem.assert_called_once_with(fixture_register_item["item_code"])
+        service_container_mock.exchange_api.client.DQuoteLib.RegItem.assert_called_once_with(fixture_register_item["item_code"])
 
         output_dto = RegisterItemOutputDto(
             account=fixture_register_item["account"],
@@ -114,13 +114,13 @@ def test_register_item_if_item_code_not_in_items_list(fixture_register_item):
     with patch("src.interactor.use_cases.register_item.RegisterItemInputDtoValidator") as validator_mock:
         validator_mock_instance = validator_mock.return_value
         presenter_mock.present.return_value = "Test output"
-        service_container_mock.exchange_client.DQuoteLib.RegItem = MagicMock()
-        service_container_mock.exchange_client.DQuoteLib.OnTickDataTrade = MagicMock()
-        service_container_mock.exchange_client.PFCGetFutureData = MagicMock()
+        service_container_mock.exchange_api.client.DQuoteLib.RegItem = MagicMock()
+        service_container_mock.exchange_api.client.DQuoteLib.OnTickDataTrade = MagicMock()
+        service_container_mock.exchange_api.client.PFCGetFutureData = MagicMock()
 
         # Mock data for items_object_list
         items_object_list = [Item("COM1234"), Item("COM5678")]
-        service_container_mock.exchange_client.PFCGetFutureData.return_value = items_object_list
+        service_container_mock.exchange_api.client.PFCGetFutureData.return_value = items_object_list
 
         use_case = RegisterItemUseCase(
             presenter_mock,

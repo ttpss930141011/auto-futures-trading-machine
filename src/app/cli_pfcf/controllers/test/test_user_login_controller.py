@@ -28,10 +28,7 @@ def test_user_login(monkeypatch, mocker, fixture_user):
     service_container_mock.session_repository.get_current_user.return_value = account
     service_container_mock.session_repository.is_user_logged_in.return_value = False
 
-    logger_mock = service_container_mock.logger
-    config_mock = service_container_mock.config
-    config_mock.EXCHANGE_TEST_URL = fixture_user["ip_address"]
-    session_repository_mock = service_container_mock.session_repository
+    service_container_mock.config.EXCHANGE_TEST_URL = fixture_user["ip_address"]
 
     # mock the module in use case
     mock_repository = mocker.patch(
